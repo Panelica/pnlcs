@@ -418,6 +418,7 @@ API 访问可能已中断。在无法读取余额期间，也无法发出余额�
     'error.upgrade_not_available_for_cycle' => '所选产品不支持此计费周期。',
     'error.nameservers_not_saved_at_registrar' => '注册商未接受新的域名服务器，因此未保存任何更改。请重试或联系技术支持。',
     'error.upgrade_already_pending' => '此服务已有一个等待付款的方案变更。请先支付或取消相应发票。',
+    'error.upgrade_after_renewal_paid' => '此服务有一张待支付的续费账单。请先支付，然后再更改套餐。',
     'success.whitelabel_saved' => '白标设置已保存。',
     'success.withdrawal_request_submitted' => '$:amount 的提现请求已成功提交。',
     'success.your_affiliate_account_has_been_activated' => '您的联盟推广账户已激活！',

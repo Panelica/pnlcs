@@ -207,6 +207,10 @@ class UpgradeService
             $pending->update(['status' => 'cancelled']);
         }
 
+        if ($service->hasOpenRenewalInvoice()) {
+            return $refuse(__('messages.error.upgrade_after_renewal_paid'));
+        }
+
         $calc = $this->calculateProration($service, $newProduct);
 
         if (! ($calc['available'] ?? false)) {
@@ -282,7 +286,10 @@ class UpgradeService
             : now()->startOfDay();
         $remainingDays = max(0, (int) now()->startOfDay()->diffInDays($due, false));
 
-        $factor = $cycleDays > 0 ? min(1.0, $remainingDays / $cycleDays) : 1.0;
+        // Every day already paid for, not at most one cycle: a service renewed
+        // early is paid up for two cycles or more, and capping the factor at 1
+        // charged the new price for the first of them only.
+        $factor = $cycleDays > 0 ? $remainingDays / $cycleDays : 1.0;
         $proratedDiff = round(($newRecurring - $currentRecurring) * $factor, 2);
 
         return [

@@ -419,6 +419,7 @@ API access may be broken. While the balance cannot be read, no low-balance warni
     'error.upgrade_not_available_for_cycle' => 'The selected product is not available for this billing cycle.',
     'error.nameservers_not_saved_at_registrar' => 'The registrar did not accept the new nameservers, so nothing has been changed. Please try again or contact support.',
     'error.upgrade_already_pending' => 'You already have a package change waiting to be paid for this service. Pay or cancel that invoice first.',
+    'error.upgrade_after_renewal_paid' => 'This service has a renewal invoice waiting to be paid. Pay it first, then change the package.',
     'success.whitelabel_saved' => 'White-label settings saved.',
     'success.withdrawal_request_submitted' => 'Withdrawal request of $:amount submitted successfully.',
     'success.your_affiliate_account_has_been_activated' => 'Your affiliate account has been activated!',

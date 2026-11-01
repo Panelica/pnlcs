@@ -419,6 +419,7 @@ Dostęp do API może być uszkodzony. Dopóki saldo jest nieczytelne, ostrzeżen
     'error.upgrade_not_available_for_cycle' => 'Wybrany produkt nie jest dostępny dla tego cyklu rozliczeniowego.',
     'error.nameservers_not_saved_at_registrar' => 'Rejestrator nie zaakceptował nowych serwerów nazw, więc nic nie zostało zmienione. Spróbuj ponownie lub skontaktuj się z pomocą techniczną.',
     'error.upgrade_already_pending' => 'Masz już oczekującą zmianę pakietu do opłacenia dla tej usługi. Najpierw opłać lub anuluj tę fakturę.',
+    'error.upgrade_after_renewal_paid' => 'Ta usługa ma fakturę za odnowienie oczekującą na zapłatę. Najpierw ją opłać, a potem zmień pakiet.',
     'success.whitelabel_saved' => 'Ustawienia white-label zapisane.',
     'success.withdrawal_request_submitted' => 'Prośba o wypłatę kwoty $:amount została przesłana pomyślnie.',
     'success.your_affiliate_account_has_been_activated' => 'Twoje konto partnerskie zostało aktywowane!',

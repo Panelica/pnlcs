@@ -69,6 +69,10 @@ class OptionUpgradeService
             $pending->update(['status' => 'cancelled']);
         }
 
+        if ($service->hasOpenRenewalInvoice()) {
+            return $refuse(__('messages.error.upgrade_after_renewal_paid'));
+        }
+
         $cycle = $service->billing_cycle ?: 'Monthly';
         $current = $this->current($service);
         $normalised = $this->options->normalise($service->product, $raw, $cycle);
@@ -108,7 +112,8 @@ class OptionUpgradeService
         $cycleDays = BillingCycleHelper::cycleDays($cycle);
         $due = $service->next_due_date ? Carbon::parse($service->next_due_date)->startOfDay() : now()->startOfDay();
         $remaining = max(0, (int) now()->startOfDay()->diffInDays($due, false));
-        $factor = $cycleDays > 0 ? min(1.0, $remaining / $cycleDays) : 1.0;
+        // Every day already paid for, as for a product change.
+        $factor = $cycleDays > 0 ? $remaining / $cycleDays : 1.0;
         $prorated = max(0.0, round($delta * $factor, 2));
 
         $upgrade = Upgrade::create([
@@ -144,6 +149,45 @@ class OptionUpgradeService
         return ['success' => true, 'message' => null, 'invoice' => null, 'applied' => true];
     }
 
+    /**
+     * The chosen options at today's cycle and price, and the recurring amount
+     * they make. Falls back to what was stored at the request when an option
+     * is no longer offered.
+     *
+     * @return array{0: array, 1: float}
+     */
+    private function pricedNow(Service $service, array $new): array
+    {
+        $cycle = $service->billing_cycle ?: 'Monthly';
+        $raw = [];
+        foreach ($new['options'] as $row) {
+            $option = \App\Models\ConfigOption::find($row['option_id'] ?? null);
+            if (! $option) {
+                continue;
+            }
+            $raw[$option->id] = $option->isQuantity() ? (int) ($row['qty'] ?? 1) : ($option->isCheckbox() ? 1 : ($row['sub_id'] ?? null));
+        }
+
+        try {
+            $normalised = $this->options->normalise($service->product, $raw, $cycle);
+        } catch (\Throwable) {
+            $normalised = [];
+        }
+        if (count($normalised) !== count(array_filter($new['options'], fn ($r) => ! empty($r['option_id'])))) {
+            Log::warning('OptionUpgradeService::apply - options could not be priced again; the request price is used', ['service' => $service->id]);
+
+            return [$new['options'], (float) $new['recurring']];
+        }
+
+        $paidOptions = (float) ServiceConfigOption::where('service_id', $service->id)->get()
+            ->sum(fn ($r) => (float) $r->unit_price * max(1, (int) $r->qty));
+
+        return [
+            $this->options->toCartPayload($normalised),
+            round((float) $service->amount + $this->options->priceOf($normalised) - $paidOptions, 2),
+        ];
+    }
+
     /** Called by UpgradeService::apply() for an upgrade of this type. */
     public function apply(Upgrade $upgrade): array
     {
@@ -153,10 +197,17 @@ class OptionUpgradeService
             return ['success' => false, 'message' => 'Service or options not found.'];
         }
 
-        DB::transaction(function () use ($service, $new, $upgrade) {
+        // Priced when it is applied, not when it was asked for. The invoice can
+        // be paid days later, and the cycle may have changed in between: the
+        // options and the recurring amount fixed at the request then put a
+        // monthly price on, say, a three-year cycle. The amount moves by the
+        // options' difference only, so a custom or discounted price is kept.
+        [$payload, $recurring] = $this->pricedNow($service, $new);
+
+        DB::transaction(function () use ($service, $payload, $recurring, $upgrade) {
             ServiceConfigOption::where('service_id', $service->id)->delete();
-            $this->options->attachToService($service, $new['options']);
-            $service->update(['amount' => (float) $new['recurring']]);
+            $this->options->attachToService($service, $payload);
+            $service->update(['amount' => $recurring]);
             $upgrade->update(['status' => 'completed']);
         });
 
