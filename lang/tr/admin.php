@@ -3373,6 +3373,7 @@ return [
     'clients.link_none' => '— yok (yalnız faturalama) —',
     'clients.link_existing_hint' => 'Bunlar seçili sunucuda hâlihazırda var olan hesaplardır — Panelica\'da panelin Kullanıcılar listesindeki müşteri hesapları. Bu servisin ait olduğu hesabı seçin ki PNLCS onu yönetebilsin (askıya alma, sonlandırma, parola). Hesap listeleme Panelica sunucuları için çalışır; yalnızca faturalama kaydı için boş bırakın.',
     'clients.service_linked' => 'Hizmet eklendi ve mevcut sunucu hesabına bağlandı.',
+    'clients.link_taken' => 'Bu sunucu hesabı zaten #:service numaralı hizmete bağlı.',
     'affiliates.add_to_balance' => 'Bakiyeye Ekle',
     'affiliates.credit_amount' => 'Eklenecek Tutar',
     'affiliates.add_affiliate' => 'Ortak Ekle',

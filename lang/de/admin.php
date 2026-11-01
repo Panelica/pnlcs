@@ -3380,6 +3380,7 @@ return [
     'clients.link_none' => '— keine (nur Abrechnung) —',
     'clients.link_existing_hint' => 'Dies sind die Konten, die bereits auf dem ausgewählten Server vorhanden sind – in Panelica die Kundenkonten unter der Benutzerliste des Panels. Wählen Sie den Dienst aus, zu dem dieser Dienst gehört, damit PNLCS ihn verwalten kann (Sperren, Beenden, Passwort). Die Kontoauflistung funktioniert für Panelica-Server; Lassen Sie dieses Feld leer, wenn es sich um einen reinen Abrechnungsdatensatz handelt.',
     'clients.service_linked' => 'Dienst hinzugefügt und mit dem vorhandenen Serverkonto verknüpft.',
+    'clients.link_taken' => 'Dieses Serverkonto ist bereits mit Dienst #:service verknüpft.',
     'clients.add_domain' => 'Domain hinzufügen',
     'clients.add_domain_hint' => 'Erfassen Sie eine Domain, die der Kunde bereits anderswo registriert hat (z. B. eine, die von einem anderen System migriert wurde), damit PNLCS ihre Verlängerungen in Rechnung stellt. Dadurch wird lediglich der Abrechnungsdatensatz erstellt – es erfolgt keine Registrierung oder Übertragung beim Registrar.',
     'clients.domain_registrar' => 'Registrar',

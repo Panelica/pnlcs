@@ -28,10 +28,20 @@ Route::middleware(['web', 'admin.auth', 'admin.2fa'])
             ->controller(LicensesPageController::class)
             ->group(function () {
                 Route::get('/', 'index')->name('index');
-                Route::post('connect', 'connect')->middleware('throttle:10,1')->name('connect');
-                Route::post('disconnect', 'disconnect')->name('disconnect');
                 Route::post('products', 'createProduct')->name('products.store');
                 Route::post('sync', 'sync')->middleware('throttle:6,1')->name('sync');
+            });
+
+        // The partner key, the Central address and the install link decide
+        // what customers' install commands download and run as root: the
+        // permission for provider credentials, not the one for products.
+        Route::middleware('admin.permission:manage_servers')
+            ->prefix('panelica-licenses')
+            ->name('panelica-licenses.')
+            ->controller(LicensesPageController::class)
+            ->group(function () {
+                Route::post('connect', 'connect')->middleware('throttle:10,1')->name('connect');
+                Route::post('disconnect', 'disconnect')->name('disconnect');
                 Route::post('install-code', 'updateInstallCode')->middleware('throttle:10,1')->name('install-code');
             });
 

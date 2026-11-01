@@ -7,6 +7,9 @@
     $muted = 'color:#777;';
     $th = 'padding:8px 10px;text-align:left;font-size:12px;color:#777;border-bottom:1px solid #e5e7eb;white-space:nowrap;';
     $td = 'padding:9px 10px;border-bottom:1px solid #f0f0f0;font-size:13px;vertical-align:middle;';
+    // The partner key and the Central address decide what customers' install
+    // commands download and run: "manage servers", like other provider credentials.
+    $canAccount = (bool) auth('admin')->user()?->hasPermission('manage_servers');
 @endphp
 <style>
     .pl-hero{display:grid;grid-template-columns:minmax(0,1.3fr) minmax(0,1fr);gap:22px;align-items:start;background:linear-gradient(135deg,#1a4d80 0%,#2563a8 100%);color:#fff;border-radius:10px;padding:26px 28px;margin-bottom:16px}
@@ -72,6 +75,7 @@
         @if($accountError)
         <div style="margin-bottom:12px;padding:8px 10px;border-radius:5px;background:#fdecea;border:1px solid #f5c2c0;font-size:12.5px;color:#8a1f17;">{{ __('panelica_license.page.key_not_working', ['error' => $accountError]) }}</div>
         @endif
+        @if($canAccount)
         <form method="POST" action="{{ route('admin.panelica-licenses.connect') }}">
             @csrf
             <div class="form-group" style="margin-bottom:10px;">
@@ -88,6 +92,7 @@
             </details>
             <button type="submit" class="btn btn-primary" style="width:100%;"><i class="fas fa-plug"></i> {{ __('panelica_license.page.connect') }}</button>
         </form>
+        @endif
     </div>
 </div>
 @else
@@ -127,7 +132,7 @@
             <p style="font-size:12.5px;{{ $muted }}margin:8px 0 0;">{{ __('panelica_license.page.link_hint') }}</p>
         </div>
         <div>
-            @if($link)
+            @if($link && $canAccount)
             <form method="POST" action="{{ route('admin.panelica-licenses.install-code') }}" style="display:flex;gap:6px;align-items:center;flex-wrap:wrap;">
                 @csrf
                 <label for="pl-code" style="font-size:12px;font-weight:600;margin:0;">{{ __('panelica_license.page.link_code') }}</label>
@@ -315,6 +320,7 @@
     </div>
 </div>
 
+@if($canAccount)
 <details class="card" style="margin-bottom:16px;">
     <summary class="card-header" style="cursor:pointer;"><strong>{{ __('panelica_license.page.account_settings') }}</strong></summary>
     <div class="card-body" style="display:grid;grid-template-columns:repeat(auto-fit,minmax(min(300px,100%),1fr));gap:18px;">
@@ -335,6 +341,7 @@
         </form>
     </div>
 </details>
+@endif
 <script>
 document.querySelectorAll('[data-pl-copy]').forEach(function (button) {
     button.addEventListener('click', function () {

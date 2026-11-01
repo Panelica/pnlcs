@@ -166,7 +166,9 @@
                 @endif
 
                 @if($order->isCompleted())
-                    <a href="{{ route('admin.ssl.download', $order) }}" class="btn btn-success w-100">{{ __('admin.ssl.download_cert') }}</a>
+                    @if(auth('admin')->user()?->hasPermission('manage_services'))
+                        <a href="{{ route('admin.ssl.download', $order) }}" class="btn btn-success w-100">{{ __('admin.ssl.download_cert') }}</a>
+                    @endif
                     <form method="POST" action="{{ route('admin.ssl.action', $order) }}">
                         @csrf
                         <input type="hidden" name="action" value="renew">
