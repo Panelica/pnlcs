@@ -414,7 +414,12 @@ $tabs = ['summary'=>__('admin.clients.tab_summary'),'services'=>__('admin.client
                 </div>
                 <div class="form-group">
                     <label class="form-label">{{ __('admin.clients.domain_registrar') }}</label>
-                    <input type="text" name="registrar" value="{{ old('registrar') }}" class="form-control" placeholder="{{ __('admin.clients.domain_registrar_placeholder') }}">
+                    <select name="registrar" class="form-control">
+                        <option value="">{{ __('admin.clients.domain_registrar_placeholder') }}</option>
+                        @foreach($registrars as $key => $label)
+                        <option value="{{ $key }}" @selected(old('registrar') === $key)>{{ $label }}</option>
+                        @endforeach
+                    </select>
                 </div>
                 <div class="form-group">
                     <label class="form-label">{{ __('admin.clients.registered') }}</label>
