@@ -2,6 +2,7 @@
 
 namespace App\Services;
 
+use App\Models\ConfigOption;
 use App\Models\ConfigOptionSub;
 use App\Models\InvoiceItem;
 use App\Models\Service;
@@ -161,7 +162,7 @@ class OptionUpgradeService
         $cycle = $service->billing_cycle ?: 'Monthly';
         $raw = [];
         foreach ($new['options'] as $row) {
-            $option = \App\Models\ConfigOption::find($row['option_id'] ?? null);
+            $option = ConfigOption::find($row['option_id'] ?? null);
             if (! $option) {
                 continue;
             }

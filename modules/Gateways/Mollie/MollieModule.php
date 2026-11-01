@@ -202,7 +202,7 @@ HTML;
         // Encoded, so the id asked about is the whole id that was sent: a
         // "#…" or "?…" on the end would otherwise be cut off by the HTTP
         // client and still find the payment.
-        $response = Http::withToken($apiKey)->get("{$this->apiUrl}/payments/" . rawurlencode((string) $paymentId));
+        $response = Http::withToken($apiKey)->get("{$this->apiUrl}/payments/".rawurlencode((string) $paymentId));
 
         if (!$response->successful()) {
             return ['success' => false, 'message' => 'Failed to verify payment with Mollie.'];
