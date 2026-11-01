@@ -682,6 +682,7 @@ return [
         'remaining_balance' => 'Kalan Bakiye',
         'reported_on' => 'Bildirim tarihi',
         'renewal_note' => 'Otomatik oluşturulan yenileme faturası.',
+        'proforma_reference' => 'Proforma no.: :number',
         'download_pdf' => 'PDF İndir',
         'due' => 'Son Ödeme',
         'invoice_details' => 'Fatura Detayları',

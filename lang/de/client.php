@@ -682,6 +682,7 @@ return [
         'remaining_balance' => 'Offener Betrag',
         'reported_on' => 'Gemeldet am',
         'renewal_note' => 'Automatisch erstellte Verlängerungsrechnung.',
+        'proforma_reference' => 'Zur Proforma Nr.: :number',
         'download_pdf' => 'PDF herunterladen',
         'due' => 'Fällig',
         'invoice_details' => 'Rechnungsdetails',

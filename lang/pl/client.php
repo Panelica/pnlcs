@@ -683,6 +683,7 @@ return [
         'remaining_balance' => 'Pozostałe saldo',
         'reported_on' => 'Zgłoszono',
         'renewal_note' => 'Faktura odnowienia wygenerowana automatycznie.',
+        'proforma_reference' => 'Do proformy nr: :number',
         'download_pdf' => 'Pobierz PDF',
         'due' => 'Termin płatności',
         'invoice_details' => 'Szczegóły faktury',
