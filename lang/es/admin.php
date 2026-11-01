@@ -3729,6 +3729,7 @@ return [
 	'servers.ip_placeholder' => 'p. ej., 203.0.113.10',
 	'servers.username_placeholder' => 'p. ej., root',
 	'servers.keep_secret' => 'Déjelo en blanco para conservarlo sin cambios',
+	'servers.verify_tls' => 'Comprobar el certificado TLS del panel (solo si tiene uno de confianza)',
 	'servers.keep_password' => '(déjelo en blanco para conservarlo)',
 	'notifications.name_placeholder' => 'p. ej., alertas de Slack',
 	'notifications.secret_placeholder' => 'Secreto compartido para la verificación',

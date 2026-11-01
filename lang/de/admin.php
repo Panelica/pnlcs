@@ -3731,6 +3731,7 @@ return [
     'servers.ip_placeholder' => 'z. B. 203.0.113.10',
     'servers.username_placeholder' => 'z. B. root',
     'servers.keep_secret' => 'Leer lassen, um nichts zu ändern',
+    'servers.verify_tls' => 'TLS-Zertifikat des Panels prüfen (nur bei einem vertrauenswürdigen Zertifikat)',
     'servers.keep_password' => '(leer lassen, um es zu behalten)',
     'notifications.name_placeholder' => 'z. B. Slack-Benachrichtigungen',
     'notifications.secret_placeholder' => 'Gemeinsames Geheimnis zur Prüfung',

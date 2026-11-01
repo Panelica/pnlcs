@@ -3735,6 +3735,7 @@ return [
     'servers.ip_placeholder' => 'np. 203.0.113.10',
     'servers.username_placeholder' => 'np. root',
     'servers.keep_secret' => 'Zostaw puste, aby nie zmieniać',
+    'servers.verify_tls' => 'Sprawdzaj certyfikat TLS panelu (tylko jeśli ma zaufany)',
     'servers.keep_password' => '(zostaw puste, aby zachować)',
     'notifications.name_placeholder' => 'np. Alerty Slack',
     'notifications.secret_placeholder' => 'Wspólny sekret do weryfikacji',
