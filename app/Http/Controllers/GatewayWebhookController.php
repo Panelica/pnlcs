@@ -8,6 +8,7 @@ use App\Models\Invoice;
 use App\Models\InvoiceChargeAttempt;
 use App\Services\Module\ModuleRegistry;
 use App\Support\AutoCharge;
+use App\Support\ClientPermissions;
 use App\Services\PaymentService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Log;
@@ -29,9 +30,13 @@ class GatewayWebhookController extends Controller
      */
     private function authoriseInvoice(Invoice $invoice): void
     {
-        $clientIds = auth()->user()?->clients()->pluck('clients.id');
+        $user = auth()->user();
+        $client = $user?->clients()->whereKey($invoice->client_id)->first();
 
-        abort_if(! $clientIds || ! $clientIds->contains($invoice->client_id), 403);
+        // On the account, and given its invoices: the permission the invoice
+        // page itself asks for (ClientPermissions), so a login invited for
+        // tickets cannot pay with the account's stored card from here.
+        abort_if(! $client || ! ClientPermissions::allows($user, $client, 'invoices'), 403);
     }
 
     /**
