@@ -681,6 +681,7 @@ return [
         'pn_transfer_date' => 'Transfer Tarihi',
         'remaining_balance' => 'Kalan Bakiye',
         'reported_on' => 'Bildirim tarihi',
+        'renewal_note' => 'Otomatik oluşturulan yenileme faturası.',
         'download_pdf' => 'PDF İndir',
         'due' => 'Son Ödeme',
         'invoice_details' => 'Fatura Detayları',
