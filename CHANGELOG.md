@@ -2,6 +2,255 @@
 
 All notable changes to PNLCS are documented here. Newest first.
 
+## 1.17.0 — 2026-11-02
+
+A stable release, offered to every installation. It is the permissions and
+credentials release: what a staff account, an API key and an invited client
+login may do is now the same question wherever it is asked, the credentials in
+the settings table are encrypted at rest, and two gateways stopped taking the
+browser's word for which invoice a payment was for. Two new integrations come
+with it — the OVHcloud registrar, and purchase-price sync for HRD and OVH — and
+invoice templates can now be per language.
+
+Thirty-three changes from [@ertugrulkeyvan](https://github.com/ertugrulkeyvan)
+(#349, #350, #352, #353, #354, #355, #358, #359, #360, #362, #363, #364, #366,
+#367, #368, #369, #370, #371, #373, #374, #376, #377, #378, #379, #380),
+[@hedon77](https://github.com/hedon77) (#351, #356, #357, #361, #365, #375,
+#381) and [@cahthuranag](https://github.com/cahthuranag) (#372). Thank you.
+
+**Five things to check after upgrading, if they apply to you.**
+
+**An API key may do less than it did.** Eleven endpoints now ask for the
+permission the panel asks for the same action, which is stricter than the one
+they asked for before: recording a payment or a transaction and adding credit
+need `manage_invoices` (they took the *create* permissions); a domain's
+transfer code and registrant details need `manage_domains` (they took `list_domains`);
+the mail history needs `view_activity_log`; editing or deleting a ticket reply
+needs `manage_tickets`; and a client note, contact or login needs
+`edit_clients`. If an integration signs in with a narrow key, widen the key or
+split the work before upgrading (#362).
+
+**Credential settings are encrypted at rest** — the mail password, the Google
+and GitHub client secrets, the reCAPTCHA secret and the OpenAI, Twilio,
+FraudLabs and MaxMind keys. A migration encrypts what is already stored.
+`APP_KEY` is what reads them back, so a database restored without its `.env`
+can no longer read them: keep `.env` in your backups, which the security
+checklist already asked for (#379).
+
+**An uploaded invoice template is now named per language.** The one
+`custom.html` becomes `<LANGUAGE>_invoice_template_v<VERSION>.html`, picked by
+the language the invoice was issued in, with English as the fallback. A
+migration copies a template you had switched on to
+`<DefaultLanguage>_invoice_template_v1.00.html`, so it keeps printing; the old
+file is left where it is (#361).
+
+**A headless install's administrator no longer has a password you can guess.**
+`php artisan db:seed` prints a random one once, or uses
+`PNLCS_ADMIN_PASSWORD` if you set it. The install wizard is unaffected (#373).
+
+**The SSL certificate download needs `manage_services`.** It carries the
+private key, which is as good as the site's identity, so `view_services` is no
+longer enough (#363).
+
+### Added
+
+- **The OVHcloud registrar.** A full module: register, transfer, renew,
+  nameservers, EPP code, transfer lock, availability and the nightly sync,
+  against `api.ovh.com` with OVH's signed-request scheme and the EU, Canada and
+  US endpoints. Registration goes through OVH's order cart, which is how OVH
+  sells domains (#381).
+- **Purchase-price sync from the registrar.** HRD and OVH can fill in
+  Setup → Domain Pricing: set a *Margin (%)*, press *Sync prices*, and the
+  extensions whose auto registrar is that module take the registrar's price
+  plus the margin, rounded up. Only those extensions are touched, a price the
+  registrar does not publish leaves yours alone, and every change is written to
+  the module log. The sync refuses if the registrar does not quote in your shop
+  currency (#375, #381).
+- **Per-language invoice templates.** Upload
+  `<LANGUAGE>_invoice_template_v<VERSION>.html` files and each invoice prints
+  in the language it was issued in — frozen on the invoice, so a customer who
+  later switches language still reprints the same document. Example PL, EN and
+  DE templates ship in `database/invoice-templates/` (#361).
+- **Official exchange-rate sources you define.** Next to the built-in TCMB
+  reader, Setup → General Settings takes a list of publishers: where the rate
+  is published, which fields of the JSON answer hold the rate and its date,
+  which way round it is quoted, and whether a stale answer is used or refused.
+  The invoice prints that publisher, kind, date and reference. Nothing ships a
+  provider, and a list that does not validate yields none (#372).
+- **A product may keep its own suspension and termination days.**
+  Products → edit → Automation: *suspend after* and *terminate after*, in days.
+  Empty, the general Automation settings apply as before (#380).
+- **A Panelica server's TLS certificate can be checked.** A box on the server
+  record, off by default, because a panel reached by IP or with its own
+  certificate would stop answering the day it were on for everybody (#377).
+- **The company website is its own field**, separate from the panel address
+  that mail links are built from. The invoice prints the website and falls back
+  to the panel address, so an installation that only ever filled one keeps
+  printing what it printed (#365).
+- **The staff of a department are told about a new ticket.** Admin accounts
+  carry the departments they cover and whether they want the mail; nobody
+  receives anything extra until somebody is added to a department (#350).
+- **A registrar picker on the client domain form**, and the connection *Test*
+  button for every registrar module that supports it, not only HRD (#381).
+- **The VAT invoice names the proforma it was issued for**, in the customer's
+  language, appended to the proforma's own notes (#357).
+
+### Changed
+
+- **A suspended service is shown, not worked on.** The customer can still open
+  it and download what is theirs; the panel login, the module buttons and the
+  hosting tabs are refused while it is suspended (#352).
+- **A package change is refused while a renewal invoice is open**, and the
+  proration charges every day already paid for — not at most one cycle, which
+  charged the new price for the first of several paid-up cycles. An option
+  change is priced when it is applied rather than when it was asked for (#358).
+- **An unpaid Add Funds invoice is priced when it is paid.** An ordinary
+  invoice keeps the rate it was raised at; an Add Funds invoice sells the shop
+  currency itself and stays payable, so waiting was a way to buy balance at an
+  old rate. Once any money has arrived on it, the rate stands (#371).
+- **Email subjects are in the recipient's language**, with the ticket
+  reference and the customer's own words kept verbatim so a reply by mail
+  still lands on its ticket, and the service, domain and SSL subjects name what
+  they are about (#351).
+- **The renewal invoice note is in the customer's language** (#356).
+- **The acknowledgement for a ticket with no account does not quote it back.**
+  The public contact form took any text and any address; it now sends the
+  reference and the department, which is what the sender needs (#370).
+- **The cart is behind the second factor**, as the client area is: a visitor
+  passes straight through, a login that has given its password but not its
+  second factor answers that first (#367).
+- **Settings → General asks for the panel address and the company website
+  separately**, and the domain pricing columns say which currency they are in
+  (#365, #375).
+
+### Fixed
+
+- **A PayPal capture pays the invoice its order was opened for.** The invoice
+  came from the browser's post or the unsigned webhook body; it is now read
+  back from the order the capture belongs to, and the payment is recorded under
+  PayPal's own id for the capture (#359).
+- **A Mollie payment is one transaction however the webhook spelled its id**
+  (#360).
+- **A Tpay webhook certificate is fetched only from Tpay's own host.**
+  Comparing the start of the address let `https://secure.tpay.com.example.net/`
+  and `https://secure.tpay.com@example.net/` through, and redirects were
+  followed unchecked (#368).
+- **A catalogue logo is stored under what its content is**, not under the
+  extension it arrived with, and an SVG is kept only without script, event
+  handlers, embedded documents or links out. A URL is fetched only from a
+  public address, each redirect checked the same way, with the connection
+  pinned to the address that was checked (#369).
+- **A payment notice does not turn a suspended service back on.** A bank
+  transfer notice moves the invoice to *payment pending* before any money has
+  arrived, and that read as nothing owed (#353).
+- **A colleague invited onto an account no longer renames it** by saving their
+  own profile, which moved the account's contact address — and the invoices
+  mailed to it — to theirs (#354).
+- **Deleting an administrator or a role takes the rights editing does.** Staff
+  management alone was enough to remove a full administrator (#355).
+- **The client dashboard follows the login's permissions**, part by part, and
+  the gateway endpoints an invoice page calls ask for the invoice permission
+  and the second factor (#366).
+- **Google and GitHub sign-in start without an earlier second factor.**
+  `2fa_verified` is a session key, and a login carried it over from whoever
+  held the session before (#367).
+- **Wrong second-factor codes are counted per account**, not only per visitor:
+  six digits do not survive a guesser who changes address or session (#374).
+- **Changing a password signs that login's other sessions out** (#376).
+- **A Proxmox backup belongs to the service it was taken for**, not to every
+  archive under a guest id — Proxmox hands a freed id to the next guest, so a
+  customer could see and restore the backups of a terminated one (#364).
+- **Building or claiming a server account from the admin client page needs
+  `manage_services`**, and a panel account another live service already manages
+  is not linked twice. The Panelica partner key, Central address and install
+  link need `manage_servers`: they decide what a customer's install command
+  downloads and runs as root (#363).
+- **An address-bar domain search is rate-limited** like the form it mirrors
+  (#370).
+- **A deleted client no longer keeps its email address taken** (#349).
+- **The shadowed copy of a translation key no longer drifts.** Each language's
+  `admin.php` writes some keys twice — once nested, once flat — and Laravel
+  reads the flat one, so the invisible copy kept going stale.
+
+### Security
+
+- Credential settings encrypted at rest (#379).
+- Browser headers on every page: `X-Frame-Options: SAMEORIGIN`,
+  `X-Content-Type-Options: nosniff`,
+  `Referrer-Policy: strict-origin-when-cross-origin`, and
+  `Strict-Transport-Security` over HTTPS. A header the web server already sends
+  is left as it is (#378).
+- The eleven API endpoints that asked for less than the panel does (#362).
+- The SSL private-key download, the server-account actions and the Panelica
+  partner credentials (#363).
+- The PayPal and Mollie payment identity fixes (#359, #360).
+- The Tpay certificate host and the catalogue logo fetch (#368, #369).
+- The per-account second-factor limit, the password change ending other
+  sessions, the social sign-in second factor, and the seeded administrator's
+  random password (#373, #374, #376, #367).
+- The official-rate publisher is fetched only from a public address, and its
+  API key is encrypted with the other credentials (#372).
+
+### Database changes
+
+- `invoices.language` — nullable, migration
+  `2026_10_31_000001_add_language_to_invoices`. The language an invoice was
+  issued in, stamped from the customer's at issue time (#361).
+- `products.suspend_after_days`, `products.terminate_after_days` — nullable,
+  migration `2026_11_02_000002_add_suspension_days_to_products`. Empty means
+  the general Automation settings, which is every existing row (#380).
+- `settings` rows for the eight credential keys are rewritten encrypted by
+  migration `2026_11_02_000001_encrypt_credential_settings`. It is idempotent
+  and reversible (#379).
+- No table change: migration
+  `2026_11_01_000001_keep_the_uploaded_invoice_template` copies an uploaded
+  `custom.html` to its language-named name (#361).
+- New settings, no migration: `CompanyWebsite` (#365),
+  `OfficialRateProviders`, `OfficialRateApiKey`, `ExchangeRateCurrency`
+  (#372). `InvoiceTemplate` and `InvoiceTemplateName` are no longer read.
+
+### For theme and module authors
+
+- `InvoicePdfService::customTemplate()` takes the invoice; `languageTemplates()`,
+  `parseTemplateFilename()`, `defaultLanguage()` and `languageTemplatePath()`
+  are new. `placeholderVars()` renders in the invoice's language itself.
+- `Invoice::stampBillingRate()`, `Invoice::refreshAddFundsRate()` and
+  `Invoice::addFundsDescription()`.
+- `Service::hasOpenRenewalInvoice()`; `SuspensionCommand::graceDays()` takes an
+  optional product and `SuspensionCommand::behindFor()` is the single question
+  the suspend and unsuspend runs both ask.
+- `Setting::SECRETS` and the `App\Casts\SecretSettingValue` cast: a value
+  carrying the `pnlcs-enc:` prefix is decrypted on read, so a row written
+  before this, a `pluck('value', 'setting')` without the row's name, and a
+  module that encrypts its own value all still work.
+- `ServerAddress::publicAddressFor()` and `ServerAddress::resolveEntry()` —
+  the address guard for any outbound fetch, with `resolveUsing()` to stand in
+  for DNS in tests.
+- `App\Services\OfficialRateProviders` (`all()`, `find()`, `normalise()`,
+  `rateFor()`); `App\Support\ApiPermissionMap` remappings;
+  `DockerAppImporter::imageExtension()`.
+- A registrar module that offers `syncPrices()` gets a *Sync prices* button,
+  and one that offers `testConnection()` gets a *Test* button.
+- `app/Http/Middleware/SecurityHeaders.php` and
+  `app/Http/Middleware/EndSessionAfterPasswordChange.php` are new middleware in
+  the `web` group.
+
+### Views a theme may override that changed
+
+- `resources/views/admin/settings/general.blade.php` (the company card, the
+  panel address and website, the language template list).
+- `resources/views/admin/config/servers.blade.php` (the Panelica TLS box),
+  `resources/views/admin/config/registrars.blade.php` (margin, sync) and
+  `resources/views/admin/config/domain-pricing.blade.php` (currency, auto
+  registrar).
+- `resources/views/admin/products/edit.blade.php` (the per-product days).
+- `resources/views/admin/ssl/show.blade.php` (the download button),
+  `resources/views/admin/panelica-licenses/index.blade.php` (the account
+  forms) and `resources/views/admin/clients/show.blade.php` (the registrar
+  picker).
+- `resources/views/emails/ticket-opened.blade.php` (the quoted content).
+- `resources/views/admin/logs/module.blade.php`.
+
 ## 1.16.0 — 2026-10-31
 
 A stable release, offered to every installation. It is the invoice-document
