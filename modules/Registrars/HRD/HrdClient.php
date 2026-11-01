@@ -70,6 +70,65 @@ class HrdClient
     }
 
     /**
+     * The partner's purchase prices for domains, keyed by extension without the
+     * leading dot: "pl" => ['register' => 46, 'renew' => 46, 'transfer' => 0,
+     * 'restore' => 55].
+     *
+     * The getPricings command returns every service with its prices in one
+     * response. Domain services are named "d_<extension>" ("d_pl", "d_com.pl");
+     * SSL and other services are skipped. Prices are PLN; "(brak)" (none) means
+     * the service has no such price and is left null. "Odnowienie wygasłej"
+     * (renewal of an expired domain) is the restore price; "Odnowienie z
+     * kwarantanny" is deliberately not imported.
+     *
+     * @return array<string, array{register: ?string, renew: ?string, transfer: ?string, restore: ?string}>
+     */
+    public function partnerGetPriceList(): array
+    {
+        [$dom] = $this->document('partner', 'getPricings');
+        $xpath = $this->send($dom);
+
+        $prices = [];
+
+        foreach ($xpath->query('/api/partner/pricings/pricing') as $pricing) {
+            $name = $xpath->query('./name/text()', $pricing);
+
+            if ($name->length === 0 || ! str_starts_with($name->item(0)->textContent, 'd_')) {
+                continue;
+            }
+
+            $extension = substr($name->item(0)->textContent, 2);
+            $row = ['register' => null, 'renew' => null, 'transfer' => null, 'restore' => null];
+
+            foreach ($xpath->query('./price', $pricing) as $price) {
+                $priceName = $xpath->query('./name/text()', $price);
+                $priceValue = $xpath->query('./value/text()', $price);
+
+                if ($priceName->length === 0 || $priceValue->length === 0) {
+                    continue;
+                }
+
+                $value = $priceValue->item(0)->textContent;
+                if ($value === '(brak)') {
+                    continue;
+                }
+
+                match ($priceName->item(0)->textContent) {
+                    'Rejestracja' => $row['register'] = $value,
+                    'Odnowienie' => $row['renew'] = $value,
+                    'Transfer' => $row['transfer'] = $value,
+                    'Odnowienie wygasłej' => $row['restore'] = $value,
+                    default => null,
+                };
+            }
+
+            $prices[$extension] = $row;
+        }
+
+        return $prices;
+    }
+
+    /**
      * @param  array<int, string>  $domains
      * @return array<string, string>  domain => state (available|taken|unknown|createOnly)
      */

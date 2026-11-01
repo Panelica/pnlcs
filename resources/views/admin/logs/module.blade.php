@@ -37,8 +37,8 @@
                 <td style="font-size:12px;white-space:nowrap;color:#777;">{{ $log->created_at?->format('Y-m-d H:i:s') ?? '-' }}</td>
                 <td style="font-weight:600;text-transform:capitalize;">{{ ucfirst($log->module ?? '-') }}</td>
                 <td>{{ $log->action ?? '-' }}</td>
-                <td style="font-family:monospace;font-size:12px;color:#777;max-width:200px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">{{ $log->request ? Str::limit($log->request, 80) : '-' }}</td>
-                <td style="font-family:monospace;font-size:12px;color:#777;max-width:200px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">{{ $log->response ? Str::limit($log->response, 80) : '-' }}</td>
+                <td style="font-family:monospace;font-size:12px;color:#777;max-width:200px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;" title="{{ $log->request }}">{{ $log->request ? Str::limit($log->request, 80) : '-' }}</td>
+                <td style="font-family:monospace;font-size:12px;color:#777;max-width:320px;overflow-wrap:anywhere;">{{ $log->response ?? '-' }}</td>
             </tr>
             @empty
             <tr><td colspan="5" style="text-align:center;color:#999;padding:30px;">{{ __('admin.logs.no_module_logs') }}</td></tr>

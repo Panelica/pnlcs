@@ -73,11 +73,24 @@
 
                 <button type="submit" class="btn btn-primary btn-sm" style="margin-top:8px;">{{ __('admin.registrars.save_settings') }}</button>
             </form>
-            @if($reg->testable)
-            <form method="POST" action="{{ route('admin.config.registrars.test', $reg->registrar_name) }}" style="margin-top:6px;">
-                @csrf
-                <button type="submit" class="btn btn-default btn-sm">{{ __('admin.registrars.test') }}</button>
-            </form>
+            @if($reg->testable || $reg->syncable)
+            <div style="display:flex;gap:6px;margin-top:6px;flex-wrap:wrap;">
+                @if($reg->testable)
+                <form method="POST" action="{{ route('admin.config.registrars.test', $reg->registrar_name) }}">
+                    @csrf
+                    <button type="submit" class="btn btn-default btn-sm">{{ __('admin.registrars.test') }}</button>
+                </form>
+                @endif
+                @if($reg->syncable)
+                <form method="POST" action="{{ route('admin.config.registrars.sync-prices', $reg->registrar_name) }}">
+                    @csrf
+                    <button type="submit" class="btn btn-default btn-sm" onclick="return pnConfirm(event, @js(__('admin.registrars.sync_prices_confirm')))">{{ __('admin.registrars.sync_prices') }}</button>
+                </form>
+                @if(!empty($reg->values['last_price_sync']))
+                <div style="font-size:12px;color:#777;align-self:center;">{{ __('admin.registrars.last_sync', ['date' => \Carbon\Carbon::parse($reg->values['last_price_sync'])->format('d.m.Y H:i')]) }}</div>
+                @endif
+                @endif
+            </div>
             @endif
         </div>
     </details>
