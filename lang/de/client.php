@@ -961,6 +961,7 @@ return [
     'status.unknown' => 'Unbekannt',
     'domains.lock_failed' => 'Der Registrar hat die Änderung abgelehnt. Bitte versuchen Sie es erneut oder kontaktieren Sie den Support.',
     'services.not_live_for_action' => 'Dieser Dienst ist bereits beendet. Die Aktion ist nicht mehr möglich.',
+    'services.suspended_for_action' => 'Dieser Dienst ist gesperrt und kann erst wieder geändert werden, wenn er aktiv ist.',
     'services.cancellation_already_requested' => 'Für diesen Dienst wurde bereits eine Kündigung beantragt.',
     'services.addon_cancel' => 'Abbrechen',
     'services.addon_cancel_confirm' => 'Diese Zusatzoption kündigen? Der eigentliche Dienst läuft weiter.',

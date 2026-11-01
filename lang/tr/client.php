@@ -961,6 +961,7 @@ return [
     'status.unknown' => 'Bilinmiyor',
     'domains.lock_failed' => 'Kayıt kuruluşu değişikliği kabul etmedi. Lütfen tekrar deneyin veya destekle iletişime geçin.',
     'services.not_live_for_action' => 'Bu hizmet sona erdi, bu nedenle artık işlem yapılamaz.',
+    'services.suspended_for_action' => 'Bu hizmet askıya alındı; yeniden etkinleşene kadar üzerinde değişiklik yapılamaz.',
     'services.cancellation_already_requested' => 'Bu hizmet için zaten bir iptal talep edilmiştir.',
     'services.addon_cancel' => 'İptal Et',
     'services.addon_cancel_confirm' => 'Bu eklenti iptal edilsin mi? Hizmetin kendisi çalışmaya devam eder.',
