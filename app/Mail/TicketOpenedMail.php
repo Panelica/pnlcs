@@ -37,7 +37,23 @@ class TicketOpenedMail extends Mailable implements ShouldQueue
         // rest is the customer's own words. A localized "Ticket Opened -
         // #123456" loses both: the importer cannot find the ticket, so the
         // reply opens a new one, and the inbox gives no hint what it is about.
-        return new Envelope(subject: "[Ticket #{$tid}] {$title}");
+        return new Envelope(subject: $this->repeatsWhatWasWritten()
+            ? "[Ticket #{$tid}] {$title}"
+            : "[Ticket #{$tid}] ".company_name());
+    }
+
+    /**
+     * Whether the acknowledgement quotes the subject and the message back.
+     *
+     * A ticket without an account comes from the public contact form (or a
+     * mail to the support address), where anybody types the address the
+     * acknowledgement goes to. Quoting their words back made the panel send
+     * any text to any address, in the operator's name. Such a sender gets the
+     * reference and the department, which is what they need to follow up.
+     */
+    private function repeatsWhatWasWritten(): bool
+    {
+        return $this->isAdmin || $this->byStaff || $this->ticket->client_id !== null;
     }
 
     public function content(): Content
@@ -49,6 +65,7 @@ class TicketOpenedMail extends Mailable implements ShouldQueue
                 'isAdmin' => $this->isAdmin,
                 'byStaff' => $this->byStaff,
                 'companyName' => company_name(),
+                'repeatsContent' => $this->repeatsWhatWasWritten(),
             ],
         );
     }

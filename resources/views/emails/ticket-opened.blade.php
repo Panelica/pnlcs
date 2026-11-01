@@ -12,12 +12,14 @@
 
 <table style="width:100%;border-collapse:collapse;margin:20px 0;">
 <tr><td style="padding:8px;border-bottom:1px solid #eee;"><strong>{{ __('email.ticket_opened.ticket_id') }}</strong></td><td style="padding:8px;border-bottom:1px solid #eee;">#{{ $ticket->tid ?? $ticket->id }}</td></tr>
+@if($repeatsContent ?? true)
 <tr><td style="padding:8px;border-bottom:1px solid #eee;"><strong>{{ __('email.common.subject_label') }}</strong></td><td style="padding:8px;border-bottom:1px solid #eee;">{{ $ticket->title }}</td></tr>
+@endif
 <tr><td style="padding:8px;border-bottom:1px solid #eee;"><strong>{{ __('email.common.department_label') }}</strong></td><td style="padding:8px;border-bottom:1px solid #eee;">{{ $ticket->department?->name ?? __('email.common.general') }}</td></tr>
 <tr><td style="padding:8px;border-bottom:1px solid #eee;"><strong>{{ __('email.common.priority_label') }}</strong></td><td style="padding:8px;border-bottom:1px solid #eee;">{{ ucfirst($ticket->priority ?? 'medium') }}</td></tr>
 </table>
 
-@if($ticket->message)
+@if(($repeatsContent ?? true) && $ticket->message)
 <div style="background:#f8f9fa;padding:15px;border-radius:4px;margin:15px 0;">
 <p style="margin:0;"><strong>{{ __('email.common.message_label') }}:</strong></p>
 <p style="margin:5px 0 0 0;">{{ Str::limit($ticket->message, 500) }}</p>

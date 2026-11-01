@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Models\DomainPricing;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\RateLimiter;
 
 class DomainSearchController extends Controller
 {
@@ -16,6 +17,15 @@ class DomainSearchController extends Controller
         $searchDomain = null;
 
         if ($request->has("domain") && $request->domain) {
+            // A search in the address bar asks the registries just as the
+            // POST does, which is throttled; this door was not. The same
+            // limit per visitor as the POST.
+            $key = 'domain-search-get:'.$request->ip();
+            if (RateLimiter::tooManyAttempts($key, 20)) {
+                abort(429);
+            }
+            RateLimiter::hit($key, 60);
+
             $rawDomain = trim(strtolower($request->domain));
             $tldParam  = trim(strtolower($request->get("tld", ".com")));
 
