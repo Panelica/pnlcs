@@ -595,11 +595,7 @@
                         <span style="font-family:monospace;font-size:13px;">{{ $languageTemplate['filename'] }}</span>
                         <div style="display:flex;gap:8px;">
                             <a href="{{ route('admin.settings.invoice-template.download', ['file' => $languageTemplate['filename']]) }}" class="btn btn-default btn-xs">{{ __('common.actions.download') }}</a>
-                            <form method="POST" action="{{ route('admin.settings.invoice-template.remove') }}" style="margin:0;">
-                                @csrf @method('DELETE')
-                                <input type="hidden" name="file" value="{{ $languageTemplate['filename'] }}">
-                                <button type="submit" class="btn btn-danger btn-xs" onclick="return pnConfirm(event, @js(__('admin.settings.invoice_template_remove_confirm')))">{{ __('admin.settings.invoice_template_remove') }}</button>
-                            </form>
+                            <button type="submit" form="invoice-template-remove" formaction="{{ route('admin.settings.invoice-template.remove', ['file' => $languageTemplate['filename']]) }}" class="btn btn-danger btn-xs" onclick="return pnConfirm(event, @js(__('admin.settings.invoice_template_remove_confirm')))">{{ __('admin.settings.invoice_template_remove') }}</button>
                         </div>
                     </div>
                     @empty
@@ -730,10 +726,12 @@
     </div>
 </form>
 
-{{-- The invoice-template upload runs as its own request, but its controls sit
-     inside the settings form above, which must not be nested. This empty form
-     is targeted through the controls' `form` attribute. --}}
+{{-- The invoice-template upload/remove run as their own requests, but their
+     controls sit inside the settings form above, which must not be nested.
+     These empty forms are targeted through the controls' `form` attribute;
+     each remove button points its `formaction` at its own file. --}}
 <form id="invoice-template-upload" method="POST" action="{{ route('admin.settings.invoice-template.upload') }}" enctype="multipart/form-data">@csrf</form>
+<form id="invoice-template-remove" method="POST" action="{{ route('admin.settings.invoice-template.remove') }}">@csrf @method('DELETE')</form>
 
 <script>
 (function () {
