@@ -84,7 +84,7 @@
                 @if($reg->syncable)
                 <form method="POST" action="{{ route('admin.config.registrars.sync-prices', $reg->registrar_name) }}">
                     @csrf
-                    <button type="submit" class="btn btn-default btn-sm" onclick="return pnConfirm(event, @js(__('admin.registrars.sync_prices_confirm')))">{{ __('admin.registrars.sync_prices') }}</button>
+                    <button type="submit" class="btn btn-default btn-sm" onclick="return pnConfirm(event, @js(__('admin.registrars.sync_prices_confirm', ['name' => $reg->label])))">{{ __('admin.registrars.sync_prices') }}</button>
                 </form>
                 @if(!empty($reg->values['last_price_sync']))
                 <div style="font-size:12px;color:#777;align-self:center;">{{ __('admin.registrars.last_sync', ['date' => \Carbon\Carbon::parse($reg->values['last_price_sync'])->format('d.m.Y H:i')]) }}</div>
