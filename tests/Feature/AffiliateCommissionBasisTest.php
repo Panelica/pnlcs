@@ -2,9 +2,11 @@
 
 use App\Models\Affiliate;
 use App\Models\Client;
+use App\Models\ClientGroup;
 use App\Models\Invoice;
 use App\Models\InvoiceItem;
 use App\Services\AffiliateService;
+use App\Services\InvoiceService;
 use App\Services\PaymentService;
 use Illuminate\Support\Facades\Mail;
 
@@ -82,6 +84,36 @@ test('a sale still earns one', function () {
     app(PaymentService::class)->applyPayment($invoice, 'stripe', 'TXN-SALE', 100.0);
 
     expect((float) $affiliate->fresh()->balance)->toBe(10.0);
+});
+
+test('the base counts the line quantity and the group discount', function (int $qty, float $base) {
+    Mail::fake();
+
+    [, $client] = referringPair();
+    $client->update(['group_id' => ClientGroup::create(['name' => 'Partners', 'discount_percent' => 10])->id]);
+
+    $invoice = app(InvoiceService::class)->createInvoice($client->fresh(), [
+        ['type' => 'Other', 'description' => 'Work', 'qty' => $qty, 'amount' => 100, 'taxed' => false],
+    ]);
+
+    expect(app(AffiliateService::class)->commissionBase($invoice))->toBe($base);
+})->with([
+    'three' => [3, 270.0],
+    'ten' => [10, 900.0],
+]);
+
+test('a fully discounted invoice leaves no base', function () {
+    Mail::fake();
+
+    [, $client] = referringPair();
+    $client->update(['group_id' => ClientGroup::create(['name' => 'Staff', 'discount_percent' => 100])->id]);
+
+    $invoice = app(InvoiceService::class)->createInvoice($client->fresh(), [
+        ['type' => 'Other', 'description' => 'One', 'amount' => 0.1, 'taxed' => false],
+        ['type' => 'Other', 'description' => 'Two', 'amount' => 0.2, 'taxed' => false],
+    ]);
+
+    expect(app(AffiliateService::class)->commissionBase($invoice))->toBe(0.0);
 });
 
 test('the commission is not a share of the tax', function () {
