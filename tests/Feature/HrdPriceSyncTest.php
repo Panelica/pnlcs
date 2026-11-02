@@ -217,3 +217,41 @@ it('names the registrar being synced, not HRD', function () {
     expect(__('admin.registrars.sync_success', ['name' => 'OVH', 'updated' => 1, 'unchanged' => 2, 'skipped' => 3]))
         ->toBe('Prices synced: 1 changed, 2 unchanged, 3 skipped (no price in OVH).');
 });
+
+const HRD_TLD_PERIODS = <<<'XML'
+<api>
+  <partner><pricings>
+    <pricing><name>d_de</name><price><name>Rejestracja</name><value>5.00</value></price></pricing>
+    <pricing><name>d_tk</name><price><name>Rejestracja</name><value>10.00</value></price></pricing>
+    <pricing><name>d_tm</name><price><name>Rejestracja</name><value>50.00</value></price></pricing>
+  </pricings></partner>
+</api>
+XML;
+
+it('imports the HRD TLDs without duplicating existing extensions', function () {
+    $existing = hrdTld('.pl', 'openprovider');
+
+    $result = hrdRegistrarWith(hrdPricings(HRD_PRICINGS))->importTlds();
+
+    expect($result)->toMatchArray(['success' => true, 'added' => 1, 'skipped' => 1]);
+
+    $comPl = DomainPricing::where('extension', '.com.pl')->first();
+    expect($comPl->auto_registrar)->toBe('hrd')
+        ->and($comPl->min_years)->toBe(1)
+        ->and($comPl->max_years)->toBe(10)
+        ->and((bool) $comPl->enabled)->toBeTrue();
+
+    // Already present on another registrar: left alone, not switched to HRD.
+    expect($existing->fresh()->auto_registrar)->toBe('openprovider');
+});
+
+it('applies the registration period limits from HRD\'s extension list', function () {
+    $result = hrdRegistrarWith(hrdPricings(HRD_TLD_PERIODS))->importTlds();
+
+    expect($result['added'])->toBe(3)
+        ->and(DomainPricing::where('extension', '.de')->value('max_years'))->toBe(1)
+        ->and(DomainPricing::where('extension', '.tk')->value('min_years'))->toBe(2)
+        ->and(DomainPricing::where('extension', '.tk')->value('max_years'))->toBe(9)
+        ->and(DomainPricing::where('extension', '.tm')->value('min_years'))->toBe(10)
+        ->and(DomainPricing::where('extension', '.tm')->value('max_years'))->toBe(10);
+});

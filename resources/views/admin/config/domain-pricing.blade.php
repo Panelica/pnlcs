@@ -44,6 +44,7 @@
         @endforeach
         </tbody>
     </table>
+    <div style="padding:10px 15px;">{{ $tlds->withQueryString()->links() }}</div>
     @endif
 </div>
 

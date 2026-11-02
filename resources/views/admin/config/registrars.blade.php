@@ -73,12 +73,18 @@
 
                 <button type="submit" class="btn btn-primary btn-sm" style="margin-top:8px;">{{ __('admin.registrars.save_settings') }}</button>
             </form>
-            @if($reg->testable || $reg->syncable)
+            @if($reg->testable || $reg->syncable || $reg->importable)
             <div style="display:flex;gap:6px;margin-top:6px;flex-wrap:wrap;">
                 @if($reg->testable)
                 <form method="POST" action="{{ route('admin.config.registrars.test', $reg->registrar_name) }}">
                     @csrf
                     <button type="submit" class="btn btn-default btn-sm">{{ __('admin.registrars.test') }}</button>
+                </form>
+                @endif
+                @if($reg->importable)
+                <form method="POST" action="{{ route('admin.config.registrars.add-tlds', $reg->registrar_name) }}">
+                    @csrf
+                    <button type="submit" class="btn btn-default btn-sm" onclick="return pnConfirm(event, @js(__('admin.registrars.add_tlds_confirm', ['name' => $reg->label])))">{{ __('admin.registrars.add_tlds') }}</button>
                 </form>
                 @endif
                 @if($reg->syncable)

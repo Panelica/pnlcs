@@ -243,6 +243,79 @@ class HrdRegistrar implements RegistrarModuleInterface, SyncsDomainData
         return $value > 0 ? ceil($value * (1 + $margin / 100)) : 0.0;
     }
 
+    /**
+     * Add every extension HRD offers to the price list as an HRD TLD, without
+     * touching the rows that already exist (so nothing is duplicated and a TLD
+     * already on another registrar is left alone). Prices are left at their
+     * defaults: "Sync prices" fills them in a separate step. The registration
+     * periods come from HRD's extension list (hrd.pl/domeny/spis-rozszerzen).
+     *
+     * @return array{success: bool, added?: int, skipped?: int, message?: string}
+     */
+    public function importTlds(): array
+    {
+        try {
+            $prices = $this->client()->partnerGetPriceList();
+            $periods = $this->tldPeriods();
+
+            $added = 0;
+            $skipped = 0;
+
+            foreach (array_keys($prices) as $ext) {
+                $period = $periods[$ext] ?? [1, 10];
+
+                $tld = DomainPricing::firstOrCreate(
+                    ['extension' => '.'.$ext],
+                    [
+                        'auto_registrar' => 'hrd',
+                        'min_years' => $period[0],
+                        'max_years' => $period[1],
+                        'enabled' => true,
+                        'category' => 'new',
+                        'is_popular' => false,
+                    ]
+                );
+
+                if ($tld->wasRecentlyCreated) {
+                    $added++;
+                } else {
+                    $skipped++;
+                }
+            }
+
+            return ['success' => true, 'added' => $added, 'skipped' => $skipped];
+        } catch (\Throwable $e) {
+            Log::error("HRD importTlds failed: {$e->getMessage()}");
+
+            return ['success' => false, 'message' => $e->getMessage()];
+        }
+    }
+
+    /**
+     * Registration period [min, max] per TLD, from HRD's extension list. Only
+     * the odd ones are listed; the default is 1-10 years.
+     *
+     * @return array<string, array{0: int, 1: int}>
+     */
+    protected function tldPeriods(): array
+    {
+        $oneYear = ['af', 'com.af', 'net.af', 'org.af', 'be', 'de', 'fr', 'gd', 'gg', 'co.gg', 'net.gg', 'org.gg', 'gl', 'co.gl', 'com.gl', 'net.gl', 'org.gl', 'io', 'it', 'je', 'co.je', 'lc', 'co.lc', 'com.lc', 'l.lc', 'net.lc', 'org.lc', 'p.lc', 'lu', 'nl', 'sc', 'com.sc', 'net.sc', 'org.sc', 'sh', 'vg', 'co.za'];
+        $fiveYears = ['cm', 'co.cm', 'com.cm', 'net.cm', 'co', 'cx', 'fm', 'pe', 'com.pe', 'net.pe'];
+
+        $periods = [];
+        foreach ($oneYear as $ext) {
+            $periods[$ext] = [1, 1];
+        }
+        foreach ($fiveYears as $ext) {
+            $periods[$ext] = [1, 5];
+        }
+        $periods['nu'] = [2, 10];
+        $periods['tk'] = [2, 9];
+        $periods['tm'] = [10, 10];
+
+        return $periods;
+    }
+
     public function register(Domain $domain, int $years, array $params = []): array
     {
         try {
