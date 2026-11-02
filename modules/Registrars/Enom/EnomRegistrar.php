@@ -162,7 +162,7 @@ class EnomRegistrar implements RegistrarModuleInterface, SyncsDomainData
             'NSAction' => 'REPLACE',
         ];
 
-        foreach ($nameservers as $i => $ns) {
+        foreach (array_values($nameservers) as $i => $ns) {
             $params['NS'.($i + 1)] = $ns;
         }
 
