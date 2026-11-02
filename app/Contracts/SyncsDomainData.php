@@ -23,7 +23,8 @@ interface SyncsDomainData
      *     status?: string|null,
      *     locked?: bool|null,
      *     nameservers?: array<int, string>,
-     *     id_protection?: bool|null
+     *     id_protection?: bool|null,
+     *     registrar_contact_id?: string|null
      * }
      *
      * id_protection is whether the registrar hides the registrant in public

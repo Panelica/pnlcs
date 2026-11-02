@@ -256,6 +256,11 @@ class DomainSyncCommand extends Command
             }
         }
 
+        $contactId = $result['registrar_contact_id'] ?? null;
+        if ($contactId && (string) $domain->registrar_contact_id !== (string) $contactId) {
+            $changes['registrar_contact_id'] = (string) $contactId;
+        }
+
         return $changes;
     }
 

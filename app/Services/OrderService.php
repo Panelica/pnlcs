@@ -1038,8 +1038,13 @@ class OrderService
         if ($result['success'] ?? false) {
             $domain->refresh();
 
-            if (strtolower((string) $domain->status) !== DomainStatus::Active->value) {
-                $domain->update(['status' => DomainStatus::Active->value]);
+            // The module writes the status it knows. An asynchronous registrar
+            // (e.g. OVH) returns "pending" because the order is placed but the
+            // domain is not registered yet; a synchronous one returns nothing
+            // and keeps the old default of "active".
+            $status = $result['status'] ?? DomainStatus::Active->value;
+            if (strtolower((string) $domain->status) !== strtolower($status)) {
+                $domain->update(['status' => $status]);
             }
             event(new DomainRegistered($domain));
 
@@ -1128,7 +1133,7 @@ class OrderService
 
         if ($result['success'] ?? false) {
             $domain->update([
-                'status' => DomainStatus::Active->value,
+                'status' => $result['status'] ?? DomainStatus::Active->value,
                 // The code has been consumed; do not keep it lying around.
                 'epp_code' => null,
             ]);
