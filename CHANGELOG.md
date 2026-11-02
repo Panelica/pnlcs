@@ -2,6 +2,92 @@
 
 All notable changes to PNLCS are documented here. Newest first.
 
+## 1.18.0 — 2026-11-02
+
+A stable release, offered to every installation. Five fixes, three of them
+found by reading the code behind a bug report rather than the report itself:
+an Enom customer could not change their nameservers at all, a client group's
+discount was short by the line quantity, and a hosting panel that accepted a
+connection and then went quiet could leave a customer looking at half a page.
+OVH registrations now go under the customer's own contact at OVH.
+
+Thank you [@5eBeKs](https://github.com/5eBeKs) (#383, #384) and
+[@hedon77](https://github.com/hedon77) (#382, #385).
+
+**One thing to know after upgrading.** A domain ordered through OVH is
+registered under **the customer's own OVH contact**, created once per customer
+and reused, instead of the operator's. Existing domains are untouched; the
+contact OVH holds for each one is read back on the nightly sync and recorded,
+so the panel can show who owns what. If you map it to a client custom field
+(Setup → Registrars → OVH → *OVH contact field*), the id is stored there too,
+the way HRD's CSA field works.
+
+### Added
+
+- **The OVH contact field.** A client custom field may hold the customer's OVH
+  contact id, so it is visible and editable next to the rest of their details
+  (#385).
+- **The owner contact on a domain.** `domains.registrar_contact_id` records
+  which contact at the registrar owns the domain, filled on registration,
+  transfer and the nightly sync (#385).
+
+### Changed
+
+- **An asynchronous registrar's domain is no longer called active before it
+  is.** A module may now say what status a registration left the domain in;
+  OVH says `pending`, because OVH processes the order after the call returns.
+  The seven other registrar modules say nothing and keep today's behaviour
+  (#385).
+- **The price-sync messages name the registrar being synced.** With two
+  registrars able to sync prices, both buttons said "from HRD" (#382).
+
+### Fixed
+
+- **An Enom customer can change their nameservers.** The module numbered them
+  from the array key, and both callers hand it a list keyed `ns1`…`ns5`; on
+  PHP 8 `'ns1' + 1` is a TypeError, which `DomainService` caught and reported
+  as the registrar refusing. So the client area could not change them and a
+  newly provisioned Enom domain never got them. The admin screen passed a
+  plain list, which is why it worked there (#383).
+- **A client group's discount counts the line quantity.** It was computed
+  from the unit amounts, while the invoice total and its tax are both
+  `amount × quantity` — so a group discount on a line of two was half what the
+  group grants (#384).
+- **A quiet hosting panel can no longer truncate a customer's page.** Every
+  call to a Panelica server set a timeout for connecting and left the one for
+  answering at thirty seconds, and the Apps page asks the panel up to sixteen
+  questions. A panel that accepted the connection and then went quiet spent
+  the whole PHP request, PHP-FPM killed the worker mid-response, and the
+  browser showed `ERR_HTTP2_PROTOCOL_ERROR` on a 200 with nothing in the log —
+  blank, or a few apps, on the same account minutes apart. On a customer's own
+  page each call now waits at most eight seconds and all of them share one
+  twenty-second budget; off it, nothing changed, because the scheduler and the
+  queue retry (#320, #386).
+- **An OVH order number no longer lands in the PNLCS order column.**
+  `domains.order_id` is the order the domain was bought on, and the step that
+  activates a paid order's pending domains finds them through it.
+
+### Database changes
+
+- `domains.registrar_contact_id` — nullable string, migration
+  `2026_11_02_000003_add_registrar_contact_id_to_domains`. Empty on every
+  existing row; filled by the next registration, transfer or sync (#385).
+
+### For theme and module authors
+
+- A registrar module's `register()` and `transfer()` may return `status`; it is
+  the status the domain is left in. Returning nothing keeps the old behaviour
+  of going active (#385).
+- `Domain::$fillable` gains `registrar_contact_id`; `SyncsDomainData`'s return
+  shape documents it.
+- `OvhRegistrar::orderDomain()` returns `['order_id', 'contact_id']` rather
+  than the order id alone.
+
+### Views a theme may override that changed
+
+- `resources/views/admin/config/registrars.blade.php` — the price-sync button
+  passes the registrar's name to its confirmation (#382).
+
 ## 1.17.0 — 2026-11-02
 
 A stable release, offered to every installation. It is the permissions and
