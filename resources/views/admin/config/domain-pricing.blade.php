@@ -7,6 +7,12 @@
     <button type="button" onclick="openAddTLD()" class="btn btn-primary btn-sm">+ {{ __('admin.domain_pricing.add_tld') }}</button>
 </div>
 
+<form method="GET" style="margin-bottom:12px;">
+    <input type="text" name="search" value="{{ request('search') }}" placeholder="{{ __('admin.domain_pricing.search_placeholder') }}" class="form-control" style="max-width:320px;display:inline-block;">
+    <button type="submit" class="btn btn-default btn-sm">{{ __('admin.search') }}</button>
+    @if(request('search'))<a href="{{ route('admin.config.domain-pricing') }}" class="btn btn-default btn-sm" style="margin-left:4px;">{{ __('common.actions.clear') }}</a>@endif
+</form>
+
 @if($errors->any())
 <div class="alert alert-danger" style="margin-bottom:15px;">
     <ul style="margin:0;padding-left:18px;">

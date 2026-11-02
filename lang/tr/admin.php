@@ -1158,6 +1158,7 @@ return [
     'domain_pricing.min_max_years' => 'En Az/En Çok Yıl',
     'domain_pricing.min_years' => 'En Az Yıl',
     'domain_pricing.no_pricing' => 'Tanımlı alan adı fiyatlandırması yok.',
+    'domain_pricing.search_placeholder' => 'Uzantı ara...',
     'domain_pricing.register_price' => 'Kayıt fiyatı (:currency)',
     'domain_pricing.renew' => 'Yenile',
     'domain_pricing.renew_price' => 'Yenileme fiyatı (:currency)',

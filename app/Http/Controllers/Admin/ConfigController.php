@@ -875,13 +875,19 @@ class ConfigController extends Controller
 
     // ===== DOMAIN PRICING =====
 
-    public function domainPricing()
+    public function domainPricing(Request $request)
     {
         $currency = Currency::getDefault();
         $currencySymbol = $currency ? trim((string) ($currency->prefix ?: $currency->suffix)) : '$';
 
+        $query = DomainPricing::query();
+
+        if ($search = trim((string) $request->query('search'))) {
+            $query->where('extension', 'like', '%'.$search.'%');
+        }
+
         return view('admin.config.domain-pricing', [
-            'tlds' => DomainPricing::orderBy('sort_order')->orderBy('extension')->paginate(50),
+            'tlds' => $query->orderBy('sort_order')->orderBy('extension')->paginate(50)->withQueryString(),
             'currencySymbol' => $currencySymbol,
             'registrars' => $this->activeRegistrars(),
         ]);

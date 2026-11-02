@@ -1168,6 +1168,7 @@ return [
     'domain_pricing.min_max_years' => 'Min/Max Yrs',
     'domain_pricing.min_years' => 'Min Years',
     'domain_pricing.no_pricing' => 'No domain pricing configured.',
+    'domain_pricing.search_placeholder' => 'Search extensions...',
     'domain_pricing.register_price' => 'Register price (:currency)',
     'domain_pricing.renew' => 'Renew',
     'domain_pricing.renew_price' => 'Renew price (:currency)',

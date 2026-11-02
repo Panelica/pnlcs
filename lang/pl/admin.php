@@ -1168,6 +1168,7 @@ return [
     'domain_pricing.min_max_years' => 'Min/Maks. lat',
     'domain_pricing.min_years' => 'Min. lat',
     'domain_pricing.no_pricing' => 'Brak skonfigurowanego cennika domen.',
+    'domain_pricing.search_placeholder' => 'Szukaj rozszerzeń...',
     'domain_pricing.register_price' => 'Cena rejestracji (:currency)',
     'domain_pricing.renew' => 'Odnów',
     'domain_pricing.renew_price' => 'Cena odnowienia (:currency)',

@@ -1168,6 +1168,7 @@ return [
     'domain_pricing.min_max_years' => '最短/最长年限',
     'domain_pricing.min_years' => '最短年限',
     'domain_pricing.no_pricing' => '尚未配置域名定价。',
+    'domain_pricing.search_placeholder' => '搜索扩展名...',
     'domain_pricing.register_price' => '注册价格（:currency）',
     'domain_pricing.renew' => '续费',
     'domain_pricing.renew_price' => '续费价格（:currency）',
