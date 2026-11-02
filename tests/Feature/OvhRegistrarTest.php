@@ -5,6 +5,8 @@ use App\Models\Currency;
 use App\Models\CustomField;
 use App\Models\Domain;
 use App\Models\DomainPricing;
+use App\Models\ModuleLog;
+use App\Models\Order;
 use App\Models\RegistrarSettings;
 use Illuminate\Support\Facades\Http;
 use Modules\Registrars\OVH\OvhRegistrar;
@@ -327,7 +329,6 @@ it('places an order with the client as owner contact and records the order', fun
 
     expect($result['success'])->toBeTrue()
         ->and($result['status'])->toBe('pending')
-        ->and($domain->fresh()->order_id)->toBe(789)
         ->and($domain->fresh()->registrar_contact_id)->toBe('12345')
         ->and($domain->fresh()->status)->toBe('pending');
 
@@ -448,4 +449,50 @@ it('reads the owner contact back when syncing a domain', function () {
 
     expect($result['success'])->toBeTrue()
         ->and($result['registrar_contact_id'])->toBe('28729887');
+});
+
+/*
+ * domains.order_id is the PNLCS order the domain was bought on — OrderService
+ * finds an order's domains through it, and the completion step that activates
+ * them reads exactly that. OVH's own order number is not that, and writing it
+ * there detached the domain from the order it came from.
+ */
+it('keeps the domain attached to the PNLCS order it was bought on', function () {
+    ovhSettings();
+    ovhRegistrationFake([
+        ['label' => 'OWNER_CONTACT', 'type' => '/me/contact'],
+        ['label' => 'OWNER_LEGAL_AGE', 'type' => 'bool'],
+    ]);
+
+    $client = ovhIndividualClient();
+    $order = Order::factory()->create(['client_id' => $client->id]);
+    $domain = ovhOrderDomain(['client_id' => $client->id, 'order_id' => $order->id]);
+
+    $result = app(OvhRegistrar::class)->register($domain, 1);
+
+    expect($result['success'])->toBeTrue()
+        ->and($domain->fresh()->order_id)->toBe($order->id)
+        // Which is what the order's own queries need.
+        ->and(Domain::where('order_id', $order->id)->pluck('id')->all())->toBe([$domain->id]);
+
+    // OVH's order number is still recorded, in the module log and the message.
+    expect($result['message'])->toContain('789')
+        ->and(ModuleLog::where('action', 'register')->latest('id')->value('request'))->toContain('789');
+});
+
+it('keeps it attached on a transfer too', function () {
+    ovhSettings();
+    ovhRegistrationFake([
+        ['label' => 'OWNER_CONTACT', 'type' => '/me/contact'],
+    ], '12345', ['transfer-default']);
+
+    $client = ovhIndividualClient();
+    $order = Order::factory()->create(['client_id' => $client->id]);
+    $domain = ovhOrderDomain(['client_id' => $client->id, 'order_id' => $order->id]);
+
+    $result = app(OvhRegistrar::class)->transfer($domain, 'EPP-CODE');
+
+    expect($result['success'])->toBeTrue()
+        ->and($domain->fresh()->order_id)->toBe($order->id)
+        ->and($domain->fresh()->registrar_contact_id)->toBe('12345');
 });

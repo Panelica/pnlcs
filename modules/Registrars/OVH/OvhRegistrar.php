@@ -107,10 +107,13 @@ class OvhRegistrar implements RegistrarModuleInterface, SyncsDomainData
             $order = $this->orderDomain($domain, max(1, $years), $params);
             $orderId = $order['order_id'];
 
+            // Not domains.order_id: that column is the PNLCS order this domain
+            // was bought on (Domain::order(), and OrderService finds an order's
+            // domains through it). OVH's own order number lives in the module
+            // log and in the message below.
             $domain->update([
                 'status' => 'pending',
                 'registrar' => 'ovh',
-                'order_id' => $orderId,
                 'registrar_contact_id' => (string) $order['contact_id'],
                 'registration_date' => now()->toDateString(),
                 'next_due_date' => now()->addYears($years)->toDateString(),
@@ -135,10 +138,10 @@ class OvhRegistrar implements RegistrarModuleInterface, SyncsDomainData
             $order = $this->orderDomain($domain, max(1, (int) ($domain->registration_period ?? 1)), [], $eppCode);
             $orderId = $order['order_id'];
 
+            // The PNLCS order link is left alone; see register().
             $domain->update([
                 'status' => 'pending_transfer',
                 'registrar' => 'ovh',
-                'order_id' => $orderId,
                 'registrar_contact_id' => (string) $order['contact_id'],
             ]);
 
