@@ -11,6 +11,7 @@ use App\Models\ModuleLog;
 use App\Models\RegistrarSettings;
 use App\Services\DomainHosting;
 use App\Support\MapsClientFields;
+use App\Support\MapsTldGracePeriods;
 use Carbon\Carbon;
 use Illuminate\Support\Facades\Log;
 
@@ -32,6 +33,7 @@ class HrdRegistrar implements RegistrarModuleInterface, SyncsDomainData
     private const QUOTE_CURRENCY = 'PLN';
 
     use MapsClientFields;
+    use MapsTldGracePeriods;
 
     protected ?HrdClient $client = null;
 
@@ -263,6 +265,7 @@ class HrdRegistrar implements RegistrarModuleInterface, SyncsDomainData
 
             foreach (array_keys($prices) as $ext) {
                 $period = $periods[$ext] ?? [1, 10];
+                [$grace, $redemption] = $this->tldGracePeriod($ext);
 
                 $tld = DomainPricing::firstOrCreate(
                     ['extension' => '.'.$ext],
@@ -270,8 +273,8 @@ class HrdRegistrar implements RegistrarModuleInterface, SyncsDomainData
                         'auto_registrar' => 'hrd',
                         'min_years' => $period[0],
                         'max_years' => $period[1],
-                        'grace_period' => 5,
-                        'redemption_grace_period' => 30,
+                        'grace_period' => $grace,
+                        'redemption_grace_period' => $redemption,
                         'enabled' => true,
                         'category' => 'new',
                         'is_popular' => false,

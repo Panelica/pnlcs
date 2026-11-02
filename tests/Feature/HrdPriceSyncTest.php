@@ -239,7 +239,7 @@ it('imports the HRD TLDs without duplicating existing extensions', function () {
     expect($comPl->auto_registrar)->toBe('hrd')
         ->and($comPl->min_years)->toBe(1)
         ->and($comPl->max_years)->toBe(10)
-        ->and($comPl->grace_period)->toBe(5)
+        ->and($comPl->grace_period)->toBe(0)          // NASK .pl: no renew grace
         ->and($comPl->redemption_grace_period)->toBe(30)
         ->and((bool) $comPl->enabled)->toBeTrue();
 
@@ -256,4 +256,31 @@ it('applies the registration period limits from HRD\'s extension list', function
         ->and(DomainPricing::where('extension', '.tk')->value('max_years'))->toBe(9)
         ->and(DomainPricing::where('extension', '.tm')->value('min_years'))->toBe(10)
         ->and(DomainPricing::where('extension', '.tm')->value('max_years'))->toBe(10);
+});
+
+const HRD_GRACE_PERIODS = <<<'XML'
+<api>
+  <partner><pricings>
+    <pricing><name>d_com</name><price><name>Rejestracja</name><value>10.00</value></price></pricing>
+    <pricing><name>d_pl</name><price><name>Rejestracja</name><value>40.00</value></price></pricing>
+    <pricing><name>d_de</name><price><name>Rejestracja</name><value>5.00</value></price></pricing>
+    <pricing><name>d_eu</name><price><name>Rejestracja</name><value>20.00</value></price></pricing>
+  </pricings></partner>
+</api>
+XML;
+
+it('applies the grace and redemption periods the registries actually grant', function () {
+    hrdRegistrarWith(hrdPricings(HRD_GRACE_PERIODS))->importTlds();
+
+    $g = fn ($e) => DomainPricing::where('extension', $e)->value('grace_period');
+    $r = fn ($e) => DomainPricing::where('extension', $e)->value('redemption_grace_period');
+
+    // ICANN gTLD: 5 days renew grace, 30 redemption.
+    expect([$g('.com'), $r('.com')])->toBe([5, 30])
+        // NASK .pl: no grace, 30-day quarantine.
+        ->and([$g('.pl'), $r('.pl')])->toBe([0, 30])
+        // DENIC .de: no grace, no redemption.
+        ->and([$g('.de'), $r('.de')])->toBe([0, 0])
+        // EURid .eu: no grace, 30-day quarantine.
+        ->and([$g('.eu'), $r('.eu')])->toBe([0, 30]);
 });

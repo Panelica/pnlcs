@@ -12,6 +12,7 @@ use App\Models\ModuleLog;
 use App\Models\RegistrarSettings;
 use App\Services\DomainHosting;
 use App\Support\MapsClientFields;
+use App\Support\MapsTldGracePeriods;
 use Carbon\Carbon;
 use Illuminate\Support\Facades\Log;
 
@@ -30,6 +31,7 @@ use Illuminate\Support\Facades\Log;
 class OvhRegistrar implements RegistrarModuleInterface, SyncsDomainData
 {
     use MapsClientFields;
+    use MapsTldGracePeriods;
 
     protected ?OvhClient $client = null;
 
@@ -416,14 +418,16 @@ class OvhRegistrar implements RegistrarModuleInterface, SyncsDomainData
             $skipped = 0;
 
             foreach ((is_array($extensions) ? $extensions : []) as $ext) {
+                [$grace, $redemption] = $this->tldGracePeriod((string) $ext);
+
                 $tld = DomainPricing::firstOrCreate(
                     ['extension' => '.'.$ext],
                     [
                         'auto_registrar' => 'ovh',
                         'min_years' => 1,
                         'max_years' => 10,
-                        'grace_period' => 5,
-                        'redemption_grace_period' => 30,
+                        'grace_period' => $grace,
+                        'redemption_grace_period' => $redemption,
                         'enabled' => true,
                         'category' => 'new',
                         'is_popular' => false,
