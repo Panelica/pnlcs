@@ -239,6 +239,8 @@ it('imports the HRD TLDs without duplicating existing extensions', function () {
     expect($comPl->auto_registrar)->toBe('hrd')
         ->and($comPl->min_years)->toBe(1)
         ->and($comPl->max_years)->toBe(10)
+        ->and($comPl->grace_period)->toBe(5)
+        ->and($comPl->redemption_grace_period)->toBe(30)
         ->and((bool) $comPl->enabled)->toBeTrue();
 
     // Already present on another registrar: left alone, not switched to HRD.

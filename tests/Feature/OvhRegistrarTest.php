@@ -511,6 +511,8 @@ it('imports the OVH TLDs without duplicating existing extensions', function () {
     expect($net->auto_registrar)->toBe('ovh')
         ->and($net->min_years)->toBe(1)
         ->and($net->max_years)->toBe(10)
+        ->and($net->grace_period)->toBe(5)
+        ->and($net->redemption_grace_period)->toBe(30)
         ->and((bool) $net->enabled)->toBeTrue();
 
     // .com already existed on another registrar: left alone.

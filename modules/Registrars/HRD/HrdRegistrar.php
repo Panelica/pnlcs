@@ -270,6 +270,8 @@ class HrdRegistrar implements RegistrarModuleInterface, SyncsDomainData
                         'auto_registrar' => 'hrd',
                         'min_years' => $period[0],
                         'max_years' => $period[1],
+                        'grace_period' => 5,
+                        'redemption_grace_period' => 30,
                         'enabled' => true,
                         'category' => 'new',
                         'is_popular' => false,

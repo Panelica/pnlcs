@@ -422,6 +422,8 @@ class OvhRegistrar implements RegistrarModuleInterface, SyncsDomainData
                         'auto_registrar' => 'ovh',
                         'min_years' => 1,
                         'max_years' => 10,
+                        'grace_period' => 5,
+                        'redemption_grace_period' => 30,
                         'enabled' => true,
                         'category' => 'new',
                         'is_popular' => false,
