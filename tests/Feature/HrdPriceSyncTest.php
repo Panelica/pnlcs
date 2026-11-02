@@ -1,5 +1,7 @@
 <?php
 
+use App\Models\Admin;
+use App\Models\AdminRole;
 use App\Models\Client;
 use App\Models\Currency;
 use App\Models\CustomField;
@@ -193,4 +195,25 @@ it('identifies a company by its NIP', function () {
     $client = Client::factory()->create(['client_type' => 'company', 'company_name' => 'Acme sp. z o.o.', 'tax_id' => '1234567890']);
 
     expect(hrdIdNumberFor($client))->toBe('1234567890');
+});
+
+it('names the registrar being synced, not HRD', function () {
+    // #382. The confirmation and the result said "HRD" whichever registrar's
+    // button was pressed, which is wrong the moment a second one can sync.
+    RegistrarSettings::updateOrCreate(['registrar' => 'ovh', 'setting' => 'visible'], ['value' => '1']);
+    $admin = Admin::factory()->create([
+        'role_id' => AdminRole::factory()->create(['name' => 'Config', 'permissions' => ['manage_registrars']])->id,
+    ]);
+
+    $html = test()->actingAs($admin, 'admin')->get(route('admin.config.registrars'))->assertOk()->getContent();
+
+    // Two syncable registrars, each button's confirmation naming its own:
+    // before #382 both said HRD. ("prices from HRD" also appears in HRD's own
+    // help text, which is correct there, so the whole sentence is counted.)
+    expect(substr_count($html, 'Fetch prices from OVH and overwrite'))->toBe(1)
+        ->and(substr_count($html, 'Fetch prices from HRD and overwrite'))->toBe(1);
+
+    // And the message the sync itself returns.
+    expect(__('admin.registrars.sync_success', ['name' => 'OVH', 'updated' => 1, 'unchanged' => 2, 'skipped' => 3]))
+        ->toBe('Prices synced: 1 changed, 2 unchanged, 3 skipped (no price in OVH).');
 });
