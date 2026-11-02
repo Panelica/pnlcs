@@ -23,6 +23,30 @@ class PanelicaModule extends AbstractServerModule implements \App\Contracts\Host
 
     private const CONNECT_TIMEOUT = 10;
 
+    /**
+     * Seconds to wait for the panel to ANSWER, once connected. Everything here
+     * set a connect timeout and left the response one at Laravel's default of
+     * thirty seconds, so one panel that accepted the connection and then went
+     * quiet cost thirty seconds — and a page that asks the panel several
+     * questions cost that many times thirty. PHP-FPM kills the worker long
+     * before, and a worker killed mid-response is a truncated reply: the
+     * browser shows ERR_HTTP2_PROTOCOL_ERROR on a 200 and Laravel logs nothing,
+     * because PHP never got to fail (#320, #386).
+     *
+     * A customer's own page therefore caps each call and shares one budget
+     * across every call this module makes in that request; everywhere else
+     * keeps the old thirty, because the scheduler and the queue retry.
+     */
+    private const READ_TIMEOUT_PAGE = 8;
+
+    private const READ_TIMEOUT = 30;
+
+    /** All of this module's calls in one customer request, together. */
+    private const PAGE_BUDGET = 20;
+
+    /** The least a call is ever given: enough to answer or fail, never zero. */
+    private const READ_TIMEOUT_FLOOR = 2;
+
     /** Installing an app pulls images; a multi-container template takes minutes. */
     private const DEPLOY_TIMEOUT = 300;
 
@@ -35,6 +59,39 @@ class PanelicaModule extends AbstractServerModule implements \App\Contracts\Host
     private function connectTimeout(): int
     {
         return request()->routeIs('client.*') ? self::CONNECT_TIMEOUT_PAGE : self::CONNECT_TIMEOUT;
+    }
+
+    /** Whether this call is being made while a customer waits on their own page. */
+    private function onCustomerPage(): bool
+    {
+        return request()->routeIs('client.*');
+    }
+
+    /**
+     * Seconds left of this request's budget for talking to the panel. Kept on
+     * the request, so it dies with the request rather than leaking into the
+     * next one on a long-lived worker.
+     */
+    private function pageBudgetLeft(): float
+    {
+        $started = request()->attributes->get('panelica_first_call_at');
+
+        if ($started === null) {
+            $started = microtime(true);
+            request()->attributes->set('panelica_first_call_at', $started);
+        }
+
+        return self::PAGE_BUDGET - (microtime(true) - (float) $started);
+    }
+
+    /** How long one call may wait for an answer. */
+    private function readTimeout(): int
+    {
+        if (! $this->onCustomerPage()) {
+            return self::READ_TIMEOUT;
+        }
+
+        return (int) max(self::READ_TIMEOUT_FLOOR, min(self::READ_TIMEOUT_PAGE, ceil($this->pageBudgetLeft())));
     }
 
     public function getConfigFields(): array
@@ -95,7 +152,7 @@ class PanelicaModule extends AbstractServerModule implements \App\Contracts\Host
     {
         $headers = $this->buildHeaders($server, 'GET', $path, '');
 
-        return Http::withHeaders($headers)->withOptions(['verify' => $this->verifiesTls($server)])->connectTimeout($this->connectTimeout())->get($this->baseUrl($server).$path);
+        return Http::withHeaders($headers)->withOptions(['verify' => $this->verifiesTls($server)])->connectTimeout($this->connectTimeout())->timeout($this->readTimeout())->get($this->baseUrl($server).$path);
     }
 
     /**
@@ -180,14 +237,14 @@ class PanelicaModule extends AbstractServerModule implements \App\Contracts\Host
         $body = json_encode($payload);
         $headers = $this->buildHeaders($server, 'PATCH', $path, $body);
 
-        return Http::withHeaders($headers)->withOptions(['verify' => $this->verifiesTls($server)])->connectTimeout($this->connectTimeout())->withBody($body, 'application/json')->patch($this->baseUrl($server).$path);
+        return Http::withHeaders($headers)->withOptions(['verify' => $this->verifiesTls($server)])->connectTimeout($this->connectTimeout())->timeout($this->readTimeout())->withBody($body, 'application/json')->patch($this->baseUrl($server).$path);
     }
 
     private function delete(Server $server, string $path): Response
     {
         $headers = $this->buildHeaders($server, 'DELETE', $path, '');
 
-        return Http::withHeaders($headers)->withOptions(['verify' => $this->verifiesTls($server)])->connectTimeout($this->connectTimeout())->delete($this->baseUrl($server).$path);
+        return Http::withHeaders($headers)->withOptions(['verify' => $this->verifiesTls($server)])->connectTimeout($this->connectTimeout())->timeout($this->readTimeout())->delete($this->baseUrl($server).$path);
     }
 
     // -------------------------------------------------------------------------
@@ -2034,6 +2091,16 @@ class PanelicaModule extends AbstractServerModule implements \App\Contracts\Host
             if ($id === '') {
                 continue;
             }
+            // One call per app, so twelve apps are twelve calls: the page's
+            // budget is what stops this becoming the reason the worker is
+            // killed. What was gathered so far is still shown; access details
+            // are an extra on the card, not the card itself (#320, #386).
+            if ($this->onCustomerPage() && $this->pageBudgetLeft() < self::READ_TIMEOUT_FLOOR) {
+                Log::info('Panelica: live container access stopped on the page budget', [
+                    'service' => $service->id, 'gathered' => count($out), 'of' => count($containers),
+                ]);
+                break;
+            }
             try {
                 $resp = $this->get($server, '/v1/docker/containers/'.rawurlencode($id));
             } catch (\Throwable $e) {
@@ -3337,7 +3404,7 @@ class PanelicaModule extends AbstractServerModule implements \App\Contracts\Host
         $qs = http_build_query(['database_name' => $databaseName], '', '&', PHP_QUERY_RFC3986);
         $path = "/v1/domains/{$domainId}/databases?{$qs}";
         $headers = $this->buildHeaders($server, 'DELETE', $path, '');
-        $resp = Http::withHeaders($headers)->withOptions(['verify' => $this->verifiesTls($server)])->connectTimeout($this->connectTimeout())->delete($this->baseUrl($server).$path);
+        $resp = Http::withHeaders($headers)->withOptions(['verify' => $this->verifiesTls($server)])->connectTimeout($this->connectTimeout())->timeout($this->readTimeout())->delete($this->baseUrl($server).$path);
         if (! $resp->successful()) {
             return $this->buildResult(false, $this->apiMessage($resp, 'Could not delete the database.'));
         }
@@ -3800,7 +3867,7 @@ class PanelicaModule extends AbstractServerModule implements \App\Contracts\Host
         $fullPath = $basePath.($qs !== '' ? '?'.$qs : '');
         $headers = $this->buildHeaders($server, 'GET', $fullPath, '');
 
-        return Http::withHeaders($headers)->withOptions(['verify' => $this->verifiesTls($server)])->connectTimeout($this->connectTimeout())->get($this->baseUrl($server).$fullPath);
+        return Http::withHeaders($headers)->withOptions(['verify' => $this->verifiesTls($server)])->connectTimeout($this->connectTimeout())->timeout($this->readTimeout())->get($this->baseUrl($server).$fullPath);
     }
 
     private function put(Server $server, string $path, array $payload): Response
@@ -3808,7 +3875,7 @@ class PanelicaModule extends AbstractServerModule implements \App\Contracts\Host
         $body = json_encode($payload);
         $headers = $this->buildHeaders($server, 'PUT', $path, $body);
 
-        return Http::withHeaders($headers)->withOptions(['verify' => $this->verifiesTls($server)])->connectTimeout($this->connectTimeout())->withBody($body, 'application/json')->put($this->baseUrl($server).$path);
+        return Http::withHeaders($headers)->withOptions(['verify' => $this->verifiesTls($server)])->connectTimeout($this->connectTimeout())->timeout($this->readTimeout())->withBody($body, 'application/json')->put($this->baseUrl($server).$path);
     }
 
     /** DELETE carrying a JSON body. The panel excludes the DELETE body from the signature. */
@@ -3817,7 +3884,7 @@ class PanelicaModule extends AbstractServerModule implements \App\Contracts\Host
         $body = json_encode($payload);
         $headers = $this->buildHeaders($server, 'DELETE', $path, '');
 
-        return Http::withHeaders($headers)->withOptions(['verify' => $this->verifiesTls($server)])->connectTimeout($this->connectTimeout())->withBody($body, 'application/json')->delete($this->baseUrl($server).$path);
+        return Http::withHeaders($headers)->withOptions(['verify' => $this->verifiesTls($server)])->connectTimeout($this->connectTimeout())->timeout($this->readTimeout())->withBody($body, 'application/json')->delete($this->baseUrl($server).$path);
     }
 
     /** The account's home directory - the root of everything the file tab shows. */

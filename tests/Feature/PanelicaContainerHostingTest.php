@@ -984,3 +984,70 @@ it('mails the connection details to the owning client, and only to them', functi
         ->assertForbidden();
     \Illuminate\Support\Facades\Mail::assertSentCount(1);
 });
+
+/*
+ * #320 / #386. The Apps page came up blank, or with a few apps, or with all of
+ * them, on the same account minutes apart; the browser said
+ * ERR_HTTP2_PROTOCOL_ERROR on a 200 and the Laravel log said nothing.
+ *
+ * Every call to the panel set a connect timeout and left the response one at
+ * Laravel's default thirty seconds, and this page asks the panel four
+ * questions plus one per app — up to sixteen calls. A panel that accepts the
+ * connection and then goes quiet costs thirty seconds a call, PHP-FPM kills
+ * the worker long before that adds up, and a worker killed mid-response is a
+ * truncated reply: a 200 with no body, and nothing for Laravel to log because
+ * PHP never got to fail.
+ */
+function panelicaReadTimeout(PanelicaModule $module): int
+{
+    $m = new ReflectionMethod(PanelicaModule::class, 'readTimeout');
+
+    return $m->invoke($module);
+}
+
+it('caps how long one panel call may wait on a customer page', function () {
+    $module = new PanelicaModule;
+
+    // Off a customer page (scheduler, queue, staff screens) nothing changes:
+    // those calls are retried, so they keep Laravel's thirty.
+    expect(panelicaReadTimeout($module))->toBe(30);
+
+    $this->get('/client/login');   // any client.* route, so the module sees a customer page
+    expect(panelicaReadTimeout($module))->toBe(8);
+});
+
+it('shortens each call as the page budget runs out, and never to zero', function () {
+    $this->get('/client/login');
+    $module = new PanelicaModule;
+
+    // Fifteen seconds of the twenty already spent: five left, so a call gets
+    // five rather than eight.
+    request()->attributes->set('panelica_first_call_at', microtime(true) - 15);
+    expect(panelicaReadTimeout($module))->toBe(5);
+
+    // Budget gone: a call still gets the floor, enough to answer or fail.
+    request()->attributes->set('panelica_first_call_at', microtime(true) - 60);
+    expect(panelicaReadTimeout($module))->toBe(2);
+});
+
+it('stops asking about apps when the page budget is gone, and shows what it has', function () {
+    $listed = [ctContainer('c-1'), ctContainer('c-2'), ctContainer('c-3')];
+    fakeInspectApi($listed, [
+        'c-1' => ['ports' => [['host_port' => '8081', 'container_port' => '80', 'protocol' => 'tcp']], 'env' => [], 'mounts' => []],
+        'c-2' => ['ports' => [['host_port' => '8082', 'container_port' => '80', 'protocol' => 'tcp']], 'env' => [], 'mounts' => []],
+        'c-3' => ['ports' => [['host_port' => '8083', 'container_port' => '80', 'protocol' => 'tcp']], 'env' => [], 'mounts' => []],
+    ]);
+    [$owner, $s] = ctService(ctServer());
+    $rows = (new PanelicaModule)->containers($s);
+
+    $this->get('/client/login');
+    // The page has already spent its budget on the calls before this one.
+    request()->attributes->set('panelica_first_call_at', microtime(true) - 60);
+
+    $live = (new PanelicaModule)->liveContainerAccess($s, $rows);
+
+    // Nothing was asked, and the page still renders: access details are an
+    // extra on the card, not the card itself.
+    expect($live)->toBe([]);
+    Http::assertNotSent(fn ($r) => str_contains(parse_url($r->url(), PHP_URL_PATH) ?? '', '/v1/docker/containers/c-1'));
+});
