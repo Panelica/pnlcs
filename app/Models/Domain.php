@@ -18,7 +18,7 @@ class Domain extends Model
      */
     protected $hidden = ['epp_code'];
 
-    protected $fillable = ['client_id', 'order_id', 'type', 'domain', 'epp_code', 'registrar', 'registration_period', 'registration_date', 'expiry_date', 'next_due_date', 'status', 'dns_management', 'email_forwarding', 'id_protection', 'is_premium', 'payment_method', 'first_payment_amount', 'recurring_amount', 'nameservers', 'notes', 'last_sync_at', 'last_sync_status', 'renewal_reminder_stage', 'renewal_reminder_sent_at'];
+    protected $fillable = ['client_id', 'order_id', 'type', 'domain', 'epp_code', 'registrar', 'registrar_contact_id', 'registration_period', 'registration_date', 'expiry_date', 'next_due_date', 'status', 'dns_management', 'email_forwarding', 'id_protection', 'is_premium', 'payment_method', 'first_payment_amount', 'recurring_amount', 'nameservers', 'notes', 'last_sync_at', 'last_sync_status', 'renewal_reminder_stage', 'renewal_reminder_sent_at'];
 
     protected function casts(): array
     {

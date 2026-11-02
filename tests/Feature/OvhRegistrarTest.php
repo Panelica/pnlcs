@@ -2,6 +2,7 @@
 
 use App\Models\Client;
 use App\Models\Currency;
+use App\Models\CustomField;
 use App\Models\Domain;
 use App\Models\DomainPricing;
 use App\Models\RegistrarSettings;
@@ -262,4 +263,189 @@ it('leaves another registrar\'s TLDs alone', function () {
 
     expect($result)->toMatchArray(['success' => true, 'updated' => 0, 'unchanged' => 0, 'skipped' => 0])
         ->and((float) $other->fresh()->register_price)->toBe(1.0);
+});
+
+/*
+ * The registration flow. OVH orders asynchronously through the cart, so the
+ * interesting part is how the owner contact is created and attached, and what
+ * the panel records afterwards.
+ */
+
+function ovhIndividualClient(array $attrs = []): Client
+{
+    return Client::factory()->create(array_merge([
+        'company_name' => null,
+        'client_type' => 'individual',
+        'first_name' => 'Jan',
+        'last_name' => 'Kowalski',
+        'email' => 'jan@example.com',
+        'address1' => 'ul. Testowa 1',
+        'city' => 'Warszawa',
+        'postcode' => '00-001',
+        'country' => 'PL',
+        'phone_number' => '600 100 200',
+    ], $attrs));
+}
+
+function ovhOrderDomain(array $attrs = []): Domain
+{
+    return Domain::factory()->create(array_merge([
+        'client_id' => ovhIndividualClient()->id,
+        'domain' => 'shop.example.com',
+        'registrar' => 'ovh',
+        'status' => 'pending',
+    ], $attrs));
+}
+
+function ovhRegistrationFake(array $required, string $contactId = '12345', array $pricingModes = ['create-default']): void
+{
+    Http::fake([
+        '*/order/cart' => Http::sequence()
+            ->push(['cartId' => 'cart-offer'], 200)
+            ->push(['cartId' => 'cart-order'], 200),
+        '*/order/cart/cart-offer/domain*' => Http::response(array_map(fn ($m) => ['pricingMode' => $m, 'offerId' => 'off-1'], $pricingModes), 200),
+        '*/me/contact' => Http::response(['id' => (int) $contactId], 200),
+        '*/order/cart/cart-order/domain' => Http::response(['itemId' => 999], 200),
+        '*/order/cart/cart-order/item/999/requiredConfiguration' => Http::response($required, 200),
+        '*/order/cart/cart-order/item/999/configuration' => Http::response([], 200),
+        '*/order/cart/cart-order/assign' => Http::response([], 200),
+        '*/order/cart/cart-order/checkout' => Http::response(['orderId' => 789], 200),
+    ]);
+}
+
+it('places an order with the client as owner contact and records the order', function () {
+    ovhSettings();
+    ovhRegistrationFake([
+        ['label' => 'OWNER_CONTACT', 'type' => '/me/contact'],
+        ['label' => 'OWNER_LEGAL_AGE', 'type' => 'bool'],
+        ['label' => 'ADMIN_ACCOUNT', 'type' => 'Nichandle'],
+        ['label' => 'TECH_ACCOUNT', 'type' => 'Nichandle'],
+    ]);
+
+    $domain = ovhOrderDomain();
+    $result = app(OvhRegistrar::class)->register($domain, 1);
+
+    expect($result['success'])->toBeTrue()
+        ->and($result['status'])->toBe('pending')
+        ->and($domain->fresh()->order_id)->toBe(789)
+        ->and($domain->fresh()->registrar_contact_id)->toBe('12345')
+        ->and($domain->fresh()->status)->toBe('pending');
+
+    // The owner is the client's contact, sent as the full resource path.
+    Http::assertSent(fn ($r) => str_ends_with($r->url(), '/configuration')
+        && (json_decode($r->body(), true)['label'] ?? null) === 'OWNER_CONTACT'
+        && (json_decode($r->body(), true)['value'] ?? null) === '/me/contact/12345');
+
+    // The boolean gate is filled with a boolean, not the contact id.
+    Http::assertSent(fn ($r) => str_ends_with($r->url(), '/configuration')
+        && (json_decode($r->body(), true)['label'] ?? null) === 'OWNER_LEGAL_AGE'
+        && (json_decode($r->body(), true)['value'] ?? null) === 'true');
+
+    // The admin/tech accounts stay the operator's own: never configured.
+    Http::assertNotSent(fn ($r) => str_ends_with($r->url(), '/configuration')
+        && in_array(json_decode($r->body(), true)['label'] ?? null, ['ADMIN_ACCOUNT', 'TECH_ACCOUNT'], true));
+});
+
+it('accepts registry conditions and other boolean gates', function () {
+    ovhSettings();
+    ovhRegistrationFake([
+        ['label' => 'OWNER_CONTACT', 'type' => '/me/contact'],
+        ['label' => 'ACCEPT_CONDITIONS', 'type' => 'bool'],
+    ]);
+
+    app(OvhRegistrar::class)->register(ovhOrderDomain(), 1);
+
+    Http::assertSent(fn ($r) => str_ends_with($r->url(), '/configuration')
+        && (json_decode($r->body(), true)['label'] ?? null) === 'ACCEPT_CONDITIONS'
+        && (json_decode($r->body(), true)['value'] ?? null) === 'true');
+});
+
+it('fails loudly on a configuration it cannot fill', function () {
+    ovhSettings();
+    ovhRegistrationFake([
+        ['label' => 'OWNER_CONTACT', 'type' => '/me/contact'],
+        ['label' => 'SOME_REGISTRY_FIELD', 'type' => 'string'],
+    ]);
+
+    $result = app(OvhRegistrar::class)->register(ovhOrderDomain(), 1);
+
+    expect($result['success'])->toBeFalse()
+        ->and($result['message'])->toContain('SOME_REGISTRY_FIELD');
+});
+
+it('reuses the stored OVH contact for the same client', function () {
+    ovhSettings();
+
+    $client = ovhIndividualClient();
+    $field = CustomField::create([
+        'type' => 'client', 'field_name' => 'ovh_contact_id', 'field_type' => 'text',
+    ]);
+    $field->values()->create(['rel_id' => $client->id, 'value' => '99999']);
+
+    $domain = Domain::factory()->create([
+        'client_id' => $client->id,
+        'domain' => 'shop.example.com',
+        'registrar' => 'ovh',
+        'status' => 'pending',
+    ]);
+
+    Http::fake([
+        '*/order/cart' => Http::sequence()
+            ->push(['cartId' => 'cart-offer'], 200)
+            ->push(['cartId' => 'cart-order'], 200),
+        '*/order/cart/cart-offer/domain*' => Http::response([['pricingMode' => 'create-default', 'offerId' => 'off-1']], 200),
+        '*/order/cart/cart-order/domain' => Http::response(['itemId' => 999], 200),
+        '*/order/cart/cart-order/item/999/requiredConfiguration' => Http::response([
+            ['label' => 'OWNER_CONTACT', 'type' => '/me/contact'],
+        ], 200),
+        '*/order/cart/cart-order/item/999/configuration' => Http::response([], 200),
+        '*/order/cart/cart-order/assign' => Http::response([], 200),
+        '*/order/cart/cart-order/checkout' => Http::response(['orderId' => 789], 200),
+    ]);
+
+    $result = app(OvhRegistrar::class)->register($domain, 1);
+
+    expect($result['success'])->toBeTrue()
+        ->and($domain->fresh()->registrar_contact_id)->toBe('99999');
+
+    // The stored contact was reused: no new contact was created at OVH.
+    Http::assertNotSent(fn ($r) => str_ends_with($r->url(), '/me/contact'));
+
+    Http::assertSent(fn ($r) => str_ends_with($r->url(), '/configuration')
+        && (json_decode($r->body(), true)['value'] ?? null) === '/me/contact/99999');
+});
+
+it('refuses to create a contact from an incomplete client', function () {
+    ovhSettings();
+    Http::fake([
+        '*/order/cart' => Http::response(['cartId' => 'cart-offer'], 200),
+        '*/order/cart/cart-offer/domain*' => Http::response([['pricingMode' => 'create-default', 'offerId' => 'off-1']], 200),
+    ]);
+
+    $domain = ovhOrderDomain(['client_id' => ovhIndividualClient(['address1' => null])->id]);
+
+    $result = app(OvhRegistrar::class)->register($domain, 1);
+
+    expect($result['success'])->toBeFalse()
+        ->and($result['message'])->toContain('missing address');
+
+    Http::assertNotSent(fn ($r) => str_ends_with($r->url(), '/me/contact'));
+});
+
+it('reads the owner contact back when syncing a domain', function () {
+    ovhSettings();
+    Http::fake([
+        '*/domain/shop.example.com/serviceInfos' => Http::response(['expiration' => '2027-06-01T10:00:00+02:00'], 200),
+        '*/domain/shop.example.com' => Http::response([
+            'status' => 'ok',
+            'transferLockStatus' => 'locked',
+            'nameServers' => [],
+            'contactOwner' => ['id' => '28729887'],
+        ], 200),
+    ]);
+
+    $result = app(OvhRegistrar::class)->syncDomain(ovhOrderDomain());
+
+    expect($result['success'])->toBeTrue()
+        ->and($result['registrar_contact_id'])->toBe('28729887');
 });

@@ -47,12 +47,15 @@ class OvhRegistrar implements RegistrarModuleInterface, SyncsDomainData
 
     public function getConfigFields(): array
     {
+        $fieldOptions = ['' => '— Auto —'] + $this->clientCustomFieldOptions();
+
         return [
             ['name' => 'app_key', 'label' => 'Application Key', 'type' => 'text', 'required' => true],
             ['name' => 'app_secret', 'label' => 'Application Secret', 'type' => 'password', 'required' => true],
             ['name' => 'consumer_key', 'label' => 'Consumer Key', 'type' => 'password', 'required' => true],
             ['name' => 'region', 'label' => 'API Region', 'type' => 'select', 'options' => ['eu' => 'Europe (EU)', 'ca' => 'Canada (CA)', 'us' => 'United States (US)'], 'default' => 'eu'],
             ['name' => 'margin_percent', 'label' => 'Margin (%)', 'type' => 'text', 'required' => false, 'default' => '0'],
+            ['name' => 'csa_field', 'label' => 'OVH contact field', 'type' => 'select', 'options' => $fieldOptions, 'required' => false],
         ];
     }
 
@@ -101,18 +104,23 @@ class OvhRegistrar implements RegistrarModuleInterface, SyncsDomainData
     public function register(Domain $domain, int $years, array $params = []): array
     {
         try {
-            $orderId = $this->orderDomain($domain, max(1, $years), $params);
+            $order = $this->orderDomain($domain, max(1, $years), $params);
+            $orderId = $order['order_id'];
 
             $domain->update([
                 'status' => 'pending',
                 'registrar' => 'ovh',
+                'order_id' => $orderId,
+                'registrar_contact_id' => (string) $order['contact_id'],
                 'registration_date' => now()->toDateString(),
                 'next_due_date' => now()->addYears($years)->toDateString(),
             ]);
 
-            $this->logAction('register', $domain, ['order_id' => $orderId], ['success' => true, 'order_id' => $orderId]);
+            $this->logAction('register', $domain, ['order_id' => $orderId, 'contact_id' => $order['contact_id']], ['success' => true, 'order_id' => $orderId]);
 
-            return ['success' => true, 'message' => "Domain ordered at OVH (order #{$orderId})."];
+            // "pending" (not "active"): OVH processes the order asynchronously,
+            // and the domain must not look registered until syncDomain() sees it.
+            return ['success' => true, 'status' => 'pending', 'message' => "Domain ordered at OVH (order #{$orderId})."];
         } catch (\Throwable $e) {
             Log::error("OVH register failed for {$domain->domain}: {$e->getMessage()}");
             $this->logAction('register', $domain, [], ['success' => false, 'error' => $e->getMessage()]);
@@ -124,11 +132,17 @@ class OvhRegistrar implements RegistrarModuleInterface, SyncsDomainData
     public function transfer(Domain $domain, string $eppCode): array
     {
         try {
-            $orderId = $this->orderDomain($domain, max(1, (int) ($domain->registration_period ?? 1)), [], $eppCode);
+            $order = $this->orderDomain($domain, max(1, (int) ($domain->registration_period ?? 1)), [], $eppCode);
+            $orderId = $order['order_id'];
 
-            $domain->update(['status' => 'pending_transfer', 'registrar' => 'ovh']);
+            $domain->update([
+                'status' => 'pending_transfer',
+                'registrar' => 'ovh',
+                'order_id' => $orderId,
+                'registrar_contact_id' => (string) $order['contact_id'],
+            ]);
 
-            return ['success' => true, 'message' => "Transfer ordered at OVH (order #{$orderId})."];
+            return ['success' => true, 'status' => 'pending_transfer', 'message' => "Transfer ordered at OVH (order #{$orderId})."];
         } catch (\Throwable $e) {
             Log::error("OVH transfer failed for {$domain->domain}: {$e->getMessage()}");
 
@@ -269,12 +283,17 @@ class OvhRegistrar implements RegistrarModuleInterface, SyncsDomainData
                 is_array($info['nameServers'] ?? null) ? $info['nameServers'] : []
             )));
 
+            // The owner contact OVH actually holds, so the panel can see (and
+            // later reconcile) who owns the domain even after a change at OVH.
+            $ownerId = $info['contactOwner']['id'] ?? $info['whoisOwner'] ?? null;
+
             return [
                 'success' => true,
                 'expiry_date' => $this->parseDate($serviceInfos['expiration'] ?? null),
                 'status' => $this->mapStatus($info['status'] ?? null),
                 'locked' => isset($info['transferLockStatus']) ? $info['transferLockStatus'] === 'locked' : null,
                 'nameservers' => $nameservers,
+                'registrar_contact_id' => $ownerId !== null ? (string) $ownerId : null,
             ];
         } catch (\Throwable $e) {
             return ['success' => false, 'message' => $e->getMessage()];
@@ -404,7 +423,13 @@ class OvhRegistrar implements RegistrarModuleInterface, SyncsDomainData
      * the order id. The registrant contact is created once per client and
      * reused via the CSA custom field.
      */
-    protected function orderDomain(Domain $domain, int $years, array $params = [], ?string $eppCode = null): int
+    /**
+     * Order a domain (registration or transfer) through OVH's cart and return
+     * the order and the owner contact it was placed with.
+     *
+     * @return array{order_id: int, contact_id: int}
+     */
+    protected function orderDomain(Domain $domain, int $years, array $params = [], ?string $eppCode = null): array
     {
         $client = $domain->client;
         if (! $client) {
@@ -443,33 +468,76 @@ class OvhRegistrar implements RegistrarModuleInterface, SyncsDomainData
         $this->client()->post('/order/cart/'.$cartId.'/assign');
         $checkout = $this->client()->post('/order/cart/'.$cartId.'/checkout');
 
-        return (int) ($checkout['orderId'] ?? ($checkout['order']['orderId'] ?? 0));
+        $orderId = (int) ($checkout['orderId'] ?? ($checkout['order']['orderId'] ?? 0));
+        if ($orderId === 0) {
+            throw new \RuntimeException('OVH: checkout returned no order id for '.$domain->domain.'.');
+        }
+
+        return ['order_id' => $orderId, 'contact_id' => $contactId];
     }
 
-    /** Add the required configurations (owner contact, nameservers, auth code). */
+    /**
+     * Fill the cart's required configurations, classified by their `type`
+     * rather than their label. The owner contact and the boolean gates are set;
+     * the admin/tech accounts are left alone so they stay the operator's own.
+     *
+     * A configuration this module cannot satisfy throws instead of being
+     * silently skipped: a skipped required configuration fails checkout anyway,
+     * but only after the operator has paid for an order that never completes.
+     */
     protected function configureCart(string $cartId, int $itemId, int $contactId, array $nameservers, ?string $eppCode): void
     {
         $required = $this->client()->get('/order/cart/'.$cartId.'/item/'.$itemId.'/requiredConfiguration');
 
         foreach ($required as $config) {
-            $label = strtolower((string) ($config['label'] ?? ''));
-
-            $value = match (true) {
-                str_contains($label, 'owner') || str_contains($label, 'contact') || str_contains($label, 'registrant') => (string) $contactId,
-                str_contains($label, 'dns') || str_contains($label, 'nameserver') => implode(',', $nameservers),
-                str_contains($label, 'auth') || str_contains($label, 'epp') => (string) $eppCode,
-                default => null,
-            };
+            $label = (string) ($config['label'] ?? '');
+            $value = $this->configurationValue($label, (string) ($config['type'] ?? ''), $contactId, $nameservers, $eppCode);
 
             if ($value === null) {
                 continue;
             }
 
             $this->client()->post('/order/cart/'.$cartId.'/item/'.$itemId.'/configuration', [
-                'label' => $config['label'],
+                'label' => $label,
                 'value' => $value,
             ]);
         }
+    }
+
+    /**
+     * The value for one cart configuration, or null to leave it untouched.
+     */
+    protected function configurationValue(string $label, string $type, int $contactId, array $nameservers, ?string $eppCode): ?string
+    {
+        $type = strtolower($type);
+
+        // The client's own contact as owner. OVH wants the full resource path,
+        // not the bare numeric id.
+        if ($type === '/me/contact' || $type === 'contact') {
+            return '/me/contact/'.$contactId;
+        }
+
+        // The Nichandle that administers the domain. Left alone: it defaults to
+        // the account the cart is assigned to — the operator's, not the client's.
+        if ($type === 'nichandle') {
+            return null;
+        }
+
+        // A boolean gate the registry imposes (legal age, terms acceptance).
+        if ($type === 'bool' || $type === 'boolean') {
+            return 'true';
+        }
+
+        // Free-form strings, keyed by label.
+        $labelLower = strtolower($label);
+        if (str_contains($labelLower, 'dns') || str_contains($labelLower, 'nameserver')) {
+            return implode(',', $nameservers);
+        }
+        if (str_contains($labelLower, 'auth') || str_contains($labelLower, 'epp')) {
+            return (string) $eppCode;
+        }
+
+        throw new \RuntimeException("OVH: cannot fill cart configuration '{$label}' (type '{$type}').");
     }
 
     /** The OVH contact id for a client, created once and remembered on the CSA field. */
@@ -480,17 +548,38 @@ class OvhRegistrar implements RegistrarModuleInterface, SyncsDomainData
             return (int) trim($csa);
         }
 
+        $line1 = (string) ($params['address'] ?? $client->address1 ?? '');
+        $line2 = (string) ($params['address2'] ?? $client->address2 ?? '');
+        $city = (string) ($params['city'] ?? $client->city ?? '');
+        $zip = (string) ($params['postcode'] ?? $client->postcode ?? '');
+        $country = $this->normalizeCountry((string) ($params['country'] ?? $client->country));
+        $province = (string) ($params['state'] ?? $client->state ?? '');
+
+        $firstName = (string) ($client->first_name ?? '');
+        $lastName = (string) ($client->last_name ?? '');
+        $email = (string) ($client->email ?? '');
+
+        $this->assertContactable($firstName, $lastName, $email, $line1, $city, $zip, $country);
+
+        $address = [
+            'line1' => $line1,
+            'city' => $city,
+            'zip' => $zip,
+            'country' => $country,
+        ];
+        if ($line2 !== '') {
+            $address['line2'] = $line2;
+        }
+        if ($province !== '') {
+            $address['province'] = $province;
+        }
+
         $contact = [
-            'firstName' => (string) ($client->first_name ?? ''),
-            'lastName' => (string) ($client->last_name ?? ''),
-            'email' => (string) ($client->email ?? ''),
-            'phone' => (string) ($client->phone_number ?? ''),
-            'address' => [
-                'line1' => (string) ($params['address'] ?? $client->address1 ?? ''),
-                'city' => (string) ($params['city'] ?? $client->city ?? ''),
-                'zip' => (string) ($params['postcode'] ?? $client->postcode ?? ''),
-                'country' => (string) ($params['country'] ?? $client->country ?? ''),
-            ],
+            'firstName' => $firstName,
+            'lastName' => $lastName,
+            'email' => $email,
+            'phone' => $this->normalizePhone((string) ($client->phone_number ?? '')),
+            'address' => $address,
             'legalForm' => $isCompany ? 'corporation' : 'individual',
         ];
 
@@ -503,6 +592,10 @@ class OvhRegistrar implements RegistrarModuleInterface, SyncsDomainData
 
         $created = $this->client()->post('/me/contact', $contact);
         $id = (int) ($created['id'] ?? 0);
+
+        if ($id === 0) {
+            throw new \RuntimeException('OVH: contact creation returned no id.');
+        }
 
         $this->storeClientField($client, $this->settings['csa_field'] ?? null, (string) $id, ['csa', 'ovh_contact_id']);
 
@@ -609,6 +702,53 @@ class OvhRegistrar implements RegistrarModuleInterface, SyncsDomainData
         }
 
         return $price > 0 ? ceil($price * (1 + $margin / 100)) : 0.0;
+    }
+
+    /**
+     * Refuse to build an OVH contact the registry will reject. OVH wants the
+     * fields below for every legal form; a missing one is a client-data
+     * problem, not a network one, so it fails here with a clear message.
+     */
+    protected function assertContactable(string $firstName, string $lastName, string $email, string $line1, string $city, string $zip, string $country): void
+    {
+        $missing = array_keys(array_filter([
+            'first name' => $firstName,
+            'last name' => $lastName,
+            'email' => $email,
+            'address' => $line1,
+            'city' => $city,
+            'postcode' => $zip,
+            'country' => $country,
+        ], fn ($value) => trim($value) === ''));
+
+        if ($missing !== []) {
+            throw new \RuntimeException('OVH: the client is missing '.implode(', ', $missing).' to register a domain.');
+        }
+    }
+
+    /** Two-letter ISO country, uppercased, defaulting to PL. */
+    protected function normalizeCountry(?string $country): string
+    {
+        $country = strtoupper(trim((string) $country));
+
+        return strlen($country) === 2 ? $country : 'PL';
+    }
+
+    /** A phone OVH accepts: digits and a leading + only. */
+    protected function normalizePhone(?string $phone): ?string
+    {
+        $phone = trim((string) $phone);
+        if ($phone === '') {
+            return null;
+        }
+
+        $digits = preg_replace('/[^0-9+]/', '', $phone) ?? $phone;
+
+        if (preg_match('/^\+(\d{1,3})(\d+)$/', $digits, $m)) {
+            return '+'.$m[1].'.'.$m[2];
+        }
+
+        return $digits;
     }
 
     protected function loadSettings(): array
