@@ -150,7 +150,7 @@ class InvoiceService
         // Taxable and untaxed lines are discounted separately so the taxable
         // amount falls by exactly the discount given on taxable work.
         foreach ([true, false] as $taxed) {
-            $base = (float) $invoice->items->where('taxed', $taxed)->sum('amount');
+            $base = (float) $invoice->items->where('taxed', $taxed)->sum(fn ($item) => (float) $item->amount * (int) $item->qty);
 
             if ($base <= 0) {
                 continue;

@@ -86,6 +86,17 @@ test('a group with no discount changes nothing', function () {
         ->and($invoice->items->firstWhere('type', 'Discount'))->toBeNull();
 });
 
+test('the discount is worked out on the line total, quantity included', function () {
+    Mail::fake();
+
+    $invoice = app(InvoiceService::class)->createInvoice(groupedClient(10), [
+        ['type' => 'Other', 'description' => 'Seats', 'qty' => 3, 'amount' => 100, 'taxed' => true],
+    ]);
+
+    expect((float) $invoice->items->firstWhere('type', 'Discount')->amount)->toEqual(-30.0)
+        ->and((float) $invoice->total)->toEqual(270.0);
+});
+
 test('topping up a balance is not discounted', function () {
     Mail::fake();
 
