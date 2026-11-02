@@ -2193,6 +2193,7 @@ class ConfigController extends Controller
         }
 
         return back()->with('success', __('admin.registrars.sync_success', [
+            'name' => $module->getModuleName(),
             'updated' => $result['updated'] ?? 0,
             'unchanged' => $result['unchanged'] ?? 0,
             'skipped' => $result['skipped'] ?? 0,
