@@ -97,6 +97,39 @@ test('the discount is worked out on the line total, quantity included', function
         ->and((float) $invoice->total)->toEqual(270.0);
 });
 
+test('two VAT rates get a discount line each and the VAT table adds up', function () {
+    Mail::fake();
+
+    $invoice = app(InvoiceService::class)->createInvoice(groupedClient(10, false), [
+        ['type' => 'Other', 'description' => 'Standard', 'amount' => 100, 'tax_rate' => 20, 'tax_label' => 'VAT 20'],
+        ['type' => 'Other', 'description' => 'Reduced', 'amount' => 100, 'tax_rate' => 10, 'tax_label' => 'VAT 10'],
+    ]);
+
+    $discounts = $invoice->items->where('type', 'Discount');
+    $table = $invoice->vatBreakdown();
+
+    expect((float) $invoice->tax)->toEqual(27.0)
+        ->and((float) $invoice->total)->toEqual(207.0)
+        ->and($discounts)->toHaveCount(2)
+        ->and(round($table['VAT 20']['amount'], 2))->toEqual(18.0)
+        ->and(round($table['VAT 20']['net'], 2))->toEqual(90.0)
+        ->and(round($table['VAT 10']['amount'], 2))->toEqual(9.0)
+        ->and(round($table['VAT 10']['net'], 2))->toEqual(90.0);
+});
+
+test('one VAT rate keeps a single discount line, inside that rate', function () {
+    Mail::fake();
+
+    $invoice = app(InvoiceService::class)->createInvoice(groupedClient(10, false), [
+        ['type' => 'Other', 'description' => 'One', 'amount' => 100, 'tax_rate' => 20, 'tax_label' => 'VAT 20'],
+        ['type' => 'Other', 'description' => 'Two', 'amount' => 100, 'tax_rate' => 20, 'tax_label' => 'VAT 20'],
+    ]);
+
+    expect($invoice->items->where('type', 'Discount'))->toHaveCount(1)
+        ->and((float) $invoice->tax)->toEqual(36.0)
+        ->and(array_keys($invoice->vatBreakdown()))->toBe(['VAT 20']);
+});
+
 test('topping up a balance is not discounted', function () {
     Mail::fake();
 
