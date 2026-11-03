@@ -19,10 +19,12 @@ trait MapsTldCategories
 
     protected function tldCategory(string $extension): string
     {
-        $local = strtolower(trim((string) Setting::get('Country', 'PL')));
+        // No default country: an installation that has not set one must not
+        // have another country's extensions called its own.
+        $local = strtolower(trim((string) Setting::get('Country', '')));
 
         // The operator's own country TLD and its second-level spaces.
-        if ($extension === $local || ($local !== '' && str_ends_with($extension, '.'.$local))) {
+        if ($local !== '' && ($extension === $local || str_ends_with($extension, '.'.$local))) {
             return 'local';
         }
 

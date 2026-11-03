@@ -430,7 +430,13 @@ class OvhRegistrar implements RegistrarModuleInterface, SyncsDomainData
                         'max_years' => 10,
                         'grace_period' => $grace,
                         'redemption_grace_period' => $redemption,
-                        'enabled' => true,
+                        // Off: the import knows the extension, not what to
+                        // charge for it. Every price column defaults to 0, so
+                        // an enabled row would be on sale for nothing until
+                        // "Sync prices" runs and somebody notices. The
+                        // operator switches it on when it is priced, the way a
+                        // copied product arrives hidden (#348).
+                        'enabled' => false,
                         'category' => $this->tldCategory((string) $ext),
                         'is_popular' => false,
                     ]

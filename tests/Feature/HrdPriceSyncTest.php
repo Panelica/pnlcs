@@ -9,6 +9,7 @@ use App\Models\CustomFieldValue;
 use App\Models\Domain;
 use App\Models\DomainPricing;
 use App\Models\RegistrarSettings;
+use App\Models\Setting;
 use Modules\Registrars\HRD\HrdClient;
 use Modules\Registrars\HRD\HrdRegistrar;
 
@@ -229,6 +230,9 @@ const HRD_TLD_PERIODS = <<<'XML'
 XML;
 
 it('imports the HRD TLDs without duplicating existing extensions', function () {
+    // "local" is the operator's own country, so the test says which it is
+    // rather than leaning on a default.
+    Setting::set('Country', 'PL', 'general');
     $existing = hrdTld('.pl', 'openprovider');
 
     $result = hrdRegistrarWith(hrdPricings(HRD_PRICINGS))->importTlds();
@@ -242,7 +246,8 @@ it('imports the HRD TLDs without duplicating existing extensions', function () {
         ->and($comPl->grace_period)->toBe(0)          // NASK .pl: no renew grace
         ->and($comPl->redemption_grace_period)->toBe(30)
         ->and($comPl->category)->toBe('local')        // the operator's own country TLD
-        ->and((bool) $comPl->enabled)->toBeTrue();
+        // Off until it is priced: see "imports TLDs switched off" below.
+        ->and((bool) $comPl->enabled)->toBeFalse();
 
     // Already present on another registrar: left alone, not switched to HRD.
     expect($existing->fresh()->auto_registrar)->toBe('openprovider');
@@ -298,6 +303,7 @@ const HRD_CATEGORIES = <<<'XML'
 XML;
 
 it('assigns the pricing category that matches each TLD', function () {
+    Setting::set('Country', 'PL', 'general');
     hrdRegistrarWith(hrdPricings(HRD_CATEGORIES))->importTlds();
 
     $cat = fn ($e) => DomainPricing::where('extension', $e)->value('category');
@@ -306,4 +312,48 @@ it('assigns the pricing category that matches each TLD', function () {
         ->and($cat('.pl'))->toBe('local')
         ->and($cat('.de'))->toBe('country')
         ->and($cat('.xyz'))->toBe('new');
+});
+
+/*
+ * An imported TLD is a draft, not a product.
+ *
+ * The import fills the extension, the registrar, the year range and the grace
+ * periods; it does not and cannot know what to charge — "Sync prices" is a
+ * separate step. Every price column defaults to 0, so an imported extension
+ * that arrives enabled is on sale for nothing: the domain search lists
+ * `enabled = true` rows and the cart accepts any enabled extension. The same
+ * rule products already follow (#348: a copied product arrives hidden).
+ */
+it('imports TLDs switched off, so nothing is on sale at nothing', function () {
+    $result = hrdRegistrarWith(hrdPricings(HRD_PRICINGS))->importTlds();
+
+    expect($result['success'])->toBeTrue()
+        ->and($result['added'])->toBeGreaterThan(0);
+
+    $imported = DomainPricing::where('extension', '.pl')->firstOrFail();
+
+    expect((bool) $imported->enabled)->toBeFalse()
+        ->and((float) $imported->register_price)->toBe(0.0)
+        // ...so the customer's domain search, which lists only enabled rows,
+        // does not offer it before a price is set.
+        ->and(DomainPricing::where('enabled', true)->pluck('extension')->all())->not->toContain('.pl');
+});
+
+it('leaves an extension that was already on sale switched on', function () {
+    // The operator's own row, priced and enabled: an import must not touch it.
+    $existing = hrdTld('.pl', 'hrd', ['register_price' => 50, 'enabled' => true]);
+
+    hrdRegistrarWith(hrdPricings(HRD_PRICINGS))->importTlds();
+
+    expect((bool) $existing->fresh()->enabled)->toBeTrue()
+        ->and((float) $existing->fresh()->register_price)->toBe(50.0);
+});
+
+it('calls no extension local when the installation has not said which country it is in', function () {
+    Setting::where('setting', 'Country')->delete();
+
+    hrdRegistrarWith(hrdPricings(HRD_CATEGORIES))->importTlds();
+
+    // .pl is then simply another country's extension, not "ours".
+    expect(DomainPricing::where('extension', '.pl')->value('category'))->toBe('country');
 });
