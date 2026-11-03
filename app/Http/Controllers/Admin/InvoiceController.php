@@ -222,6 +222,7 @@ class InvoiceController extends Controller
         if ($ruleId !== '__legacy__') {
             $rule = $ruleId !== '' ? TaxRule::find((int) $ruleId) : null;
             abort_if($ruleId !== '' && $rule === null, 422);
+            $rule = $invoice->buyer_tax_exempt && (float) $rule?->tax_rate > 0 ? null : $rule;
         }
 
         $fields = [

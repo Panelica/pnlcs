@@ -183,6 +183,16 @@ class InvoiceService
             ? (float) $rule->tax_rate
             : (array_key_exists('tax_rate', $itemData) && $itemData['tax_rate'] !== null ? (float) $itemData['tax_rate'] : null);
 
+        // The builder offers a rate whether or not the buyer is exempt. Settled
+        // here, as the line is written: a document already issued keeps the tax
+        // it printed. A zero rate is left as it is, with its rule and label
+        // ("np.", "zw."), which the documents print.
+        if ($invoice->buyer_tax_exempt && $taxRate > 0) {
+            $taxRate = 0.0;
+            $rule = null;
+            unset($itemData['tax_label'], $itemData['taxed']);
+        }
+
         $item = InvoiceItem::create([
             'invoice_id' => $invoice->id,
             'client_id' => $invoice->client_id,
@@ -238,7 +248,7 @@ class InvoiceService
                 $taxRate = $this->calculateTax($taxableAmount, $invoice->client_id)['tax_rate'];
             }
 
-            if ($invoice->tax_mode === Invoice::TAX_NONE) {
+            if ($invoice->tax_mode === Invoice::TAX_NONE || $invoice->buyer_tax_exempt) {
                 $taxRate = 0.0;
             }
 
