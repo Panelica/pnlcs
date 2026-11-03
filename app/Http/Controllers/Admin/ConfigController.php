@@ -12,6 +12,7 @@ use App\Http\Controllers\Api\ServiceApiController;
 use App\Http\Controllers\Api\SystemApiController;
 use App\Http\Controllers\Api\TicketApiController;
 use App\Http\Controllers\Controller;
+use App\Http\Traits\CsvExportable;
 use App\Models\ActivityLog;
 use App\Models\Admin;
 use App\Models\AdminRole;
@@ -78,9 +79,12 @@ use Illuminate\Support\Str;
 use Illuminate\Validation\Rule;
 use Illuminate\Validation\ValidationException;
 use Modules\Servers\Proxmox\Ipv4Pool;
+use Symfony\Component\HttpFoundation\StreamedResponse;
 
 class ConfigController extends Controller
 {
+    use CsvExportable;
+
     // ===== STAFF =====
 
     public function admins()
@@ -875,22 +879,155 @@ class ConfigController extends Controller
 
     // ===== DOMAIN PRICING =====
 
+    /** The pricing columns that may be sorted by clicking a header. */
+    private const TLD_SORTABLE = [
+        'extension', 'register_price', 'transfer_price', 'renew_price', 'restore_price',
+        'category', 'auto_registrar', 'enabled', 'min_years', 'max_years', 'grace_period',
+    ];
+
     public function domainPricing(Request $request)
     {
         $currency = Currency::getDefault();
         $currencySymbol = $currency ? trim((string) ($currency->prefix ?: $currency->suffix)) : '$';
 
+        $sort = $this->tldSort($request);
+
+        return view('admin.config.domain-pricing', [
+            'tlds' => $this->tldQuery($request)->orderBy($sort['column'], $sort['direction'])->paginate(50)->withQueryString(),
+            'currencySymbol' => $currencySymbol,
+            'registrars' => $this->activeRegistrars(),
+            'sort' => $sort['column'],
+            'direction' => $sort['direction'],
+        ]);
+    }
+
+    /** The pricing query shared by the list, the export and the bulk delete. */
+    protected function tldQuery(Request $request)
+    {
         $query = DomainPricing::query();
 
         if ($search = trim((string) $request->query('search'))) {
             $query->where('extension', 'like', '%'.$search.'%');
         }
 
-        return view('admin.config.domain-pricing', [
-            'tlds' => $query->orderBy('sort_order')->orderBy('extension')->paginate(50)->withQueryString(),
-            'currencySymbol' => $currencySymbol,
-            'registrars' => $this->activeRegistrars(),
+        return $query;
+    }
+
+    /** The validated sort column and direction, defaulting to extension asc. */
+    protected function tldSort(Request $request): array
+    {
+        $column = (string) $request->query('sort', 'extension');
+        $direction = (string) $request->query('direction', 'asc');
+
+        if (! in_array($column, self::TLD_SORTABLE, true)) {
+            $column = 'extension';
+        }
+        if (! in_array($direction, ['asc', 'desc'], true)) {
+            $direction = 'asc';
+        }
+
+        return ['column' => $column, 'direction' => $direction];
+    }
+
+    /** Download the pricing table as a CSV, honouring the search and sort. */
+    public function exportTldCsv(Request $request): StreamedResponse
+    {
+        $sort = $this->tldSort($request);
+        $tlds = $this->tldQuery($request)->orderBy($sort['column'], $sort['direction'])->get();
+
+        $rows = $tlds->map(fn ($t) => [
+            $t->extension,
+            $t->register_price,
+            $t->transfer_price,
+            $t->renew_price,
+            $t->restore_price,
+            $t->privacy_price,
+            $t->grace_period,
+            $t->redemption_grace_period,
+            $t->min_years,
+            $t->max_years,
+            $t->category,
+            $t->auto_registrar,
+            $t->enabled ? 1 : 0,
+            $t->is_popular ? 1 : 0,
+            $t->sort_order,
         ]);
+
+        return $this->streamCsvDownload(
+            'domain-pricing-'.now()->format('Y-m-d').'.csv',
+            ['extension', 'register_price', 'transfer_price', 'renew_price', 'restore_price', 'privacy_price', 'grace_period', 'redemption_grace_period', 'min_years', 'max_years', 'category', 'auto_registrar', 'enabled', 'is_popular', 'sort_order'],
+            $rows
+        );
+    }
+
+    /** Import the pricing table from a CSV, upserting by extension. */
+    public function importTldCsv(Request $request)
+    {
+        $request->validate([
+            'file' => 'required|file|mimes:csv,txt',
+        ]);
+
+        $handle = fopen($request->file('file')->getRealPath(), 'r');
+        if ($handle === false) {
+            return back()->with('error', __('admin.domain_pricing.import_failed'));
+        }
+
+        fgetcsv($handle); // header row
+
+        $columns = ['register_price', 'transfer_price', 'renew_price', 'restore_price', 'privacy_price', 'grace_period', 'redemption_grace_period', 'min_years', 'max_years', 'category', 'auto_registrar', 'enabled', 'is_popular', 'sort_order'];
+        $imported = 0;
+
+        while (($row = fgetcsv($handle)) !== false) {
+            $row = array_map('trim', $row);
+            $extension = ltrim((string) ($row[0] ?? ''), "'");
+            $extension = '.'.ltrim($extension, '.');
+            if ($extension === '.') {
+                continue;
+            }
+
+            $data = [];
+            foreach ($columns as $i => $column) {
+                if (! isset($row[$i + 1]) || trim((string) $row[$i + 1]) === '') {
+                    continue; // empty = leave the field unchanged
+                }
+                $data[$column] = $this->castTldValue($column, $row[$i + 1]);
+            }
+
+            DomainPricing::updateOrCreate(['extension' => $extension], $data);
+            $imported++;
+        }
+
+        fclose($handle);
+
+        return back()->with('success', __('admin.domain_pricing.import_success', ['count' => $imported]));
+    }
+
+    /** Delete the checked TLDs, or every TLD when "select all" was used. */
+    public function bulkDeleteTlds(Request $request)
+    {
+        if ($request->boolean('select_all')) {
+            $count = DomainPricing::query()->delete();
+        } else {
+            $ids = array_values(array_filter(array_map('intval', (array) $request->input('ids', []))));
+            if ($ids === []) {
+                return back()->with('error', __('admin.domain_pricing.select_none'));
+            }
+            $count = DomainPricing::whereIn('id', $ids)->delete();
+        }
+
+        return back()->with('success', __('admin.domain_pricing.deleted', ['count' => $count]));
+    }
+
+    /** Cast an imported CSV cell to the column's type. */
+    protected function castTldValue(string $column, string $value): mixed
+    {
+        return match ($column) {
+            'register_price', 'transfer_price', 'renew_price', 'restore_price', 'privacy_price' => (float) $value,
+            'grace_period', 'redemption_grace_period', 'min_years', 'max_years', 'sort_order' => (int) $value,
+            'enabled', 'is_popular' => in_array(strtolower($value), ['1', 'true', 'yes', 'on'], true),
+            'category' => in_array($value, ['generic', 'local', 'country', 'new'], true) ? $value : 'new',
+            default => $value,
+        };
     }
 
     /**

@@ -226,3 +226,23 @@ test('payment notification and payment method translation keys resolve', functio
         ->and(__('messages.success.category_deleted'))->toBe('Category deleted.')
         ->and(__('client.security.session_revoked'))->toBe('Session revoked.');
 });
+
+test('bulk delete removes the checked TLDs, and every TLD on select-all', function () {
+    $a = DomainPricing::create(['extension' => '.aaa', 'register_price' => 1, 'renew_price' => 1, 'transfer_price' => 1]);
+    $b = DomainPricing::create(['extension' => '.bbb', 'register_price' => 1, 'renew_price' => 1, 'transfer_price' => 1]);
+    $c = DomainPricing::create(['extension' => '.ccc', 'register_price' => 1, 'renew_price' => 1, 'transfer_price' => 1]);
+
+    $this->actingAs(cfgAdmin(), 'admin')
+        ->post(route('admin.config.domain-pricing.bulk-delete'), ['ids' => [$a->id, $b->id]])
+        ->assertSessionHas('success');
+
+    expect(DomainPricing::find($a->id))->toBeNull()
+        ->and(DomainPricing::find($b->id))->toBeNull()
+        ->and(DomainPricing::find($c->id))->not->toBeNull();
+
+    $this->actingAs(cfgAdmin(), 'admin')
+        ->post(route('admin.config.domain-pricing.bulk-delete'), ['select_all' => '1'])
+        ->assertSessionHas('success');
+
+    expect(DomainPricing::count())->toBe(0);
+});

@@ -444,6 +444,9 @@ Route::middleware(['admin.auth', 'admin.2fa'])->prefix('admin')->name('admin.')-
 
             Route::get('domain-pricing', [ConfigController::class, 'domainPricing'])->name('domain-pricing');
             Route::post('domain-pricing', [ConfigController::class, 'storeTld'])->name('domain-pricing.store');
+            Route::get('domain-pricing/export', [ConfigController::class, 'exportTldCsv'])->name('domain-pricing.export');
+            Route::post('domain-pricing/import', [ConfigController::class, 'importTldCsv'])->name('domain-pricing.import');
+            Route::post('domain-pricing/bulk-delete', [ConfigController::class, 'bulkDeleteTlds'])->name('domain-pricing.bulk-delete');
             Route::put('domain-pricing/{domainPricing}', [ConfigController::class, 'updateTld'])->name('domain-pricing.update');
             Route::delete('domain-pricing/{domainPricing}', [ConfigController::class, 'destroyTld'])->name('domain-pricing.destroy');
         });
