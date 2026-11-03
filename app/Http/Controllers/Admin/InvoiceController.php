@@ -236,8 +236,12 @@ class InvoiceController extends Controller
 
             // Give every line an explicit rate so a legacy invoice edited once
             // stays consistent: lines without a rate would otherwise stop being
-            // taxed the moment any other line carries its own rate.
-            $fallback = (float) $invoice->tax_rate;
+            // taxed the moment any other line carries its own rate. On an
+            // exempt buyer's invoice that rate is zero: handing the untouched
+            // lines the invoice's rate turned the document into a per-line one,
+            // which is the path that does not read the exemption, and left it
+            // half taxed - the edited line at zero, the rest at 20% (#389).
+            $fallback = $invoice->buyer_tax_exempt ? 0.0 : (float) $invoice->tax_rate;
             $invoice->items()->whereNull('tax_rate')->get()->each(function (InvoiceItem $legacy) use ($fallback) {
                 $legacy->update(['tax_rate' => $legacy->taxed ? $fallback : 0.0]);
             });

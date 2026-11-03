@@ -169,3 +169,38 @@ test('a paid proforma keeps its tax on the VAT invoice when the buyer became exe
     expect((float) $vat->total)->toEqual(120.0)
         ->and($vat->fresh()->vatBreakdown()['VAT 20']['amount'])->toEqual(20.0);
 });
+
+test('editing one line of a legacy invoice does not leave an exempt buyer half taxed', function () {
+    $client = Client::factory()->create(['tax_exempt' => true]);
+    $admin = Admin::factory()->create(['role_id' => AdminRole::factory()->fullAdmin()->create()->id]);
+
+    // A legacy invoice: the tax sits on the invoice, not on its lines.
+    $invoice = Invoice::factory()->create([
+        'client_id' => $client->id, 'buyer_tax_exempt' => true,
+        'tax_rate' => 20, 'subtotal' => 200, 'tax' => 40, 'total' => 240,
+        'status' => InvoiceStatus::Unpaid->value,
+    ]);
+    foreach (['One', 'Two'] as $description) {
+        InvoiceItem::factory()->create([
+            'invoice_id' => $invoice->id, 'client_id' => $client->id,
+            'description' => $description, 'amount' => 100, 'qty' => 1,
+            'taxed' => true, 'tax_rate' => null, 'tax_label' => null, 'tax_rule_id' => null,
+        ]);
+    }
+
+    $this->actingAs($admin, 'admin')
+        ->put(route('admin.invoices.items.update', [$invoice, $invoice->items->first()]), [
+            'description' => 'One edited', 'qty' => 1, 'amount' => 100, 'tax_rule_id' => '',
+        ])
+        ->assertRedirect();
+
+    // Editing a line gives every line an explicit rate, which makes the
+    // invoice a per-line one - and that is the path that does not read the
+    // exemption. The line that was edited went to zero and the other kept the
+    // invoice's 20%, on a document marked exempt.
+    $invoice = $invoice->fresh();
+
+    expect($invoice->items->map(fn ($item) => (float) $item->tax_rate)->all())->toBe([0.0, 0.0])
+        ->and((float) $invoice->tax)->toEqual(0.0)
+        ->and((float) $invoice->total)->toEqual(200.0);
+});
