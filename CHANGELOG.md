@@ -2,6 +2,124 @@
 
 All notable changes to PNLCS are documented here. Newest first.
 
+## 1.19.0 — 2026-11-03
+
+A stable release, offered to every installation. Two registrars can now fill
+the domain price list themselves, and the pricing screen can be worked with
+once it holds hundreds of rows. The rest is a family of VAT faults on
+invoices: five of them, all in the same place — a discount line that carried
+no VAT rate of its own, and a buyer whose exemption nothing read.
+
+Thank you [@hedon77](https://github.com/hedon77) (#387) and
+[@5eBeKs](https://github.com/5eBeKs) (#388, #389, #390, #392, #393).
+
+**One thing to know after upgrading.** On an invoice whose lines carry their
+own VAT rates — the ones built in **Billing → Invoices → New**, or from a
+catalogue product — a discount is now written as one line per rate instead of
+one line without a rate. That changes what such an invoice adds up to, and in
+the customer's favour: a 10% group discount on lines of 100 at 20% and 100 at
+10% used to be taxed 30 and totalled 210, with the discount missing from the
+VAT table entirely, so the table declared a net of 200 against a subtotal of
+180. It is now taxed 27 and totals 207, and the table reconciles. **Invoices
+already issued are not touched**; this applies to invoices raised from now on.
+An invoice for a buyer marked tax exempt now carries no VAT on a line even
+when a rate is chosen for it.
+
+### Added
+
+- **Fill the price list from the registrar.** HRD and OVH can hand over every
+  extension they sell, with its pricing category and its real grace and
+  redemption periods, instead of the operator typing them in. **Setup →
+  Registrars → Add TLDs** (#387).
+- **Find an extension on the pricing screen.** The screen is paginated and
+  searchable by extension, which it needed once an import can put several
+  hundred rows on it (#387).
+
+### Changed
+
+- **An imported extension arrives switched off, and with no country assumed.**
+  Every price column defaults to 0, so an extension that arrived enabled was
+  on sale for nothing until somebody ran the price sync and noticed. The
+  import also no longer assumes Poland when the installation has not said
+  which country it sells from.
+
+### Fixed
+
+- **A discount on an invoice with more than one VAT rate takes the tax off
+  each rate.** The discount line carried no rate of its own. `lineTax()` falls
+  back to the invoice's rate for a line without one, and the invoice's rate is
+  0 when its lines carry more than one — so the discount took no tax off at
+  all, and because the line had no label the VAT table skipped it, leaving a
+  table that disagreed with the invoice's own subtotal. One line per rate now,
+  each carrying that rate, its label and its rule (#390).
+- **A promo code is split the same way.** The same fault, reached through a
+  code rather than a client group. No invoice issued today changes, because
+  order and renewal lines carry a single invoice-level rate; this is in place
+  before they carry their own (#393).
+- **A buyer marked tax exempt is not charged a line's VAT rate.** The invoice
+  builder offered the client's tax rule whether or not the client was exempt,
+  and only the path without line rates read the exemption. A line of 100 at
+  20% for an exempt client was taxed 20. A zero-rate rule keeps its label, so
+  `zw.` and `np.` still print and still have their row (#389).
+- **An exempt buyer's older invoice is no longer left half taxed.** Editing
+  one line of an invoice whose tax sits on the invoice rather than on its
+  lines gives every line an explicit rate first, which turned it into a
+  per-line invoice — the path that does not read the exemption. The edited
+  line went to zero and the untouched ones kept 20%, on a document marked
+  exempt.
+- **The VAT invoice for a paid proforma names the proforma's buyer.** It took
+  the money from the proforma and the buyer from the client record as it stood
+  when the payment arrived. A client who changed their name, address or tax id,
+  or became exempt, in between got a VAT invoice naming a different buyer from
+  the one that was billed — marked exempt while carrying the proforma's tax. A
+  buyer column the proforma left empty is still read from the client, as
+  before (#392).
+- **An affiliate's commission counts the line quantity.** The base summed the
+  unit amounts and subtracted the discount line, which does count the
+  quantity: a line of three at 100 in a 10% group gave a base of 70 where 270
+  was sold, and at a quantity of ten it gave 0, so no commission was earned at
+  all (#388).
+- **The Apps page no longer loses its buttons.** The last line of the page's
+  script set an attribute on the catalogue's counter without looking for it,
+  and the counter is only on the page when containers are in the plan, the
+  customer may install one, and the panel answered with the catalogue. On any
+  other page it threw, and the throw stopped the rest of the script, so the
+  apps the customer already runs lost their controls too. The page's extra
+  calls — the catalogue, the plan's room, the account's domains, the access
+  details — are now each allowed to fail on their own, and the page says the
+  catalogue could not be read instead of reporting an empty plan (#386).
+
+### Database changes
+
+None. No migration in this release.
+
+### For theme and module authors
+
+- **A registrar module may implement `importTlds(): array`**, returning
+  `['success' => bool, 'message' => ?string, 'added' => int, 'skipped' => int]`.
+  It is discovered with `method_exists`, so a module without it is unaffected
+  and simply does not offer the button.
+- **A server module may implement `containerCatalogue(Service): ?array`**,
+  returning null when the catalogue could not be read. The client Apps page
+  prefers it over `containerTemplates()` when it is there, so a module with
+  only the latter keeps working; the difference is that null lets the page say
+  the catalogue failed rather than that the plan has no apps.
+- `InvoiceService::groupByVat(Collection): Collection` and
+  `InvoiceService::vatOf(Collection): array` are public, for code that adds a
+  discount line and needs it to carry the VAT of the lines it discounts.
+- `PanelicaModule::containerTemplates()` is now `containerCatalogue() ?? []`;
+  its own contract is unchanged.
+
+### Views a theme may override that changed
+
+- `resources/views/admin/config/domain-pricing.blade.php` — pagination, the
+  search box and the "Add TLDs" button (#387).
+- `resources/views/admin/config/registrars.blade.php` — the "Add TLDs" button
+  and its confirmation (#387).
+- `resources/views/client/services/hosting/containers.blade.php` — the
+  catalogue counter is only touched when it is on the page, and the empty
+  catalogue has two messages instead of one (#386).
+
 ## 1.18.0 — 2026-11-02
 
 A stable release, offered to every installation. Five fixes, three of them
