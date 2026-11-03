@@ -1051,3 +1051,120 @@ it('stops asking about apps when the page budget is gone, and shows what it has'
     expect($live)->toBe([]);
     Http::assertNotSent(fn ($r) => str_contains(parse_url($r->url(), PHP_URL_PATH) ?? '', '/v1/docker/containers/c-1'));
 });
+
+/*
+ * The catalogue is not always on the page. It is absent when the plan has no
+ * apps, when the customer has used up their allowance, and when the panel did
+ * not answer the catalogue call - and the page's own script, its message and
+ * its status code all have to survive that (#386).
+ */
+
+/** The apps page with the catalogue call under our control: a response, or a throw. */
+function fakeCatalogueCall(array $containers, Closure $catalogue): void
+{
+    Http::fake(function ($request) use ($containers, $catalogue) {
+        $url = $request->url();
+        $m = $request->method();
+        if (str_contains($url, '/docker/templates') && $m === 'GET') {
+            return $catalogue();
+        }
+        if (str_contains($url, '/accounts/') && str_contains($url, '/domains')) {
+            return Http::response(['data' => []], 200);
+        }
+        if (preg_match('#/v1/accounts/[^/?]+$#', parse_url($url, PHP_URL_PATH) ?? '') && $m === 'GET') {
+            return Http::response(['data' => ['id' => 'acct-1', 'plan_id' => 'plan-1']], 200);
+        }
+        if (str_contains($url, '/v1/plans') && $m === 'GET') {
+            return Http::response(['data' => [['id' => 'plan-1', 'max_containers' => 5]]], 200);
+        }
+        if (str_contains($url, '/docker/containers') && $m === 'GET') {
+            return Http::response(['data' => ['containers' => $containers]], 200);
+        }
+
+        return Http::response(['data' => []], 200);
+    });
+}
+
+it('carries no script that assumes the catalogue is on the page', function () use ($MINE) {
+    // The reported fault: one unguarded line at the bottom of the page threw
+    // "Cannot read properties of null" whenever the catalogue was missing, and
+    // the throw stopped the rest of the script - so the apps the customer
+    // already runs lost their buttons too.
+    fakeCatalogueCall([$MINE], fn () => Http::response(['data' => ['templates' => []]], 200));
+    [$owner, $s] = ctService(ctServer());
+
+    $html = $this->actingAs($owner)->get(route('client.services.containers', $s))->assertOk()->getContent();
+
+    // Proof the catalogue's elements really are off this page, and that the one
+    // line of script that runs on load looks before it touches one. The rest of
+    // the script is wired from the catalogue's own markup - a button that is
+    // not on the page cannot be clicked - so it is reached only when they exist.
+    expect($html)->not->toContain('id="ct-count"')->not->toContain('id="ct-noresult"');
+    expect(preg_match("/getElementById\\('ct-count'\\)\\s*\\.setAttribute/", $html))->toBe(0);
+    expect($html)->toContain("var ctCount = document.getElementById('ct-count');");
+});
+
+it('says the catalogue could not be read instead of blaming the plan', function () use ($MINE) {
+    // A panel that answers the catalogue call with an error is not a plan
+    // without apps. Saying the second for the first sent customers to support
+    // asking why their plan had gone empty.
+    fakeCatalogueCall([$MINE], fn () => Http::response(['error' => 'busy'], 503));
+    [$owner, $s] = ctService(ctServer());
+
+    $r = $this->actingAs($owner)->get(route('client.services.containers', $s))->assertOk();
+
+    expect($r->viewData('catalogueUnavailable'))->toBeTrue();
+    $r->assertSee(__('client.hosting.containers.catalogue_unavailable'))
+        ->assertDontSee(__('client.hosting.containers.no_apps'))
+        // The apps they run are still there.
+        ->assertSee('acct1-wordpress');
+});
+
+it('shows the apps it has when the catalogue times out, not a server error', function () use ($MINE) {
+    // The HTTP client throws on a timeout, and nothing caught it: a panel that
+    // was briefly slow turned the whole page into a 500.
+    fakeCatalogueCall([$MINE], function () {
+        throw new Illuminate\Http\Client\ConnectionException('cURL error 28: Operation timed out');
+    });
+    [$owner, $s] = ctService(ctServer());
+
+    $this->actingAs($owner)->get(route('client.services.containers', $s))
+        ->assertOk()
+        ->assertSee('acct1-wordpress')
+        ->assertSee(__('client.hosting.containers.catalogue_unavailable'));
+});
+
+it('still says the plan has no apps when the catalogue is simply empty', function () use ($MINE) {
+    fakeCatalogueCall([$MINE], fn () => Http::response(['data' => ['templates' => []]], 200));
+    [$owner, $s] = ctService(ctServer());
+
+    $r = $this->actingAs($owner)->get(route('client.services.containers', $s))->assertOk();
+
+    expect($r->viewData('catalogueUnavailable'))->toBeFalse();
+    $r->assertSee(__('client.hosting.containers.no_apps'))
+        ->assertDontSee(__('client.hosting.containers.catalogue_unavailable'));
+});
+
+it('keeps the page up when every extra on it fails', function () use ($MINE) {
+    // Domains, domain links, stored and live access details: each is an extra
+    // on a card. One unanswered call must not cost the customer the page.
+    Http::fake(function ($request) use ($MINE) {
+        $url = $request->url();
+        $path = parse_url($url, PHP_URL_PATH) ?? '';
+        if (preg_match('#/v1/accounts/[^/?]+$#', $path) && $request->method() === 'GET') {
+            return Http::response(['data' => ['id' => 'acct-1', 'plan_id' => 'plan-1']], 200);
+        }
+        if (str_contains($url, '/v1/plans')) {
+            return Http::response(['data' => [['id' => 'plan-1', 'max_containers' => 5]]], 200);
+        }
+        if (str_contains($url, '/docker/containers') && $request->method() === 'GET' && ! preg_match('#/docker/containers/[^/?]+#', $path)) {
+            return Http::response(['data' => ['containers' => [$MINE]]], 200);
+        }
+
+        throw new Illuminate\Http\Client\ConnectionException('cURL error 28: Operation timed out');
+    });
+    [$owner, $s] = ctService(ctServer());
+
+    $this->actingAs($owner)->get(route('client.services.containers', $s))
+        ->assertOk()->assertSee('acct1-wordpress');
+});

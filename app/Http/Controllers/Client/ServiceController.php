@@ -18,6 +18,7 @@ use App\Models\Invoice;
 use App\Services\InvoiceGenerationService;
 use App\Services\Module\ModuleScreens;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Mail;
 
 class ServiceController extends Controller
@@ -1075,10 +1076,42 @@ class ServiceController extends Controller
         }
         $containers = $module->containers($service);
         $policy = $module->containerPolicy($service);
+
+        // One unanswered call must not take the whole page down. What follows
+        // are this page's extras - the catalogue, the plan's room, the
+        // account's domains, how to reach each app - and the HTTP client
+        // throws on a timeout, so a panel that was slow or briefly
+        // unreachable turned the page into a 500 instead of showing the apps
+        // the customer already runs (#386).
+        $optional = function (callable $call, mixed $fallback, string $what) use ($service) {
+            try {
+                return $call();
+            } catch (\Throwable $e) {
+                Log::warning("Client container page: {$what} could not be read", [
+                    'service' => $service->id,
+                    'error' => $e->getMessage(),
+                ]);
+
+                return $fallback;
+            }
+        };
+
         // The catalogue is only needed when the customer can actually install
         // something; skipping it otherwise saves a call on a locked plan.
-        $templates = $policy['can_create'] ? $module->containerTemplates($service) : [];
-        $resources = method_exists($module, 'containerResources') ? $module->containerResources($service) : ['memory_mb' => 0, 'cpu_percent' => 0];
+        // Null back from $optional means the call failed, which the page says
+        // in as many words - "no apps on your plan" is a different answer.
+        $templates = [];
+        $catalogueUnavailable = false;
+        if ($policy['can_create']) {
+            $templates = $optional(fn () => method_exists($module, 'containerCatalogue')
+                ? $module->containerCatalogue($service)
+                : $module->containerTemplates($service), null, 'the app catalogue');
+            $catalogueUnavailable = $templates === null;
+            $templates ??= [];
+        }
+        $resources = method_exists($module, 'containerResources')
+            ? $optional(fn () => $module->containerResources($service), ['memory_mb' => 0, 'cpu_percent' => 0], 'the plan resources')
+            : ['memory_mb' => 0, 'cpu_percent' => 0];
         $groups = $this->groupTemplates($templates);
         // Our own images, one query for the page. The panel's logo_url is not
         // used: most apps have none and half the rest are dead links.
@@ -1086,13 +1119,21 @@ class ServiceController extends Controller
         // Which domains this account has, and which are already serving an app -
         // installing something is only half the job if it cannot be reached on
         // the customer's own address.
-        $domains = method_exists($module, 'accountDomains') ? $module->accountDomains($service) : [];
-        $links = method_exists($module, 'containerDomainLinks') ? $module->containerDomainLinks($service) : [];
+        $domains = method_exists($module, 'accountDomains')
+            ? $optional(fn () => $module->accountDomains($service), [], 'the account domains')
+            : [];
+        $links = method_exists($module, 'containerDomainLinks')
+            ? $optional(fn () => $module->containerDomainLinks($service), [], 'the domain links')
+            : [];
         // How to reach each app. Two sources: what the panel said at install time,
         // and what it says about the running container now - the second is the only
         // one that covers apps installed outside PNLCS.
-        $stored = method_exists($module, 'containerAccessDetails') ? $module->containerAccessDetails($service) : [];
-        $live = method_exists($module, 'liveContainerAccess') ? $module->liveContainerAccess($service, $containers) : [];
+        $stored = method_exists($module, 'containerAccessDetails')
+            ? $optional(fn () => $module->containerAccessDetails($service), [], 'the stored access details')
+            : [];
+        $live = method_exists($module, 'liveContainerAccess')
+            ? $optional(fn () => $module->liveContainerAccess($service, $containers), [], 'the live access details')
+            : [];
         $access = \App\Models\DockerAppCredential::withLive($stored, $live, $containers);
 
         // One card per APP, not per container. A template deploys the app plus
@@ -1122,7 +1163,7 @@ class ServiceController extends Controller
             }
         }
 
-        return view('client.services.hosting.containers', compact('service', 'containers', 'grouped', 'policy', 'templates', 'resources', 'groups', 'logos', 'domains', 'links', 'access'));
+        return view('client.services.hosting.containers', compact('service', 'containers', 'grouped', 'policy', 'templates', 'resources', 'groups', 'logos', 'domains', 'links', 'access', 'catalogueUnavailable'));
     }
 
     /** Point one of the account's domains at one of its apps. */

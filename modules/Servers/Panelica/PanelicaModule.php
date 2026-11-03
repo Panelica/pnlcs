@@ -1637,14 +1637,30 @@ class PanelicaModule extends AbstractServerModule implements \App\Contracts\Host
      */
     public function containerTemplates(Service $service): array
     {
+        return $this->containerCatalogue($service) ?? [];
+    }
+
+    /**
+     * The same catalogue, with a failure kept instead of flattened.
+     *
+     * containerTemplates() answers [] both for a plan with no apps and for a
+     * panel that did not answer. The install gate can live with that - it
+     * leaves the decision to the panel - but the page cannot: it told the
+     * customer their plan had no apps every time this call failed, which is a
+     * different answer and sends them to support (#386).
+     *
+     * @return array<int, array<string, mixed>>|null null when it could not be read
+     */
+    public function containerCatalogue(Service $service): ?array
+    {
         $server = $this->getServer($service);
         $accountId = $this->linkedAccountId($service);
         if (! $server || ! $accountId) {
-            return [];
+            return null;
         }
         $resp = $this->get($server, '/v1/docker/templates?owner_user_id='.urlencode($accountId));
         if (! $resp->successful()) {
-            return [];
+            return null;
         }
         $out = [];
         foreach (($resp->json('data.templates') ?? []) as $t) {

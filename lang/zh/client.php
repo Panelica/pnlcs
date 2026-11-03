@@ -1539,6 +1539,7 @@ return [
     'hosting.containers.needs_light' => '轻量',
     'hosting.containers.needs_ram' => '此应用所需的内存',
     'hosting.containers.no_apps' => '您的套餐暂无可用应用。',
+    'hosting.containers.catalogue_unavailable' => '目前无法加载应用目录，请稍后重试。',
     'hosting.containers.not_your_app' => '该应用不属于此服务。',
     'hosting.containers.notes_title' => '注意事项',
     'hosting.containers.open_app' => '打开应用',

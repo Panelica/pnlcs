@@ -1531,6 +1531,7 @@ return [
     'hosting.containers.needs_light' => 'Невелике навантаження',
     'hosting.containers.needs_ram' => 'Потрібний обсяг пам’яті',
     'hosting.containers.no_apps' => 'На вашому тарифі поки немає доступних застосунків.',
+    'hosting.containers.catalogue_unavailable' => 'Не вдалося завантажити каталог застосунків. Спробуйте ще раз за хвилину.',
     'hosting.containers.not_your_app' => 'Цей застосунок не належить цій послузі.',
     'hosting.containers.notes_title' => 'Корисно знати',
     'hosting.containers.open_app' => 'Відкрити застосунок',

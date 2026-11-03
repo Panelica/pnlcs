@@ -1540,6 +1540,7 @@ return [
     'hosting.containers.needs_light' => 'Lekka',
     'hosting.containers.needs_ram' => 'Pamięć wymagana przez tę aplikację',
     'hosting.containers.no_apps' => 'W Twoim planie nie ma jeszcze dostępnych aplikacji.',
+    'hosting.containers.catalogue_unavailable' => 'Nie udało się teraz pobrać katalogu aplikacji. Spróbuj ponownie za chwilę.',
     'hosting.containers.not_your_app' => 'Ta aplikacja nie należy do tej usługi.',
     'hosting.containers.notes_title' => 'Warto wiedzieć',
     'hosting.containers.open_app' => 'Otwórz aplikację',

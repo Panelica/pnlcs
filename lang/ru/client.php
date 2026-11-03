@@ -1531,6 +1531,7 @@ return [
     'hosting.containers.needs_light' => 'Лёгкое',
     'hosting.containers.needs_ram' => 'Нужно памяти',
     'hosting.containers.no_apps' => 'На вашем тарифе пока нет доступных приложений.',
+    'hosting.containers.catalogue_unavailable' => 'Не удалось загрузить каталог приложений. Повторите попытку через минуту.',
     'hosting.containers.not_your_app' => 'Это приложение не относится к этой услуге.',
     'hosting.containers.notes_title' => 'Полезно знать',
     'hosting.containers.open_app' => 'Открыть приложение',

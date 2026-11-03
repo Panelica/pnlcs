@@ -1539,6 +1539,7 @@ return [
     'hosting.containers.needs_light' => 'Hafif',
     'hosting.containers.needs_ram' => 'Bu uygulamanın ihtiyaç duyduğu bellek',
     'hosting.containers.no_apps' => 'Paketinizde kullanılabilir uygulama yok.',
+    'hosting.containers.catalogue_unavailable' => 'Uygulama listesi şu anda alınamadı. Lütfen birazdan tekrar deneyin.',
     'hosting.containers.not_your_app' => 'Bu uygulama bu hizmete ait değil.',
     'hosting.containers.notes_title' => 'Bilmekte fayda var',
     'hosting.containers.open_app' => 'Uygulamayı aç',

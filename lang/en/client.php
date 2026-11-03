@@ -1540,6 +1540,7 @@ return [
     'hosting.containers.needs_light' => 'Light',
     'hosting.containers.needs_ram' => 'Memory this app needs',
     'hosting.containers.no_apps' => 'No apps are available on your plan yet.',
+    'hosting.containers.catalogue_unavailable' => 'The app catalogue could not be loaded right now. Please try again in a moment.',
     'hosting.containers.not_your_app' => 'That app does not belong to this service.',
     'hosting.containers.notes_title' => 'Good to know',
     'hosting.containers.open_app' => 'Open app',

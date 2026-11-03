@@ -236,7 +236,10 @@
 <div class="ct-card ct-col-side">
     <div class="ct-ch"><i class="ri-add-circle-line"></i>{{ __('client.hosting.containers.install_title') }}</div>
     @if(empty($templates))
-        <div class="ct-empty">{{ __('client.hosting.containers.no_apps') }}</div>
+        {{-- "None on your plan" and "the panel did not answer" are different
+             answers; saying the first for the second sends the customer to
+             support asking why their plan has no apps. --}}
+        <div class="ct-empty">{{ __('client.hosting.containers.'.(($catalogueUnavailable ?? false) ? 'catalogue_unavailable' : 'no_apps')) }}</div>
     @else
     <form method="POST" action="{{ route('client.services.containers.store', $service) }}" id="ct-installform" onsubmit="return ctInstalling()">
         @csrf
@@ -755,7 +758,14 @@ function ctClear(){
     i.focus();
 }
 
-document.getElementById('ct-count').setAttribute('data-tpl', @json(__('client.hosting.containers.showing')));
+// This is the only line here that runs on load; everything above it is wired
+// from the catalogue's own markup and cannot fire without it. Unguarded, it
+// threw "Cannot read properties of null" on every page that has no catalogue -
+// a plan without apps, an allowance used up, a panel that did not answer - and
+// the throw stopped the rest of the script, so the apps the customer already
+// runs lost their buttons too (#386).
+var ctCount = document.getElementById('ct-count');
+if (ctCount) { ctCount.setAttribute('data-tpl', @json(__('client.hosting.containers.showing'))); }
 </script>
 
 @endsection

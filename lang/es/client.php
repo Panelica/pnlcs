@@ -1570,6 +1570,7 @@ El enlace es válido durante :days días. Si no esperaba esta invitación, puede
     'hosting.containers.needs_light' => 'Ligera',
     'hosting.containers.needs_ram' => 'Memoria que necesita esta aplicación',
     'hosting.containers.no_apps' => 'Aún no hay aplicaciones disponibles en su plan.',
+    'hosting.containers.catalogue_unavailable' => 'No se pudo cargar el catálogo de aplicaciones en este momento. Vuelva a intentarlo en unos instantes.',
     'hosting.containers.not_your_app' => 'Esa aplicación no pertenece a este servicio.',
     'hosting.containers.notes_title' => 'Conviene saber',
     'hosting.containers.open_app' => 'Abrir aplicación',

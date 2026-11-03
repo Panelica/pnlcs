@@ -1429,6 +1429,7 @@ return [
     'hosting.containers.needs_light' => 'Leicht',
     'hosting.containers.needs_ram' => 'Speicher, den diese App benötigt',
     'hosting.containers.no_apps' => 'In Ihrem Plan sind noch keine Apps verfügbar.',
+    'hosting.containers.catalogue_unavailable' => 'Der App-Katalog konnte derzeit nicht geladen werden. Bitte versuchen Sie es in einem Moment erneut.',
     'hosting.containers.not_your_app' => 'Diese App gehört nicht zu diesem Dienst.',
     'hosting.containers.notes_title' => 'Gut zu wissen',
     'hosting.containers.open_app' => 'App öffnen',
