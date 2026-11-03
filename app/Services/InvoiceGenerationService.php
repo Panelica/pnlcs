@@ -12,6 +12,7 @@ use App\Models\Promotion;
 use App\Models\Service;
 use App\Models\ServiceAddon;
 use Carbon\Carbon;
+use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 
@@ -320,11 +321,32 @@ class InvoiceGenerationService
      */
     private function coveredAmount(Invoice $invoice, Promotion $promo): float
     {
-        $covered = $promo->coveredProductIds();
-
-        if ($covered === [] && $promo->billingCycles() === []) {
+        if (! $this->isRestricted($promo)) {
             return (float) $invoice->subtotal;
         }
+
+        return (float) $this->coveredItems($invoice, $promo)->sum('amount');
+    }
+
+    private function isRestricted(Promotion $promo): bool
+    {
+        return $promo->coveredProductIds() !== [] || $promo->billingCycles() !== [];
+    }
+
+    /**
+     * The lines a promotion may discount: every line for an unrestricted
+     * code, only the lines whose product and billing period it covers for a
+     * restricted one.
+     *
+     * @return Collection<array-key, mixed>
+     */
+    private function coveredItems(Invoice $invoice, Promotion $promo): Collection
+    {
+        if (! $this->isRestricted($promo)) {
+            return $invoice->items;
+        }
+
+        $covered = $promo->coveredProductIds();
 
         $serviceItems = $invoice->items->whereIn('type', ['Hosting', 'Service', 'hosting', 'service']);
 
@@ -333,11 +355,79 @@ class InvoiceGenerationService
 
         // A code limited to some billing periods discounts only the lines on
         // one of them: a monthly service ordered with a yearly code pays in full.
-        return (float) $serviceItems
+        return $serviceItems
             ->filter(fn ($item) => ($service = $services[$item->rel_id] ?? null)
                 && ($covered === [] || in_array((int) $service->product_id, $covered, true))
-                && $promo->coversCycle($service->billing_cycle))
-            ->sum('amount');
+                && $promo->coversCycle($service->billing_cycle));
+    }
+
+    /**
+     * The groups a promo code is split into, each with the taxed flag its
+     * line gets: one group per VAT the covered lines carry. On an invoice
+     * whose lines carry no VAT at all there is one group, flagged taxed when
+     * any line is, as the single promo line always was. Next to lines with a
+     * VAT, the group without one is split into taxed and untaxed lines, as
+     * the group discount splits them.
+     *
+     * @param  Collection<array-key, mixed>  $covered
+     * @return Collection<int, array{lines: Collection<array-key, mixed>, taxed: bool}>
+     */
+    private function promoGroups(Invoice $invoice, Collection $covered, bool $hasTaxable): Collection
+    {
+        $none = '||';
+        $carriesVat = $this->invoiceService->groupByVat($invoice->items)->keys()->contains(fn ($key) => $key !== $none);
+        $groups = collect();
+
+        foreach ($this->invoiceService->groupByVat($covered) as $key => $lines) {
+            if ($key !== $none || ! $carriesVat) {
+                $groups->push(['lines' => $lines, 'taxed' => $hasTaxable]);
+
+                continue;
+            }
+
+            foreach ([true, false] as $taxed) {
+                $part = $lines->where('taxed', $taxed);
+
+                if ($part->isNotEmpty()) {
+                    $groups->push(['lines' => $part, 'taxed' => $taxed]);
+                }
+            }
+        }
+
+        return $groups;
+    }
+
+    /**
+     * A fixed amount shared by weight to the cent: each share rounded down,
+     * the cents still missing going one each to the largest remainders, the
+     * earlier share first on a tie. No share is negative and they add up to
+     * exactly the amount.
+     *
+     * @param  array<int, float>  $weights
+     * @return array<int, float>
+     */
+    private function shareCents(float $amount, array $weights): array
+    {
+        $cents = (int) round($amount * 100);
+        $total = array_sum($weights);
+        $shares = [];
+        $remainders = [];
+
+        foreach ($weights as $i => $weight) {
+            $exact = $cents * $weight / $total;
+            $shares[$i] = (int) floor($exact + 1e-9);
+            $remainders[$i] = round($exact - $shares[$i], 9);
+        }
+
+        // Stable sort: equal remainders keep the order of the groups.
+        $order = array_keys($remainders);
+        usort($order, fn ($a, $b) => [$remainders[$b], $a] <=> [$remainders[$a], $b]);
+
+        foreach (array_slice($order, 0, $cents - array_sum($shares)) as $i) {
+            $shares[$i]++;
+        }
+
+        return array_map(fn ($share) => $share / 100, $shares);
     }
 
     private function invoiceProductIds(Invoice $invoice): array
@@ -498,16 +588,51 @@ class InvoiceGenerationService
             // total charges tax on money the customer never pays.
             $hasTaxable = (float) $invoice->items->where('taxed', true)->sum('amount') > 0;
 
-            $this->invoiceService->addLineItem($invoice, [
-                'type' => 'Discount',
-                'rel_id' => 0,
-                'description' => "Promo code {$promo->code}",
-                'amount' => -$discount,
-                'taxed' => $hasTaxable,
-            ]);
+            // One line per VAT rate of the lines the code covers, the way the
+            // group discount is split: a single line without a rate took no
+            // tax off an invoice whose lines carry two rates, and printed a
+            // VAT row of its own next to a single one. Lines without a rate
+            // form one group, so such invoices keep their one line. Next to
+            // lines with a rate, that group is split into taxed and untaxed
+            // as the group discount splits it, since a line without a rate
+            // takes the invoice rate when taxed. A percentage is worked out on
+            // each group; a fixed amount is shared by each group's net.
+            $groups = $this->promoGroups($invoice, $this->coveredItems($invoice, $promo), $hasTaxable)
+                ->map(fn ($group) => $group + ['net' => (float) $group['lines']->sum(fn ($item) => (float) $item->amount * (int) $item->qty)])
+                ->filter(fn ($group) => $group['net'] > 0)
+                ->values();
+            $weight = (float) $groups->sum('net');
+
+            if ($groups->count() === 1) {
+                $amounts = [$discount];
+            } elseif ($promo->type === 'percentage') {
+                $amounts = $groups->map(fn ($group) => round($base * $group['net'] / $weight * ($promo->value / 100), 2))->all();
+            } else {
+                $amounts = $this->shareCents($discount, $groups->pluck('net')->all());
+            }
+
+            $given = round(array_sum($amounts), 2);
+
+            if ($given <= 0) {
+                return false;
+            }
+
+            foreach ($groups as $i => $group) {
+                if ($amounts[$i] <= 0) {
+                    continue;
+                }
+
+                $this->invoiceService->addLineItem($invoice, [
+                    'type' => 'Discount',
+                    'rel_id' => 0,
+                    'description' => "Promo code {$promo->code}",
+                    'amount' => -$amounts[$i],
+                    'taxed' => $group['taxed'],
+                ] + $this->invoiceService->vatOf($group['lines']));
+            }
 
             $invoice->update([
-                'notes' => trim(($invoice->notes ?? '')."\nPromo applied: {$promo->code} (-".money_fmt($discount).')'),
+                'notes' => trim(($invoice->notes ?? '')."\nPromo applied: {$promo->code} (-".money_fmt($given).')'),
             ]);
 
             // The sign-up counter, measured against max_uses. A renewal spends
