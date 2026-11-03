@@ -139,17 +139,16 @@ it('counts a TLD HRD has no price for as skipped and an unchanged one as unchang
     expect($result)->toMatchArray(['success' => true, 'updated' => 0, 'unchanged' => 1, 'skipped' => 1]);
 });
 
-it('refuses to write złoty prices into a shop that prices in something else', function () {
+it('converts złoty prices into the shop currency', function () {
     zlotyShop('USD');
+    Currency::create(['code' => 'PLN', 'name' => 'PLN', 'prefix' => '', 'suffix' => ' PLN', 'rate' => 2.0, 'is_default' => false]);
     $pl = hrdTld('.pl');
 
     $result = hrdRegistrarWith(hrdPricings(HRD_PRICINGS), ['margin_percent' => '20'])->syncPrices();
 
-    expect($result['success'])->toBeFalse()
-        ->and($result['message'])->toContain('PLN')
-        ->and($result['message'])->toContain('USD')
-        // Nothing was touched.
-        ->and((float) $pl->fresh()->register_price)->toBe(1.0);
+    // 46 PLN @ 2 PLN/USD = 23 USD; +20% → 27.6 → 28.
+    expect($result['success'])->toBeTrue()
+        ->and((float) $pl->fresh()->register_price)->toBe(28.0);
 });
 
 /** The id number HRD is given for this client's registrant. */

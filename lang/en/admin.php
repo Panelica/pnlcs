@@ -2512,6 +2512,7 @@ return [
     'registrars.sync_failed' => 'Price sync failed: :message',
     'registrars.sync_unavailable' => 'This registrar does not support price synchronization.',
     'registrars.sync_currency_mismatch' => 'Price sync is off: the registrar quotes in :registrar and the shop prices in :shop. Set the shop currency to :registrar, or enter the prices by hand.',
+    'registrars.sync_currency_unavailable' => 'Cannot convert the :registrar prices to :shop — no exchange rate is available.',
     'registrars.last_sync' => 'Last price sync: :date',
     'registrars.add_tlds' => 'Add TLDs',
     'registrars.add_tlds_confirm' => 'Add every extension :name offers to the domain price list? Existing extensions are left alone.',

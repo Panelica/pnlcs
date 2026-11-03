@@ -317,7 +317,11 @@ class OvhRegistrar implements RegistrarModuleInterface, SyncsDomainData
     {
         try {
             $margin = (float) ($this->settings['margin_percent'] ?? 0);
-            $shop = strtoupper((string) (Currency::getDefault()?->code ?? ''));
+
+            // The cart's currency is the OVH account's. Resolve the conversion
+            // factor once, from the first quote, and convert every price with it.
+            $quoted = null;
+            $factor = null;
 
             $updated = 0;
             $unchanged = 0;
@@ -343,15 +347,16 @@ class OvhRegistrar implements RegistrarModuleInterface, SyncsDomainData
                     continue;
                 }
 
-                // The cart's currency is the OVH account's. Written into a
-                // price list the shop reads in another one, every number would
-                // be wrong by the exchange rate and nothing would say so.
-                $quoted = (string) ($price['currency'] ?? '');
-                if ($quoted !== '' && $quoted !== $shop) {
-                    return ['success' => false, 'message' => __('admin.registrars.sync_currency_mismatch', [
-                        'registrar' => $quoted,
-                        'shop' => $shop !== '' ? $shop : '—',
-                    ])];
+                if ($factor === null && ($price['currency'] ?? null)) {
+                    $quoted = strtoupper((string) $price['currency']);
+                    $factor = Currency::rateToShop($quoted);
+
+                    if ($factor === null) {
+                        return ['success' => false, 'message' => __('admin.registrars.sync_currency_unavailable', [
+                            'registrar' => $quoted,
+                            'shop' => Currency::getDefault()?->code ?? '—',
+                        ])];
+                    }
                 }
 
                 // Only the prices OVH quotes. One it does not is not a price
@@ -359,7 +364,7 @@ class OvhRegistrar implements RegistrarModuleInterface, SyncsDomainData
                 // panel does not know, so the operator's own number stays.
                 $next = [];
                 foreach (['register' => 'register_price', 'renew' => 'renew_price', 'transfer' => 'transfer_price'] as $from => $column) {
-                    $value = $this->withMargin($price[$from] ?? null, $margin);
+                    $value = $this->withMargin($price[$from] ?? null, $margin, $factor ?? 1.0);
                     if ($value !== null) {
                         $next[$column] = $value;
                     }
@@ -388,7 +393,7 @@ class OvhRegistrar implements RegistrarModuleInterface, SyncsDomainData
                 $updated++;
             }
 
-            $this->logSync($updated, $unchanged, $skipped, $changes, $skippedExtensions, $margin);
+            $this->logSync($updated, $unchanged, $skipped, $changes, $skippedExtensions, $margin, $quoted, $factor);
 
             RegistrarSettings::updateOrCreate(
                 ['registrar' => 'ovh', 'setting' => 'last_price_sync'],
@@ -756,13 +761,15 @@ class OvhRegistrar implements RegistrarModuleInterface, SyncsDomainData
     }
 
     /** A purchase price with the margin applied, rounded up to a whole unit. */
-    protected function withMargin(?float $price, float $margin): ?float
+    protected function withMargin(?float $price, float $margin, float $factor = 1.0): ?float
     {
         if ($price === null) {
             return null;
         }
 
-        return $price > 0 ? ceil($price * (1 + $margin / 100)) : 0.0;
+        $value = $price * $factor;
+
+        return $value > 0 ? ceil($value * (1 + $margin / 100)) : 0.0;
     }
 
     /**
@@ -860,7 +867,7 @@ class OvhRegistrar implements RegistrarModuleInterface, SyncsDomainData
         }
     }
 
-    protected function logSync(int $updated, int $unchanged, int $skipped, array $changes, array $skippedExtensions, float $margin): void
+    protected function logSync(int $updated, int $unchanged, int $skipped, array $changes, array $skippedExtensions, float $margin, ?string $currency = null, ?float $rate = null): void
     {
         $details = collect($changes)->map(function (array $c): string {
             return $c['extension']
@@ -876,7 +883,7 @@ class OvhRegistrar implements RegistrarModuleInterface, SyncsDomainData
             ModuleLog::create([
                 'module' => $this->getModuleName(),
                 'action' => 'sync_prices',
-                'request' => json_encode(['margin_percent' => $margin], JSON_UNESCAPED_SLASHES),
+                'request' => json_encode(['margin_percent' => $margin, 'currency' => $currency, 'rate' => $rate], JSON_UNESCAPED_SLASHES),
                 'response' => json_encode([
                     'updated' => $updated,
                     'unchanged' => $unchanged,

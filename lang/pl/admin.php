@@ -2512,6 +2512,7 @@ return [
     'registrars.sync_failed' => 'Synchronizacja cen nie powiodła się: :message',
     'registrars.sync_unavailable' => 'Ten rejestrator nie obsługuje synchronizacji cen.',
     'registrars.sync_currency_mismatch' => 'Synchronizacja cen jest niedostępna: rejestrator podaje ceny w :registrar, a sklep w :shop. Ustaw walutę sklepu na :registrar lub wprowadź ceny ręcznie.',
+    'registrars.sync_currency_unavailable' => 'Nie można przeliczyć cen z :registrar na :shop — brak dostępnego kursu wymiany.',
     'registrars.last_sync' => 'Ostatnia synchronizacja cen: :date',
     'registrars.add_tlds' => 'Dodaj TLD',
     'registrars.add_tlds_confirm' => 'Dodać wszystkie rozszerzenia oferowane przez :name do cennika domen? Istniejące rozszerzenia zostaną pominięte.',

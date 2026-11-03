@@ -2512,6 +2512,7 @@ return [
     'registrars.sync_failed' => '价格同步失败：:message',
     'registrars.sync_unavailable' => '该注册商不支持价格同步。',
     'registrars.sync_currency_mismatch' => '无法同步价格：注册商以 :registrar 计价，而商店以 :shop 计价。请将商店货币改为 :registrar，或手动填写价格。',
+    'registrars.sync_currency_unavailable' => '无法将 :registrar 的价格转换为 :shop —— 没有可用的汇率。',
     'registrars.last_sync' => '上次价格同步：:date',
     'registrars.add_tlds' => '添加 TLD',
     'registrars.add_tlds_confirm' => '将 :name 提供的所有扩展名添加到域名价格表中？现有扩展名保持不变。',

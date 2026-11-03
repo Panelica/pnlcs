@@ -2512,6 +2512,7 @@ return [
     'registrars.sync_failed' => 'Preissynchronisierung fehlgeschlagen: :message',
     'registrars.sync_unavailable' => 'Dieser Registrar unterstützt keine Preissynchronisierung.',
     'registrars.sync_currency_mismatch' => 'Preissynchronisierung nicht möglich: Der Registrar rechnet in :registrar, der Shop in :shop. Stellen Sie die Shop-Währung auf :registrar um oder geben Sie die Preise von Hand ein.',
+    'registrars.sync_currency_unavailable' => 'Die :registrar-Preise lassen sich nicht nach :shop umrechnen — kein Wechselkurs verfügbar.',
     'registrars.last_sync' => 'Letzte Preissynchronisierung: :date',
     'registrars.add_tlds' => 'TLDs hinzufügen',
     'registrars.add_tlds_confirm' => 'Alle von :name angebotenen Erweiterungen zur Domain-Preisliste hinzufügen? Vorhandene Erweiterungen bleiben unverändert.',

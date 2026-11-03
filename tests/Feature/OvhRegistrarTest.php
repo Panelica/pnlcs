@@ -241,18 +241,19 @@ it('writes the prices OVH quotes, with the margin, rounded up', function () {
         ->and((float) $tld->fresh()->transfer_price)->toBe(1.0);
 });
 
-it('refuses to write prices quoted in a currency the shop does not price in', function () {
+it('converts foreign-currency prices into the shop currency', function () {
     ovhSettings();
     ovhShop('USD');
+    Currency::create(['code' => 'PLN', 'name' => 'PLN', 'prefix' => '', 'suffix' => ' PLN', 'rate' => 2.0, 'is_default' => false]);
+    RegistrarSettings::updateOrCreate(['registrar' => 'ovh', 'setting' => 'margin_percent'], ['value' => '20']);
     $tld = ovhTld('.pl');
     ovhCartFake([['FEE', 46.0]], 'PLN');
 
     $result = app(OvhRegistrar::class)->syncPrices();
 
-    expect($result['success'])->toBeFalse()
-        ->and($result['message'])->toContain('PLN')
-        ->and($result['message'])->toContain('USD')
-        ->and((float) $tld->fresh()->register_price)->toBe(1.0);
+    // 46 PLN @ 2 PLN/USD = 23 USD; +20% → 27.6 → 28.
+    expect($result['success'])->toBeTrue()
+        ->and((float) $tld->fresh()->register_price)->toBe(28.0);
 });
 
 it('leaves another registrar\'s TLDs alone', function () {

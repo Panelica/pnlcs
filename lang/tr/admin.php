@@ -2487,6 +2487,7 @@ return [
     'registrars.sync_failed' => 'Fiyat eşitlemesi başarısız: :message',
     'registrars.sync_unavailable' => 'Bu kayıt kuruluşu fiyat eşitlemesini desteklemiyor.',
     'registrars.sync_currency_mismatch' => 'Fiyat eşitlemesi yapılamaz: kayıt kuruluşu :registrar, dükkân ise :shop para biriminde fiyatlıyor. Dükkân para birimini :registrar yapın ya da fiyatları elle girin.',
+    'registrars.sync_currency_unavailable' => ':registrar fiyatları :shop para birimine çevrilemiyor — kullanılabilir döviz kuru yok.',
     'registrars.last_sync' => 'Son fiyat eşitlemesi: :date',
     'registrars.add_tlds' => 'TLD ekle',
     'registrars.add_tlds_confirm' => ':name tarafından sunulan tüm uzantılar alan adı fiyat listesine eklensin mi? Mevcut uzantılar olduğu gibi kalır.',

@@ -122,14 +122,13 @@ class HrdRegistrar implements RegistrarModuleInterface, SyncsDomainData
      */
     public function syncPrices(): array
     {
-        // HRD quotes in złoty. Written into a price list the shop reads in
-        // another currency, the numbers would be wrong by the exchange rate
-        // and nothing would say so.
-        $shop = strtoupper((string) (Currency::getDefault()?->code ?? ''));
-        if ($shop !== self::QUOTE_CURRENCY) {
-            return ['success' => false, 'message' => __('admin.registrars.sync_currency_mismatch', [
+        // HRD quotes in złoty. Converted into the shop's currency before the
+        // margin is applied, so a shop pricing in euros keeps correct numbers.
+        $factor = Currency::rateToShop(self::QUOTE_CURRENCY);
+        if ($factor === null) {
+            return ['success' => false, 'message' => __('admin.registrars.sync_currency_unavailable', [
                 'registrar' => self::QUOTE_CURRENCY,
-                'shop' => $shop !== '' ? $shop : '—',
+                'shop' => Currency::getDefault()?->code ?? '—',
             ])];
         }
 
@@ -162,7 +161,7 @@ class HrdRegistrar implements RegistrarModuleInterface, SyncsDomainData
                 // operator's own number stays.
                 $next = [];
                 foreach (['register' => 'register_price', 'renew' => 'renew_price', 'transfer' => 'transfer_price', 'restore' => 'restore_price'] as $from => $column) {
-                    $value = $this->withMargin($prices[$ext][$from] ?? null, $margin);
+                    $value = $this->withMargin($prices[$ext][$from] ?? null, $margin, $factor);
                     if ($value !== null) {
                         $next[$column] = $value;
                     }
@@ -208,7 +207,7 @@ class HrdRegistrar implements RegistrarModuleInterface, SyncsDomainData
                 ModuleLog::create([
                     'module' => $this->getModuleName(),
                     'action' => 'sync_prices',
-                    'request' => json_encode(['margin_percent' => $margin], JSON_UNESCAPED_SLASHES),
+                    'request' => json_encode(['margin_percent' => $margin, 'currency' => self::QUOTE_CURRENCY, 'rate' => $factor], JSON_UNESCAPED_SLASHES),
                     'response' => json_encode([
                         'updated' => $updated,
                         'unchanged' => $unchanged,
@@ -235,14 +234,14 @@ class HrdRegistrar implements RegistrarModuleInterface, SyncsDomainData
         }
     }
 
-    /** A purchase price with the margin applied, rounded up to a whole złoty. */
-    protected function withMargin(?string $price, float $margin): ?float
+    /** A purchase price, converted and with the margin applied, rounded up. */
+    protected function withMargin(?string $price, float $margin, float $factor = 1.0): ?float
     {
         if ($price === null || trim($price) === '') {
             return null;
         }
 
-        $value = (float) $price;
+        $value = (float) $price * $factor;
 
         return $value > 0 ? ceil($value * (1 + $margin / 100)) : 0.0;
     }
