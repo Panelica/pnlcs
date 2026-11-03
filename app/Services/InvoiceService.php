@@ -148,21 +148,30 @@ class InvoiceService
         $groupName = $invoice->client->group->name;
 
         // Taxable and untaxed lines are discounted separately so the taxable
-        // amount falls by exactly the discount given on taxable work.
+        // amount falls by exactly the discount given on taxable work, and each
+        // VAT rate gets its own line so its tax falls by the discount on it.
         foreach ([true, false] as $taxed) {
-            $base = (float) $invoice->items->where('taxed', $taxed)->sum(fn ($item) => (float) $item->amount * (int) $item->qty);
+            $groups = $invoice->items->where('taxed', $taxed)
+                ->groupBy(fn ($item) => $item->tax_rule_id.'|'.$item->tax_rate.'|'.$item->tax_label);
 
-            if ($base <= 0) {
-                continue;
+            foreach ($groups as $lines) {
+                $base = (float) $lines->sum(fn ($item) => (float) $item->amount * (int) $item->qty);
+
+                if ($base <= 0) {
+                    continue;
+                }
+
+                $this->addLineItem($invoice, [
+                    'type' => 'Discount',
+                    'rel_id' => 0,
+                    'description' => "{$groupName} discount ({$percent}%)",
+                    'amount' => -round($base * ($percent / 100), 2),
+                    'taxed' => $taxed,
+                    'tax_rate' => $lines->first()->tax_rate,
+                    'tax_label' => $lines->first()->tax_label,
+                    'tax_rule_id' => $lines->first()->tax_rule_id,
+                ]);
             }
-
-            $this->addLineItem($invoice, [
-                'type' => 'Discount',
-                'rel_id' => 0,
-                'description' => "{$groupName} discount ({$percent}%)",
-                'amount' => -round($base * ($percent / 100), 2),
-                'taxed' => $taxed,
-            ]);
         }
     }
 
