@@ -85,6 +85,11 @@ docker exec pnlcs /usr/local/bin/update.sh --check    # compare only
 
 `update.sh` runs the same updater, then reloads PHP. A container restarted in
 the middle of an update rolls it back by itself before it starts serving.
+
+It updates PNLCS, **not the image**. nginx, PHP and the entrypoint come from
+the image, and a fix to any of them arrives by pulling the tag again and
+recreating the container — the volumes, and everything in them, stay:
+[the image, which `update.sh` does not touch](docker.md#the-image-which-updatesh-does-not-touch).
 Images before **1.5** reset the code to the development branch on every update
 and discarded changes made inside the container; pull
 `panelica/pnlcs-runtime:1.5` and recreate the container with the same volumes

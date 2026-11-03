@@ -67,6 +67,37 @@ docker exec pnlcs /usr/local/bin/update.sh
 See [Updating](updating.md#docker). A container restarted in the middle of an
 update rolls it back before it serves a page.
 
+### The image, which `update.sh` does not touch
+
+`update.sh` updates **PNLCS**, not the container it runs in. Fixes to nginx,
+PHP, the Alpine packages or the entrypoint live in the image, and they arrive
+only when you pull the tag again and recreate the container:
+
+```bash
+docker pull panelica/pnlcs-runtime:1.5
+docker stop pnlcs && docker rm pnlcs
+docker run -d --name pnlcs ... panelica/pnlcs-runtime:1.5   # the same run command as before
+```
+
+Your installation, database and uploads are in the volumes, so they stay. The
+`1.5` tag is **rebuilt in place** when the base image or a package it carries
+is updated — the tag does not change, so there is nothing for the panel to
+announce; pulling it again is how you get the newer build. Each rebuild also
+gets a dated tag (`1.5-20261103`) if you want to pin one.
+
+To see whether your container is on the newest build of its tag:
+
+```bash
+docker inspect --format '{{.Image}}' pnlcs                             # what the container runs
+docker image inspect panelica/pnlcs-runtime:1.5 --format '{{.Id}}'     # what the tag points at now
+```
+
+Different ids mean a newer build is waiting; pull and recreate as above.
+
+**Installed with Panelica:** in **Docker Manager**, open the container's
+**Update Image** action and press **Pull & Update** — it pulls the tag and
+recreates the container with the same settings and volumes.
+
 **From image 1.4 or older:** those images reset the code to the development
 branch on every update. Recreate the container on 1.5 with the same volumes;
 your installation, data and changes stay as they are:
