@@ -290,9 +290,10 @@ class AffiliateService
 
         // A payment for several invoices is no sale either: each invoice it
         // pays earns its own commission when it is settled.
-        return (float) $invoice->items()
+        return round($invoice->items()
             ->whereNotIn('type', ['AddFunds', MassPaymentService::ITEM_TYPE])
-            ->sum('amount');
+            ->get()
+            ->sum(fn ($item) => (float) $item->amount * (int) $item->qty), 2);
     }
 
     public function calculateCommission(Affiliate $affiliate, float $invoiceTotal, ?float $rate = null): float
