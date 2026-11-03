@@ -12,6 +12,8 @@ use App\Models\ModuleLog;
 use App\Models\RegistrarSettings;
 use App\Services\DomainHosting;
 use App\Support\MapsClientFields;
+use App\Support\MapsTldCategories;
+use App\Support\MapsTldGracePeriods;
 use Carbon\Carbon;
 use Illuminate\Support\Facades\Log;
 
@@ -30,6 +32,8 @@ use Illuminate\Support\Facades\Log;
 class OvhRegistrar implements RegistrarModuleInterface, SyncsDomainData
 {
     use MapsClientFields;
+    use MapsTldCategories;
+    use MapsTldGracePeriods;
 
     protected ?OvhClient $client = null;
 
@@ -394,6 +398,54 @@ class OvhRegistrar implements RegistrarModuleInterface, SyncsDomainData
             return ['success' => true, 'updated' => $updated, 'unchanged' => $unchanged, 'skipped' => $skipped];
         } catch (\Throwable $e) {
             Log::error("OVH syncPrices failed: {$e->getMessage()}");
+
+            return ['success' => false, 'message' => $e->getMessage()];
+        }
+    }
+
+    /**
+     * Add every extension OVH offers to the price list as an OVH TLD, without
+     * touching the rows that already exist (so nothing is duplicated and a TLD
+     * already on another registrar is left alone). Prices are left at their
+     * defaults: "Sync prices" fills them in a separate step.
+     *
+     * @return array{success: bool, added?: int, skipped?: int, message?: string}
+     */
+    public function importTlds(): array
+    {
+        try {
+            $extensions = $this->client()->get('/domain/extensions');
+
+            $added = 0;
+            $skipped = 0;
+
+            foreach ((is_array($extensions) ? $extensions : []) as $ext) {
+                [$grace, $redemption] = $this->tldGracePeriod((string) $ext);
+
+                $tld = DomainPricing::firstOrCreate(
+                    ['extension' => '.'.$ext],
+                    [
+                        'auto_registrar' => 'ovh',
+                        'min_years' => 1,
+                        'max_years' => 10,
+                        'grace_period' => $grace,
+                        'redemption_grace_period' => $redemption,
+                        'enabled' => true,
+                        'category' => $this->tldCategory((string) $ext),
+                        'is_popular' => false,
+                    ]
+                );
+
+                if ($tld->wasRecentlyCreated) {
+                    $added++;
+                } else {
+                    $skipped++;
+                }
+            }
+
+            return ['success' => true, 'added' => $added, 'skipped' => $skipped];
+        } catch (\Throwable $e) {
+            Log::error("OVH importTlds failed: {$e->getMessage()}");
 
             return ['success' => false, 'message' => $e->getMessage()];
         }

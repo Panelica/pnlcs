@@ -875,13 +875,19 @@ class ConfigController extends Controller
 
     // ===== DOMAIN PRICING =====
 
-    public function domainPricing()
+    public function domainPricing(Request $request)
     {
         $currency = Currency::getDefault();
         $currencySymbol = $currency ? trim((string) ($currency->prefix ?: $currency->suffix)) : '$';
 
+        $query = DomainPricing::query();
+
+        if ($search = trim((string) $request->query('search'))) {
+            $query->where('extension', 'like', '%'.$search.'%');
+        }
+
         return view('admin.config.domain-pricing', [
-            'tlds' => DomainPricing::orderBy('sort_order')->get(),
+            'tlds' => $query->orderBy('sort_order')->orderBy('extension')->paginate(50)->withQueryString(),
             'currencySymbol' => $currencySymbol,
             'registrars' => $this->activeRegistrars(),
         ]);
@@ -1009,6 +1015,7 @@ class ConfigController extends Controller
                     'help' => ($module && method_exists($module, 'getConfigHelp')) ? $module->getConfigHelp() : null,
                     'testable' => $module && method_exists($module, 'testConnection'),
                     'syncable' => $module && method_exists($module, 'syncPrices'),
+                    'importable' => $module && method_exists($module, 'importTlds'),
                     // Manual works out of the box; every other registrar is
                     // off until the operator switches it on.
                     'active' => $name === 'manual'
@@ -2196,6 +2203,30 @@ class ConfigController extends Controller
             'name' => $module->getModuleName(),
             'updated' => $result['updated'] ?? 0,
             'unchanged' => $result['unchanged'] ?? 0,
+            'skipped' => $result['skipped'] ?? 0,
+        ]));
+    }
+
+    /**
+     * Import every TLD the registrar offers into the price list, without
+     * duplicating the extensions that are already there.
+     */
+    public function addRegistrarTlds(Request $request, string $registrar)
+    {
+        $module = app(ModuleRegistry::class)->getRegistrarModule($registrar);
+
+        if (! $module || ! method_exists($module, 'importTlds')) {
+            return back()->with('error', __('admin.registrars.add_tlds_unavailable'));
+        }
+
+        $result = $module->importTlds();
+
+        if (empty($result['success'])) {
+            return back()->with('error', __('admin.registrars.add_tlds_failed', ['message' => $result['message'] ?? '']));
+        }
+
+        return back()->with('success', __('admin.registrars.add_tlds_success', [
+            'added' => $result['added'] ?? 0,
             'skipped' => $result['skipped'] ?? 0,
         ]));
     }

@@ -496,3 +496,26 @@ it('keeps it attached on a transfer too', function () {
         ->and($domain->fresh()->order_id)->toBe($order->id)
         ->and($domain->fresh()->registrar_contact_id)->toBe('12345');
 });
+
+it('imports the OVH TLDs without duplicating existing extensions', function () {
+    ovhSettings();
+    Http::fake(['*/domain/extensions' => Http::response(['com', 'net', 'pl'], 200)]);
+
+    DomainPricing::create(['extension' => '.com', 'auto_registrar' => 'hrd']);
+
+    $result = app(OvhRegistrar::class)->importTlds();
+
+    expect($result)->toMatchArray(['success' => true, 'added' => 2, 'skipped' => 1]);
+
+    $net = DomainPricing::where('extension', '.net')->first();
+    expect($net->auto_registrar)->toBe('ovh')
+        ->and($net->min_years)->toBe(1)
+        ->and($net->max_years)->toBe(10)
+        ->and($net->grace_period)->toBe(5)
+        ->and($net->redemption_grace_period)->toBe(30)
+        ->and($net->category)->toBe('generic')
+        ->and((bool) $net->enabled)->toBeTrue();
+
+    // .com already existed on another registrar: left alone.
+    expect(DomainPricing::where('extension', '.com')->value('auto_registrar'))->toBe('hrd');
+});
