@@ -36,7 +36,7 @@ class ProformaService
             $vat = DB::transaction(function () use ($proforma) {
                 $vat = Invoice::create([
                     'client_id' => $proforma->client_id,
-                    ...Invoice::buyerSnapshotFrom($proforma->client),
+                    ...$this->buyerFromProforma($proforma),
                     'invoice_num' => app(InvoiceService::class)->generateInvoiceNumber('vat'),
                     'date' => now()->toDateString(),
                     'due_date' => now()->toDateString(),
@@ -100,6 +100,34 @@ class ProformaService
 
             return null;
         }
+    }
+
+    /**
+     * The buyer the VAT invoice is issued to: the one frozen on the proforma,
+     * because the document the money came from decides who was billed. Read
+     * off the client record instead, a client who changed their details or
+     * became exempt between the proforma and the payment got a VAT invoice
+     * naming a different buyer from the one that paid.
+     *
+     * A column the proforma left empty is read from the client, as before:
+     * the proforma itself shows the client's value for it (Invoice::buyer()),
+     * and a proforma issued before a column joined the snapshot (tax office,
+     * national ID, client type) has nothing to copy there.
+     *
+     * @return array<string,mixed>
+     */
+    private function buyerFromProforma(Invoice $proforma): array
+    {
+        $buyer = Invoice::buyerSnapshotFrom($proforma->client);
+
+        foreach (array_keys($buyer) as $column) {
+            $value = $proforma->getAttribute($column);
+            if ($value !== null && $value !== '' && $value !== []) {
+                $buyer[$column] = $value;
+            }
+        }
+
+        return $buyer;
     }
 
     /**
