@@ -241,6 +241,7 @@ it('imports the HRD TLDs without duplicating existing extensions', function () {
         ->and($comPl->max_years)->toBe(10)
         ->and($comPl->grace_period)->toBe(0)          // NASK .pl: no renew grace
         ->and($comPl->redemption_grace_period)->toBe(30)
+        ->and($comPl->category)->toBe('local')        // the operator's own country TLD
         ->and((bool) $comPl->enabled)->toBeTrue();
 
     // Already present on another registrar: left alone, not switched to HRD.
@@ -283,4 +284,26 @@ it('applies the grace and redemption periods the registries actually grant', fun
         ->and([$g('.de'), $r('.de')])->toBe([0, 0])
         // EURid .eu: no grace, 30-day quarantine.
         ->and([$g('.eu'), $r('.eu')])->toBe([0, 30]);
+});
+
+const HRD_CATEGORIES = <<<'XML'
+<api>
+  <partner><pricings>
+    <pricing><name>d_com</name><price><name>Rejestracja</name><value>10.00</value></price></pricing>
+    <pricing><name>d_pl</name><price><name>Rejestracja</name><value>40.00</value></price></pricing>
+    <pricing><name>d_de</name><price><name>Rejestracja</name><value>5.00</value></price></pricing>
+    <pricing><name>d_xyz</name><price><name>Rejestracja</name><value>15.00</value></price></pricing>
+  </pricings></partner>
+</api>
+XML;
+
+it('assigns the pricing category that matches each TLD', function () {
+    hrdRegistrarWith(hrdPricings(HRD_CATEGORIES))->importTlds();
+
+    $cat = fn ($e) => DomainPricing::where('extension', $e)->value('category');
+
+    expect($cat('.com'))->toBe('generic')
+        ->and($cat('.pl'))->toBe('local')
+        ->and($cat('.de'))->toBe('country')
+        ->and($cat('.xyz'))->toBe('new');
 });

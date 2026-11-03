@@ -11,6 +11,7 @@ use App\Models\ModuleLog;
 use App\Models\RegistrarSettings;
 use App\Services\DomainHosting;
 use App\Support\MapsClientFields;
+use App\Support\MapsTldCategories;
 use App\Support\MapsTldGracePeriods;
 use Carbon\Carbon;
 use Illuminate\Support\Facades\Log;
@@ -33,6 +34,7 @@ class HrdRegistrar implements RegistrarModuleInterface, SyncsDomainData
     private const QUOTE_CURRENCY = 'PLN';
 
     use MapsClientFields;
+    use MapsTldCategories;
     use MapsTldGracePeriods;
 
     protected ?HrdClient $client = null;
@@ -276,7 +278,7 @@ class HrdRegistrar implements RegistrarModuleInterface, SyncsDomainData
                         'grace_period' => $grace,
                         'redemption_grace_period' => $redemption,
                         'enabled' => true,
-                        'category' => 'new',
+                        'category' => $this->tldCategory($ext),
                         'is_popular' => false,
                     ]
                 );

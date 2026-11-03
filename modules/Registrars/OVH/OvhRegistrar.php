@@ -12,6 +12,7 @@ use App\Models\ModuleLog;
 use App\Models\RegistrarSettings;
 use App\Services\DomainHosting;
 use App\Support\MapsClientFields;
+use App\Support\MapsTldCategories;
 use App\Support\MapsTldGracePeriods;
 use Carbon\Carbon;
 use Illuminate\Support\Facades\Log;
@@ -31,6 +32,7 @@ use Illuminate\Support\Facades\Log;
 class OvhRegistrar implements RegistrarModuleInterface, SyncsDomainData
 {
     use MapsClientFields;
+    use MapsTldCategories;
     use MapsTldGracePeriods;
 
     protected ?OvhClient $client = null;
@@ -429,7 +431,7 @@ class OvhRegistrar implements RegistrarModuleInterface, SyncsDomainData
                         'grace_period' => $grace,
                         'redemption_grace_period' => $redemption,
                         'enabled' => true,
-                        'category' => 'new',
+                        'category' => $this->tldCategory((string) $ext),
                         'is_popular' => false,
                     ]
                 );

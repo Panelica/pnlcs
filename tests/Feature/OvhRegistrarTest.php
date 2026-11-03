@@ -513,6 +513,7 @@ it('imports the OVH TLDs without duplicating existing extensions', function () {
         ->and($net->max_years)->toBe(10)
         ->and($net->grace_period)->toBe(5)
         ->and($net->redemption_grace_period)->toBe(30)
+        ->and($net->category)->toBe('generic')
         ->and((bool) $net->enabled)->toBeTrue();
 
     // .com already existed on another registrar: left alone.
