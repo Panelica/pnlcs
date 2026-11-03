@@ -4,7 +4,10 @@
 
 <div class="page-header" style="display:flex;align-items:center;justify-content:space-between;">
     <h1>{{ __('admin.domain_pricing.title') }}</h1>
-    <button type="button" onclick="openAddTLD()" class="btn btn-primary btn-sm">+ {{ __('admin.domain_pricing.add_tld') }}</button>
+    <div style="display:flex;gap:8px;align-items:center;">
+        <button type="button" onclick="openAddTLD()" class="btn btn-primary btn-sm">+ {{ __('admin.domain_pricing.add_tld') }}</button>
+        <button type="submit" form="tld-bulk-form" class="btn btn-danger btn-sm" id="tld-bulk-delete">{{ __('admin.domain_pricing.delete') }}</button>
+    </div>
 </div>
 
 <div style="display:flex;gap:8px;margin-bottom:12px;align-items:center;flex-wrap:wrap;">
@@ -51,9 +54,6 @@
     @if($tlds->isEmpty())
     <div class="card-body" style="text-align:center;padding:40px;color:#999;">{{ __('admin.domain_pricing.no_pricing') }}</div>
     @else
-    <div style="padding:10px 16px;border-bottom:1px solid #e5e7eb;display:flex;gap:8px;align-items:center;">
-        <button type="submit" form="tld-bulk-form" class="btn btn-danger btn-sm" id="tld-bulk-delete">{{ __('admin.domain_pricing.delete') }}</button>
-    </div>
     <table class="data-table">
         <thead><tr>
             <th style="width:30px;"><input type="checkbox" id="tld-select-all" aria-label="{{ __('admin.bulk.select_all') }}"></th>
