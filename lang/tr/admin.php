@@ -1168,6 +1168,7 @@ return [
     'domain_pricing.import_failed' => 'CSV dosyası okunamadı.',
     'domain_pricing.import_success' => ':count uzantı içe aktarıldı.',
     'domain_pricing.deleted' => ':count uzantı silindi.',
+    'domain_pricing.register' => 'Kayıt',
     'domain_pricing.register_price' => 'Kayıt fiyatı (:currency)',
     'domain_pricing.renew' => 'Yenile',
     'domain_pricing.renew_price' => 'Yenileme fiyatı (:currency)',

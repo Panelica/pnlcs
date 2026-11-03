@@ -1178,6 +1178,7 @@ return [
     'domain_pricing.import_failed' => 'Die CSV-Datei konnte nicht gelesen werden.',
     'domain_pricing.import_success' => ':count Erweiterungen importiert.',
     'domain_pricing.deleted' => ':count Erweiterungen gelöscht.',
+    'domain_pricing.register' => 'Registrierung',
     'domain_pricing.register_price' => 'Registrierungspreis (:currency)',
     'domain_pricing.renew' => 'Erneuern',
     'domain_pricing.renew_price' => 'Erneuerungspreis (:currency)',

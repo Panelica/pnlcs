@@ -1178,6 +1178,7 @@ return [
     'domain_pricing.import_failed' => 'The CSV file could not be read.',
     'domain_pricing.import_success' => 'Imported :count extensions.',
     'domain_pricing.deleted' => 'Deleted :count extensions.',
+    'domain_pricing.register' => 'Register',
     'domain_pricing.register_price' => 'Register price (:currency)',
     'domain_pricing.renew' => 'Renew',
     'domain_pricing.renew_price' => 'Renew price (:currency)',

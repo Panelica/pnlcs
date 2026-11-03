@@ -1178,6 +1178,7 @@ return [
     'domain_pricing.import_failed' => '无法读取 CSV 文件。',
     'domain_pricing.import_success' => '已导入 :count 个扩展名。',
     'domain_pricing.deleted' => '已删除 :count 个扩展名。',
+    'domain_pricing.register' => '注册',
     'domain_pricing.register_price' => '注册价格（:currency）',
     'domain_pricing.renew' => '续费',
     'domain_pricing.renew_price' => '续费价格（:currency）',

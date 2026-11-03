@@ -10,18 +10,20 @@
     </div>
 </div>
 
-<div style="display:flex;gap:8px;margin-bottom:12px;align-items:center;flex-wrap:wrap;">
+<div style="display:flex;gap:8px;margin-bottom:12px;align-items:center;justify-content:space-between;flex-wrap:wrap;">
     <form method="GET" style="display:flex;gap:8px;align-items:center;">
         <input type="text" name="search" value="{{ request('search') }}" placeholder="{{ __('admin.domain_pricing.search_placeholder') }}" class="form-control" style="max-width:300px;">
         <button type="submit" class="btn btn-default btn-sm">{{ __('admin.search') }}</button>
         @if(request('search'))<a href="{{ route('admin.config.domain-pricing') }}" class="btn btn-default btn-sm">{{ __('common.actions.clear') }}</a>@endif
     </form>
-    <a href="{{ route('admin.config.domain-pricing.export', ['search' => request('search'), 'sort' => $sort, 'direction' => $direction]) }}" class="btn btn-default btn-sm">{{ __('admin.domain_pricing.export_csv') }}</a>
-    <form method="POST" action="{{ route('admin.config.domain-pricing.import') }}" enctype="multipart/form-data" style="display:flex;gap:6px;align-items:center;">
-        @csrf
-        <input type="file" name="file" accept=".csv,.txt" required class="form-control" style="max-width:220px;padding:4px;">
-        <button type="submit" class="btn btn-default btn-sm">{{ __('admin.domain_pricing.import_csv') }}</button>
-    </form>
+    <div style="display:flex;gap:8px;align-items:center;">
+        <a href="{{ route('admin.config.domain-pricing.export', ['search' => request('search'), 'sort' => $sort, 'direction' => $direction]) }}" class="btn btn-default btn-sm">{{ __('admin.domain_pricing.export_csv') }}</a>
+        <form method="POST" action="{{ route('admin.config.domain-pricing.import') }}" enctype="multipart/form-data" style="display:flex;gap:6px;align-items:center;">
+            @csrf
+            <input type="file" name="file" accept=".csv,.txt" required class="form-control" style="max-width:200px;padding:4px;">
+            <button type="submit" class="btn btn-default btn-sm">{{ __('admin.domain_pricing.import_csv') }}</button>
+        </form>
+    </div>
 </div>
 
 @if($errors->any())
@@ -58,7 +60,7 @@
         <thead><tr>
             <th style="width:30px;"><input type="checkbox" id="tld-select-all" aria-label="{{ __('admin.bulk.select_all') }}"></th>
             <th>{!! $thSort('extension', __('admin.domain_pricing.extension')) !!}</th>
-            <th>{!! $thSort('register_price', __('common.actions.register')) !!}</th>
+            <th>{!! $thSort('register_price', __('admin.domain_pricing.register')) !!}</th>
             <th>{!! $thSort('transfer_price', __('admin.domain_pricing.transfer')) !!}</th>
             <th>{!! $thSort('renew_price', __('admin.domain_pricing.renew')) !!}</th>
             <th>{!! $thSort('restore_price', __('admin.domain_pricing.restore')) !!}</th>
