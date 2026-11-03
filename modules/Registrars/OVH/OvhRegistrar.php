@@ -58,6 +58,7 @@ class OvhRegistrar implements RegistrarModuleInterface, SyncsDomainData
             ['name' => 'app_secret', 'label' => 'Application Secret', 'type' => 'password', 'required' => true],
             ['name' => 'consumer_key', 'label' => 'Consumer Key', 'type' => 'password', 'required' => true],
             ['name' => 'region', 'label' => 'API Region', 'type' => 'select', 'options' => ['eu' => 'Europe (EU)', 'ca' => 'Canada (CA)', 'us' => 'United States (US)'], 'default' => 'eu'],
+            ['name' => 'subsidiary', 'label' => 'Subsidiary (ovhSubsidiary)', 'type' => 'text', 'required' => false, 'default' => 'PL'],
             ['name' => 'margin_percent', 'label' => 'Margin (%)', 'type' => 'text', 'required' => false, 'default' => '0'],
             ['name' => 'csa_field', 'label' => 'OVH contact field', 'type' => 'select', 'options' => $fieldOptions, 'required' => false],
         ];
@@ -467,6 +468,22 @@ class OvhRegistrar implements RegistrarModuleInterface, SyncsDomainData
     // ---------------------------------------------------------------------
 
     /**
+     * The OVH subsidiary every cart is opened under (e.g. "PL"). OVH refuses
+     * a cart without it, and the offers/prices depend on it, so it is a
+     * module setting rather than a guess.
+     */
+    protected function subsidiary(): string
+    {
+        return strtoupper(trim((string) ($this->settings['subsidiary'] ?? 'PL')));
+    }
+
+    /** Open an order cart under the account's subsidiary. */
+    protected function createCart(): array
+    {
+        return $this->client()->post('/order/cart', ['ovhSubsidiary' => $this->subsidiary()]);
+    }
+
+    /**
      * The offers OVH returns for a domain: create-default / create-premium
      * (available), transfer-* (taken but transferable), aftermarket.
      *
@@ -474,7 +491,7 @@ class OvhRegistrar implements RegistrarModuleInterface, SyncsDomainData
      */
     protected function domainOffers(string $domain): array
     {
-        $cart = $this->client()->post('/order/cart');
+        $cart = $this->createCart();
         $cartId = (string) ($cart['cartId'] ?? '');
 
         if ($cartId === '') {
@@ -515,7 +532,7 @@ class OvhRegistrar implements RegistrarModuleInterface, SyncsDomainData
 
         $contactId = $this->registrantContactId($client, $isCompany, $params);
 
-        $cart = $this->client()->post('/order/cart');
+        $cart = $this->createCart();
         $cartId = (string) ($cart['cartId'] ?? '');
         if ($cartId === '') {
             throw new \RuntimeException('OVH: could not create an order cart.');
@@ -687,14 +704,16 @@ class OvhRegistrar implements RegistrarModuleInterface, SyncsDomainData
     }
 
     /**
-     * The price OVH quotes for a TLD, read from a synthetic domain ("example.tld")
-     * through the cart. Null when the TLD is not orderable.
+     * The price OVH quotes for a TLD, read from a synthetic, clearly-available
+     * domain through the cart. "example" is reserved by the registries, so a
+     * quoted price for example.tld is a transfer, not a registration. Null when
+     * the TLD is not orderable.
      *
      * @return array{register: ?float, renew: ?float, transfer: ?float, currency: ?string}|null
      */
     protected function tldPrice(string $tld): ?array
     {
-        $domain = 'example'.$tld;
+        $domain = 'zzxxyy'.random_int(100000, 999999).'.'.$tld;
 
         try {
             $offers = $this->domainOffers($domain);
@@ -703,7 +722,7 @@ class OvhRegistrar implements RegistrarModuleInterface, SyncsDomainData
                 return null;
             }
 
-            $cart = $this->client()->post('/order/cart');
+            $cart = $this->createCart();
             $cartId = (string) ($cart['cartId'] ?? '');
             if ($cartId === '') {
                 return null;
