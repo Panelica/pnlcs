@@ -192,17 +192,24 @@ it('maps OVH name server objects back to hostnames', function () {
  * every price for every TLD, and the panel's price columns are
  * `decimal NOT NULL` — so both have to be handled before a number is written.
  */
-function ovhCartFake(array $prices, string $currency = 'PLN'): void
+function ovhPlan(string $tld, float $register, float $renew, ?float $transfer = null): array
+{
+    $pricings = [
+        ['mode' => 'create-default', 'phase' => 0, 'interval' => 12, 'price' => $register * 100000000],
+        ['mode' => 'create-default', 'phase' => 1, 'interval' => 12, 'price' => $renew * 100000000],
+    ];
+    if ($transfer !== null) {
+        $pricings[] = ['mode' => 'transfer-default', 'phase' => 0, 'interval' => 12, 'price' => $transfer * 100000000];
+    }
+
+    return ['planCode' => $tld, 'pricings' => $pricings];
+}
+
+function ovhCatalogFake(array $plans, string $currency = 'PLN'): void
 {
     Http::fake([
-        '*/order/cart/cart-1/domain*' => Http::sequence()
-            // The availability lookup, then the item that carries the prices.
-            ->push([['pricingMode' => 'create-default', 'offerId' => 'off-1']], 200)
-            ->push(['prices' => array_map(fn (array $p) => [
-                'label' => $p[0],
-                'price' => ['value' => $p[1], 'currencyCode' => $currency],
-            ], $prices)], 200),
-        '*/order/cart' => Http::response(['cartId' => 'cart-1'], 200),
+        '*/me' => Http::response(['currency' => ['code' => $currency]], 200),
+        '*/order/catalog/public/domain*' => Http::response(['plans' => $plans], 200),
     ]);
 }
 
@@ -228,7 +235,7 @@ it('writes the prices OVH quotes, with the margin, rounded up', function () {
     ovhShop('PLN');
     $tld = ovhTld('.pl');
     RegistrarSettings::updateOrCreate(['registrar' => 'ovh', 'setting' => 'margin_percent'], ['value' => '20']);
-    ovhCartFake([['FEE', 46.0], ['RENEW', 50.0]]);
+    ovhCatalogFake([ovhPlan('pl', 46.0, 50.0, 40.0)]);
 
     $result = app(OvhRegistrar::class)->syncPrices();
 
@@ -236,9 +243,7 @@ it('writes the prices OVH quotes, with the margin, rounded up', function () {
         ->and($result['updated'])->toBe(1)
         ->and((float) $tld->fresh()->register_price)->toBe(56.0)   // 46 * 1.2 → 55.2 → 56
         ->and((float) $tld->fresh()->renew_price)->toBe(60.0)
-        // OVH quoted no transfer price: the operator's own number stays, and
-        // the column (decimal NOT NULL) is never handed a null.
-        ->and((float) $tld->fresh()->transfer_price)->toBe(1.0);
+        ->and((float) $tld->fresh()->transfer_price)->toBe(48.0);  // 40 * 1.2 → 48
 });
 
 it('converts foreign-currency prices into the shop currency', function () {
@@ -247,7 +252,7 @@ it('converts foreign-currency prices into the shop currency', function () {
     Currency::create(['code' => 'PLN', 'name' => 'PLN', 'prefix' => '', 'suffix' => ' PLN', 'rate' => 2.0, 'is_default' => false]);
     RegistrarSettings::updateOrCreate(['registrar' => 'ovh', 'setting' => 'margin_percent'], ['value' => '20']);
     $tld = ovhTld('.pl');
-    ovhCartFake([['FEE', 46.0]], 'PLN');
+    ovhCatalogFake([ovhPlan('pl', 46.0, 50.0)], 'PLN');
 
     $result = app(OvhRegistrar::class)->syncPrices();
 
