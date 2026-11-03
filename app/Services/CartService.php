@@ -587,6 +587,7 @@ class CartService
 
             if ($promo && $this->promoFits($cart, $promo)) {
                 $discountable = $taxable + $untaxed;
+                $sides = ['taxable' => $taxable, 'untaxed' => $untaxed];
 
                 // A code limited to some products comes off those lines only,
                 // exactly as the invoice writes it. The cart used to take the
@@ -597,30 +598,41 @@ class CartService
                 $covered = $promo->coveredProductIds();
 
                 if ($covered !== [] || $promo->billingCycles() !== []) {
-                    $coveredAmount = 0.0;
+                    $sides = ['taxable' => 0.0, 'untaxed' => 0.0];
 
-                    foreach ($items as $item) {
+                    foreach ($items as $index => $item) {
                         if (($item['type'] ?? 'product') !== 'domain'
                             && ($covered === [] || in_array((int) ($item['product_id'] ?? 0), $covered, true))
                             && $promo->coversCycle($item['billing_cycle'] ?? null)) {
-                            $coveredAmount += (float) ($item['price'] ?? 0);
+                            $sides[($taxFlags['items'][$index] ?? true) ? 'taxable' : 'untaxed'] += (float) ($item['price'] ?? 0);
                         }
                     }
 
-                    $discountable = min($coveredAmount, $discountable);
+                    $discountable = min(array_sum($sides), $discountable);
                 }
 
                 $promoDiscount = $promo->type === 'percentage'
                     ? round($discountable * ((float) $promo->value / 100), 2)
                     : min((float) $promo->value, $discountable);
 
-                // The invoice writes the promotion as one line, taxed when
-                // there is any taxable work on the order, so it comes off the
-                // taxable side first.
-                if ($taxable > 0) {
-                    $taxable -= $promoDiscount;
-                } else {
+                // The invoice writes the promotion as a taxed and an untaxed
+                // line, each the share of the work it covers, so each side
+                // falls by the discount given on it.
+                $sides = array_filter($sides, fn ($net) => $net > 0);
+
+                if (count($sides) > 1) {
+                    $weight = array_sum($sides);
+                    $shares = $promo->type === 'percentage'
+                        ? array_map(fn ($net) => round($discountable * $net / $weight * ((float) $promo->value / 100), 2), $sides)
+                        : array_combine(array_keys($sides), app(InvoiceGenerationService::class)->shareCents($promoDiscount, array_values($sides)));
+
+                    $taxable -= $shares['taxable'];
+                    $untaxed -= $shares['untaxed'];
+                    $promoDiscount = round(array_sum($shares), 2);
+                } elseif (isset($sides['untaxed'])) {
                     $untaxed -= $promoDiscount;
+                } else {
+                    $taxable -= $promoDiscount;
                 }
             }
         }

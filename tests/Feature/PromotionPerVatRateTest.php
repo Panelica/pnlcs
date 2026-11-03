@@ -160,7 +160,7 @@ test('after a group discount the code takes its share of what is left, per rate'
         ->and((float) $invoice->total)->toEqual(186.3);
 });
 
-test('lines without a rate still get one promo line, as before', function () {
+test('lines without a rate get a taxed and an untaxed promo line, still without a rate', function () {
     Mail::fake();
 
     $invoice = vatRatePromo(vatRateInvoice([
@@ -168,14 +168,13 @@ test('lines without a rate still get one promo line, as before', function () {
         ['type' => 'Other', 'description' => 'Untaxed', 'amount' => 50, 'taxed' => false],
     ]), 'percentage', 10);
 
-    $discounts = $invoice->items->where('type', 'Discount');
+    $discounts = $invoice->items->where('type', 'Discount')->values();
 
-    expect($discounts)->toHaveCount(1)
-        ->and((float) $discounts->first()->amount)->toEqual(-15.0)
-        ->and((bool) $discounts->first()->taxed)->toBeTrue()
-        ->and($discounts->first()->tax_rate)->toBeNull()
-        ->and($discounts->first()->tax_label)->toBeNull()
-        ->and($discounts->first()->tax_rule_id)->toBeNull();
+    expect($discounts)->toHaveCount(2)
+        ->and($discounts->map(fn ($line) => [(float) $line->amount, (bool) $line->taxed])->all())->toBe([[-10.0, true], [-5.0, false]])
+        ->and($discounts->whereNotNull('tax_rate'))->toHaveCount(0)
+        ->and($discounts->whereNotNull('tax_label'))->toHaveCount(0)
+        ->and($discounts->whereNotNull('tax_rule_id'))->toHaveCount(0);
 });
 
 test('without a promo code the invoice has no discount line', function () {

@@ -363,23 +363,21 @@ class InvoiceGenerationService
 
     /**
      * The groups a promo code is split into, each with the taxed flag its
-     * line gets: one group per VAT the covered lines carry. On an invoice
-     * whose lines carry no VAT at all there is one group, flagged taxed when
-     * any line is, as the single promo line always was. Next to lines with a
-     * VAT, the group without one is split into taxed and untaxed lines, as
-     * the group discount splits them.
+     * line gets: one group per VAT the covered lines carry. The group without
+     * a VAT is split into taxed and untaxed lines, as the group discount
+     * splits them: a line without a rate takes the invoice rate when taxed,
+     * so one taxed line for the whole code took tax off untaxed work too.
      *
      * @param  Collection<array-key, mixed>  $covered
      * @return Collection<int, array{lines: Collection<array-key, mixed>, taxed: bool}>
      */
-    private function promoGroups(Invoice $invoice, Collection $covered, bool $hasTaxable): Collection
+    private function promoGroups(Collection $covered, bool $hasTaxable): Collection
     {
         $none = '||';
-        $carriesVat = $this->invoiceService->groupByVat($invoice->items)->keys()->contains(fn ($key) => $key !== $none);
         $groups = collect();
 
         foreach ($this->invoiceService->groupByVat($covered) as $key => $lines) {
-            if ($key !== $none || ! $carriesVat) {
+            if ($key !== $none) {
                 $groups->push(['lines' => $lines, 'taxed' => $hasTaxable]);
 
                 continue;
@@ -406,7 +404,7 @@ class InvoiceGenerationService
      * @param  array<int, float>  $weights
      * @return array<int, float>
      */
-    private function shareCents(float $amount, array $weights): array
+    public function shareCents(float $amount, array $weights): array
     {
         $cents = (int) round($amount * 100);
         $total = array_sum($weights);
@@ -592,12 +590,12 @@ class InvoiceGenerationService
             // group discount is split: a single line without a rate took no
             // tax off an invoice whose lines carry two rates, and printed a
             // VAT row of its own next to a single one. Lines without a rate
-            // form one group, so such invoices keep their one line. Next to
-            // lines with a rate, that group is split into taxed and untaxed
-            // as the group discount splits it, since a line without a rate
-            // takes the invoice rate when taxed. A percentage is worked out on
-            // each group; a fixed amount is shared by each group's net.
-            $groups = $this->promoGroups($invoice, $this->coveredItems($invoice, $promo), $hasTaxable)
+            // are split into taxed and untaxed as the group discount splits
+            // them: one taxed line for the whole code took the discount on
+            // untaxed work off the taxable amount, down to below zero. A
+            // percentage is worked out on each group; a fixed amount is shared
+            // by each group's net.
+            $groups = $this->promoGroups($this->coveredItems($invoice, $promo), $hasTaxable)
                 ->map(fn ($group) => $group + ['net' => (float) $group['lines']->sum(fn ($item) => (float) $item->amount * (int) $item->qty)])
                 ->filter(fn ($group) => $group['net'] > 0)
                 ->values();
