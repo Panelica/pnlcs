@@ -129,6 +129,34 @@ it('writes the prices with the margin onto its own TLDs only', function () {
         ->and((float) $other->fresh()->register_price)->toBe(1.0);
 });
 
+it('rounds to the cent so a repeat sync reports no change', function () {
+    zlotyShop();
+    $tld = hrdTld('.pl');
+
+    $xml = <<<'XML'
+<api>
+  <partner><pricings>
+    <pricing>
+      <name>d_pl</name>
+      <price><name>Rejestracja</name><value>9.99</value></price>
+      <price><name>Odnowienie</name><value>9.99</value></price>
+    </pricing>
+  </pricings></partner>
+</api>
+XML;
+
+    $registrar = hrdRegistrarWith(hrdPricings($xml), ['margin_percent' => '17']);
+
+    $first = $registrar->syncPrices();
+    expect($first['success'])->toBeTrue()
+        ->and($first['updated'])->toBe(1)
+        ->and((float) $tld->fresh()->register_price)->toBe(11.69);
+
+    $second = $registrar->syncPrices();
+    expect($second['updated'])->toBe(0)
+        ->and($second['unchanged'])->toBe(1);
+});
+
 it('counts a TLD HRD has no price for as skipped and an unchanged one as unchanged', function () {
     zlotyShop();
     hrdTld('.xyz');

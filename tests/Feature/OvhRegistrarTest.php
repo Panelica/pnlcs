@@ -262,6 +262,23 @@ it('converts foreign-currency prices into the shop currency', function () {
         ->and((float) $tld->fresh()->register_price)->toBe(27.6);
 });
 
+it('rounds to the cent so a repeat sync reports no change', function () {
+    ovhSettings();
+    ovhShop('PLN');
+    $tld = ovhTld('.pl');
+    RegistrarSettings::updateOrCreate(['registrar' => 'ovh', 'setting' => 'margin_percent'], ['value' => '17']);
+    ovhCatalogFake([ovhPlan('pl', 9.99, 9.99)]);
+
+    $first = app(OvhRegistrar::class)->syncPrices();
+    expect($first['success'])->toBeTrue()
+        ->and($first['updated'])->toBe(1)
+        ->and((float) $tld->fresh()->register_price)->toBe(11.69);
+
+    $second = app(OvhRegistrar::class)->syncPrices();
+    expect($second['updated'])->toBe(0)
+        ->and($second['unchanged'])->toBe(1);
+});
+
 it('leaves another registrar\'s TLDs alone', function () {
     ovhSettings();
     ovhShop('PLN');
