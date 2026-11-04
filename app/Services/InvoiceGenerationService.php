@@ -315,17 +315,28 @@ class InvoiceGenerationService
      * @return array<int, int>
      */
     /**
-     * The part of the invoice a promotion may discount: the whole subtotal
-     * for an unrestricted code, only the lines whose product the code covers
-     * for a restricted one.
+     * The part of the invoice a promotion may discount: every line for an
+     * unrestricted code, only the lines whose product the code covers for a
+     * restricted one.
      */
     private function coveredAmount(Invoice $invoice, Promotion $promo): float
     {
         if (! $this->isRestricted($promo)) {
-            return (float) $invoice->subtotal;
+            return $this->linesAmount($invoice);
         }
 
         return (float) $this->coveredItems($invoice, $promo)->sum('amount');
+    }
+
+    /**
+     * What the invoice's lines add up to, before tax is added or taken out.
+     * The invoice subtotal is the same figure only while tax is added on top:
+     * with prices that include tax it is what is left once the tax is taken
+     * out, and a percentage of it came to less than the cart quoted.
+     */
+    private function linesAmount(Invoice $invoice): float
+    {
+        return (float) $invoice->items->sum(fn ($item) => (float) $item->amount * (int) $item->qty);
     }
 
     private function isRestricted(Promotion $promo): bool
@@ -543,7 +554,10 @@ class InvoiceGenerationService
         }
 
         return DB::transaction(function () use ($invoice, $promo, $continuation) {
-            $subtotal = (float) $invoice->subtotal;
+            // The lines, not the subtotal: with prices that include tax the
+            // subtotal has the tax taken out, so 10% of a 120 basket came
+            // off 100 and the invoice charged 110 for a basket quoted 108.
+            $subtotal = $this->linesAmount($invoice);
 
             if ($subtotal <= 0) {
                 return false;
