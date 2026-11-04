@@ -1168,3 +1168,76 @@ it('keeps the page up when every extra on it fails', function () use ($MINE) {
     $this->actingAs($owner)->get(route('client.services.containers', $s))
         ->assertOk()->assertSee('acct1-wordpress');
 });
+
+/*
+ * What one load of the Apps page costs the panel.
+ *
+ * The panel limits an API key to sixty requests a minute (its Starter tier),
+ * and this page asks it up to nineteen questions: the container list, the
+ * plan, the catalogue, the account's domains, the links, and one call per app
+ * for the access details. Two of those nineteen were the same question - the
+ * page asked for the container list and containerPolicy() asked again to count
+ * what the customer runs - and a 429 reads like an empty answer, so the apps
+ * came and went on the same account minutes apart (#386, found by dualarrow
+ * pointing at his own two servers).
+ */
+
+/** How many times the fake was asked for a path, by regular expression. */
+function ctCalls(string $pattern): int
+{
+    return collect(Http::recorded())
+        ->filter(fn ($pair) => preg_match($pattern, parse_url($pair[0]->url(), PHP_URL_PATH) ?? '') === 1)
+        ->count();
+}
+
+it('asks the panel for the container list once per page, not twice', function () use ($MINE) {
+    fakeContainerApi(5, [$MINE], [['slug' => 'wordpress', 'name' => 'WordPress', 'description' => '', 'logo_url' => '', 'categories' => ['cms']]]);
+    [$owner, $s] = ctService(ctServer());
+
+    $this->actingAs($owner)->get(route('client.services.containers', $s))->assertOk();
+
+    // The list and the plan's used-count come from one answer, kept for the
+    // request the way the plan row already is.
+    expect(ctCalls('#/v1/docker/containers$#'))->toBe(1);
+});
+
+it('says the catalogue could not be read when the panel rate limits it', function () use ($MINE) {
+    fakeCatalogueCall([$MINE], fn () => Http::response(['error' => 'too many requests'], 429));
+    [$owner, $s] = ctService(ctServer());
+
+    $r = $this->actingAs($owner)->get(route('client.services.containers', $s))->assertOk();
+
+    expect($r->viewData('catalogueUnavailable'))->toBeTrue();
+    $r->assertSee(__('client.hosting.containers.catalogue_unavailable'))
+        ->assertDontSee(__('client.hosting.containers.no_apps'))
+        ->assertSee('acct1-wordpress');
+});
+
+it('stops asking for access details at the first 429 instead of spending the rest of the quota', function () {
+    $listed = [ctContainer('c-1'), ctContainer('c-2'), ctContainer('c-3')];
+    Http::fake(function ($request) use ($listed) {
+        $path = parse_url($request->url(), PHP_URL_PATH) ?? '';
+        if (preg_match('#/v1/accounts/[^/?]+$#', $path)) {
+            return Http::response(['data' => ['id' => 'acct-1', 'plan_id' => 'plan-1']], 200);
+        }
+        if (str_contains($path, '/v1/plans')) {
+            return Http::response(['data' => [['id' => 'plan-1', 'max_containers' => 5]]], 200);
+        }
+        if (preg_match('#/v1/docker/containers/[^/?]+$#', $path)) {
+            return Http::response(['error' => 'too many requests'], 429);   // the limiter
+        }
+        if (str_contains($path, '/v1/docker/containers')) {
+            return Http::response(['data' => ['containers' => $listed]], 200);
+        }
+
+        return Http::response(['data' => []], 200);
+    });
+    [$owner, $s] = ctService(ctServer());
+    $rows = (new PanelicaModule)->containers($s);
+
+    $live = (new PanelicaModule)->liveContainerAccess($s, $rows);
+
+    // One call, not three: the page still draws, without the details.
+    expect($live)->toBe([])
+        ->and(ctCalls('#/v1/docker/containers/[^/]+$#'))->toBe(1);
+});

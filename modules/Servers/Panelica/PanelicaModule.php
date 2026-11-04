@@ -1539,6 +1539,9 @@ class PanelicaModule extends AbstractServerModule implements \App\Contracts\Host
         if (! $server || ! $accountId) {
             return [];
         }
+        if (array_key_exists((string) $accountId, $this->containersCache)) {
+            return $this->containersCache[(string) $accountId];
+        }
         $resp = $this->get($server, '/v1/docker/containers');
         if (! $resp->successful()) {
             return [];
@@ -1589,7 +1592,7 @@ class PanelicaModule extends AbstractServerModule implements \App\Contracts\Host
         }
         usort($out, fn ($a, $b) => strcmp($a['name'], $b['name']));
 
-        return $out;
+        return $this->containersCache[(string) $accountId] = $out;
     }
 
     /**
@@ -2121,6 +2124,15 @@ class PanelicaModule extends AbstractServerModule implements \App\Contracts\Host
                 $resp = $this->get($server, '/v1/docker/containers/'.rawurlencode($id));
             } catch (\Throwable $e) {
                 continue;   // one unreachable container must not empty the page
+            }
+            // A rate-limited panel is asked once, not twelve times: the
+            // limiter counts a minute at a time, so the calls after the first
+            // 429 only spend the quota the rest of the page needs (pnlcs#386).
+            if ($resp->status() === 429) {
+                Log::info('Panelica: live container access stopped, the panel is rate limiting', [
+                    'service' => $service->id, 'gathered' => count($out), 'of' => count($containers),
+                ]);
+                break;
             }
             if (! $resp->successful()) {
                 continue;
@@ -2662,6 +2674,18 @@ class PanelicaModule extends AbstractServerModule implements \App\Contracts\Host
 
     /** @var array<string, array<string, mixed>|null> plan row per account, for this request */
     private array $planRowCache = [];
+
+    /**
+     * The account's container list for this request. The Apps page asks for it
+     * and containerPolicy() asks again to count what the customer runs, so one
+     * page spent two of its calls on the same answer - and the panel's rate
+     * limiter counts both (pnlcs#386: one page load reaches nineteen calls
+     * against the panel's sixty a minute, and a 429 is indistinguishable from
+     * an empty list, which is why the apps came and went).
+     *
+     * @var array<string, array<int, array<string, mixed>>>
+     */
+    private array $containersCache = [];
 
     /**
      * The account's plan row, fetched once per request.
