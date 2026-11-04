@@ -179,6 +179,10 @@ function localeValues(string $locale): array
 // Raised 2026-10-30 by exactly two, for the proforma titles (#343): Polish
 // writes "Proforma" as English does, on the admin search result and the client
 // invoice page. Both are listed in database/data/same_as_english.php.
+// Raised 2026-11-04 by one, for the domain pricing CSV buttons (#391): Polish
+// writes the noun pair as "Eksport CSV" / "Import CSV", and the second is
+// spelled as English spells it. Listed in database/data/same_as_english.php;
+// this budget looks at the English value instead, so it still sees it.
 const UNTRANSLATED_VALUE_BUDGET = [
     // +1 each 2026-10-21: the admin menu entry of the Panelica license module
     // is the product name, "Panelica", in every language.
@@ -193,7 +197,7 @@ const UNTRANSLATED_VALUE_BUDGET = [
     // +1 2026-10-29 (#332): the settings page's new "Domains" tab is written
     // "Domains" in German too, as the labels above it already are.
     'de' => 191,
-    'pl' => 108,
+    'pl' => 109,
     'zh' => 39,
 ];
 

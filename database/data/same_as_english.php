@@ -274,6 +274,7 @@ return [
         'admin.currencies.format',
         'admin.dashboard.laravel',
         'admin.dashboard.uptime',
+        'admin.domain_pricing.import_csv',
         'admin.domain_pricing.transfer',
         'admin.domains.last_sync_ok',
         'admin.domains.premium',
