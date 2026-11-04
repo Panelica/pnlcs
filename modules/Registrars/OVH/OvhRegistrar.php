@@ -58,6 +58,7 @@ class OvhRegistrar implements RegistrarModuleInterface, SyncsDomainData
             ['name' => 'app_secret', 'label' => 'Application Secret', 'type' => 'password', 'required' => true],
             ['name' => 'consumer_key', 'label' => 'Consumer Key', 'type' => 'password', 'required' => true],
             ['name' => 'region', 'label' => 'API Region', 'type' => 'select', 'options' => ['eu' => 'Europe (EU)', 'ca' => 'Canada (CA)', 'us' => 'United States (US)'], 'default' => 'eu'],
+            ['name' => 'subsidiary', 'label' => 'Subsidiary (ovhSubsidiary)', 'type' => 'text', 'required' => false, 'default' => 'PL'],
             ['name' => 'margin_percent', 'label' => 'Margin (%)', 'type' => 'text', 'required' => false, 'default' => '0'],
             ['name' => 'csa_field', 'label' => 'OVH contact field', 'type' => 'select', 'options' => $fieldOptions, 'required' => false],
         ];
@@ -317,7 +318,32 @@ class OvhRegistrar implements RegistrarModuleInterface, SyncsDomainData
     {
         try {
             $margin = (float) ($this->settings['margin_percent'] ?? 0);
-            $shop = strtoupper((string) (Currency::getDefault()?->code ?? ''));
+
+            // The catalog quotes every TLD in one call, in the account's
+            // currency. Resolve that currency once, then the conversion factor.
+            // A currency that cannot be read refuses the sync: guessing the
+            // shop currency would write wrong prices into the live list.
+            $quoted = $this->accountCurrency();
+            if ($quoted === null) {
+                return ['success' => false, 'message' => __('admin.registrars.sync_currency_unavailable', [
+                    'registrar' => 'OVH',
+                    'shop' => Currency::getDefault()?->code ?? '—',
+                ])];
+            }
+            $factor = Currency::rateToShop($quoted);
+            if ($factor === null) {
+                return ['success' => false, 'message' => __('admin.registrars.sync_currency_unavailable', [
+                    'registrar' => $quoted,
+                    'shop' => Currency::getDefault()?->code ?? '—',
+                ])];
+            }
+
+            $subsidiary = $this->subsidiary();
+            if ($subsidiary === '') {
+                return ['success' => false, 'message' => __('admin.registrars.sync_subsidiary_unset')];
+            }
+
+            $catalog = $this->catalogPrices();
 
             $updated = 0;
             $unchanged = 0;
@@ -335,7 +361,7 @@ class OvhRegistrar implements RegistrarModuleInterface, SyncsDomainData
                     continue;
                 }
 
-                $price = $this->tldPrice($ext);
+                $price = $catalog[$ext] ?? null;
                 if ($price === null) {
                     $skipped++;
                     $skippedExtensions[] = $tld->extension;
@@ -343,23 +369,12 @@ class OvhRegistrar implements RegistrarModuleInterface, SyncsDomainData
                     continue;
                 }
 
-                // The cart's currency is the OVH account's. Written into a
-                // price list the shop reads in another one, every number would
-                // be wrong by the exchange rate and nothing would say so.
-                $quoted = (string) ($price['currency'] ?? '');
-                if ($quoted !== '' && $quoted !== $shop) {
-                    return ['success' => false, 'message' => __('admin.registrars.sync_currency_mismatch', [
-                        'registrar' => $quoted,
-                        'shop' => $shop !== '' ? $shop : '—',
-                    ])];
-                }
-
                 // Only the prices OVH quotes. One it does not is not a price
                 // of zero and not a null the column refuses: it is one the
                 // panel does not know, so the operator's own number stays.
                 $next = [];
                 foreach (['register' => 'register_price', 'renew' => 'renew_price', 'transfer' => 'transfer_price'] as $from => $column) {
-                    $value = $this->withMargin($price[$from] ?? null, $margin);
+                    $value = $this->withMargin($price[$from] ?? null, $margin, $factor);
                     if ($value !== null) {
                         $next[$column] = $value;
                     }
@@ -388,7 +403,7 @@ class OvhRegistrar implements RegistrarModuleInterface, SyncsDomainData
                 $updated++;
             }
 
-            $this->logSync($updated, $unchanged, $skipped, $changes, $skippedExtensions, $margin);
+            $this->logSync($updated, $unchanged, $skipped, $changes, $skippedExtensions, $margin, $quoted, $factor);
 
             RegistrarSettings::updateOrCreate(
                 ['registrar' => 'ovh', 'setting' => 'last_price_sync'],
@@ -462,6 +477,22 @@ class OvhRegistrar implements RegistrarModuleInterface, SyncsDomainData
     // ---------------------------------------------------------------------
 
     /**
+     * The OVH subsidiary every cart is opened under (e.g. "PL"). OVH refuses
+     * a cart without it, and the offers/prices depend on it, so it is never
+     * guessed: it must be set explicitly, and an empty value refuses the sync.
+     */
+    protected function subsidiary(): string
+    {
+        return strtoupper(trim((string) ($this->settings['subsidiary'] ?? '')));
+    }
+
+    /** Open an order cart under the account's subsidiary. */
+    protected function createCart(): array
+    {
+        return $this->client()->post('/order/cart', ['ovhSubsidiary' => $this->subsidiary()]);
+    }
+
+    /**
      * The offers OVH returns for a domain: create-default / create-premium
      * (available), transfer-* (taken but transferable), aftermarket.
      *
@@ -469,7 +500,7 @@ class OvhRegistrar implements RegistrarModuleInterface, SyncsDomainData
      */
     protected function domainOffers(string $domain): array
     {
-        $cart = $this->client()->post('/order/cart');
+        $cart = $this->createCart();
         $cartId = (string) ($cart['cartId'] ?? '');
 
         if ($cartId === '') {
@@ -510,7 +541,7 @@ class OvhRegistrar implements RegistrarModuleInterface, SyncsDomainData
 
         $contactId = $this->registrantContactId($client, $isCompany, $params);
 
-        $cart = $this->client()->post('/order/cart');
+        $cart = $this->createCart();
         $cartId = (string) ($cart['cartId'] ?? '');
         if ($cartId === '') {
             throw new \RuntimeException('OVH: could not create an order cart.');
@@ -682,54 +713,63 @@ class OvhRegistrar implements RegistrarModuleInterface, SyncsDomainData
     }
 
     /**
-     * The price OVH quotes for a TLD, read from a synthetic domain ("example.tld")
-     * through the cart. Null when the TLD is not orderable.
+     * The register / renew / transfer prices for every TLD OVH sells, read
+     * from the public order catalog in one call. Prices are in the account's
+     * currency; the key is the extension without its dot.
      *
-     * @return array{register: ?float, renew: ?float, transfer: ?float, currency: ?string}|null
+     * @return array<string, array{register: ?float, renew: ?float, transfer: ?float}>
      */
-    protected function tldPrice(string $tld): ?array
+    protected function catalogPrices(): array
     {
-        $domain = 'example'.$tld;
+        $catalog = $this->client()->get('/order/catalog/public/domain', ['ovhSubsidiary' => $this->subsidiary()]);
 
-        try {
-            $offers = $this->domainOffers($domain);
-            $offer = collect($offers)->first(fn ($o) => str_starts_with((string) ($o['pricingMode'] ?? ''), 'create'));
-            if (! $offer) {
-                return null;
+        $prices = [];
+
+        foreach ($catalog['plans'] ?? [] as $plan) {
+            $tld = ltrim((string) ($plan['planCode'] ?? ''), '.');
+            if ($tld === '') {
+                continue;
             }
 
-            $cart = $this->client()->post('/order/cart');
-            $cartId = (string) ($cart['cartId'] ?? '');
-            if ($cartId === '') {
-                return null;
-            }
+            $row = ['register' => null, 'renew' => null, 'transfer' => null];
 
-            $item = $this->client()->post('/order/cart/'.$cartId.'/domain', [
-                'domain' => $domain,
-                'offerId' => $offer['offerId'] ?? null,
-                'duration' => 'P1Y',
-                'quantity' => 1,
-            ]);
+            foreach ($plan['pricings'] ?? [] as $pricing) {
+                // One year, and the standard offer (not premium/aftermarket).
+                if ((int) ($pricing['interval'] ?? 0) !== 12) {
+                    continue;
+                }
 
-            $prices = ['register' => null, 'renew' => null, 'transfer' => null, 'currency' => null];
+                $mode = (string) ($pricing['mode'] ?? '');
+                $phase = (int) ($pricing['phase'] ?? -1);
+                $value = $pricing['price'] ?? null;
 
-            foreach ($item['prices'] ?? [] as $p) {
-                $label = strtoupper((string) ($p['label'] ?? ''));
-                $value = $p['price']['value'] ?? null;
-                // Which currency the cart quotes in: the account's, not the
-                // shop's, and the two have to agree before a number is kept.
-                $prices['currency'] ??= ($p['price']['currencyCode'] ?? null) ? strtoupper((string) $p['price']['currencyCode']) : null;
+                // OVH prices the unavailable rows at 99999900000000; keep null.
+                $amount = is_numeric($value) && (float) $value < 90000000000000 ? (float) $value / 100000000 : null;
 
-                if (in_array($label, ['FEE', 'TOTAL'], true)) {
-                    $prices['register'] = $value !== null ? (float) $value : null;
-                } elseif ($label === 'RENEW') {
-                    $prices['renew'] = $value !== null ? (float) $value : null;
-                } elseif ($label === 'TRANSFER') {
-                    $prices['transfer'] = $value !== null ? (float) $value : null;
+                if ($mode === 'create-default' && $phase === 0) {
+                    $row['register'] = $amount;
+                } elseif ($mode === 'create-default' && $phase === 1) {
+                    $row['renew'] = $amount;
+                } elseif ($mode === 'transfer-default' && $phase === 0) {
+                    $row['transfer'] = $amount;
                 }
             }
 
-            return $prices;
+            if ($row['register'] !== null || $row['renew'] !== null || $row['transfer'] !== null) {
+                $prices[$tld] = $row;
+            }
+        }
+
+        return $prices;
+    }
+
+    /** The OVH account's currency code (the one the catalog quotes in). */
+    protected function accountCurrency(): ?string
+    {
+        try {
+            $me = $this->client()->get('/me');
+
+            return isset($me['currency']['code']) ? strtoupper((string) $me['currency']['code']) : null;
         } catch (\Throwable) {
             return null;
         }
@@ -755,14 +795,16 @@ class OvhRegistrar implements RegistrarModuleInterface, SyncsDomainData
         return $this->client;
     }
 
-    /** A purchase price with the margin applied, rounded up to a whole unit. */
-    protected function withMargin(?float $price, float $margin): ?float
+    /** A purchase price with the margin applied. */
+    protected function withMargin(?float $price, float $margin, float $factor = 1.0): ?float
     {
         if ($price === null) {
             return null;
         }
 
-        return $price > 0 ? ceil($price * (1 + $margin / 100)) : 0.0;
+        $value = $price * $factor;
+
+        return $value > 0 ? round($value * (1 + $margin / 100), 2) : 0.0;
     }
 
     /**
@@ -860,7 +902,7 @@ class OvhRegistrar implements RegistrarModuleInterface, SyncsDomainData
         }
     }
 
-    protected function logSync(int $updated, int $unchanged, int $skipped, array $changes, array $skippedExtensions, float $margin): void
+    protected function logSync(int $updated, int $unchanged, int $skipped, array $changes, array $skippedExtensions, float $margin, ?string $currency = null, ?float $rate = null): void
     {
         $details = collect($changes)->map(function (array $c): string {
             return $c['extension']
@@ -876,7 +918,7 @@ class OvhRegistrar implements RegistrarModuleInterface, SyncsDomainData
             ModuleLog::create([
                 'module' => $this->getModuleName(),
                 'action' => 'sync_prices',
-                'request' => json_encode(['margin_percent' => $margin], JSON_UNESCAPED_SLASHES),
+                'request' => json_encode(['margin_percent' => $margin, 'currency' => $currency, 'rate' => $rate], JSON_UNESCAPED_SLASHES),
                 'response' => json_encode([
                     'updated' => $updated,
                     'unchanged' => $unchanged,

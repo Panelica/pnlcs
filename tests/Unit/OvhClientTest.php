@@ -46,3 +46,14 @@ test('throws a readable error on an OVH API failure', function () {
     expect(fn () => $client->get('/me'))
         ->toThrow(RuntimeException::class, 'OVH HTTP 403: Not granted for this resource');
 });
+
+test('a body-less POST sends an empty body, not an empty array', function () {
+    Http::fake(['https://eu.api.ovh.com/1.0/*' => Http::response([], 200)]);
+
+    $client = new OvhClient('k', 's', 'c', 'eu');
+    $client->post('/order/cart');
+
+    Http::assertSent(fn ($request) => $request->method() === 'POST'
+        && $request->url() === 'https://eu.api.ovh.com/1.0/order/cart'
+        && $request->body() === '');
+});

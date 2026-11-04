@@ -39,14 +39,14 @@ class OvhClient
         return $this->request('GET', $path, $query);
     }
 
-    /** @param array<mixed> $body */
-    public function post(string $path, array $body = []): mixed
+    /** @param array<mixed>|null $body  null sends no body at all */
+    public function post(string $path, ?array $body = null): mixed
     {
         return $this->request('POST', $path, [], $body);
     }
 
-    /** @param array<mixed> $body */
-    public function put(string $path, array $body = []): mixed
+    /** @param array<mixed>|null $body  null sends no body at all */
+    public function put(string $path, ?array $body = null): mixed
     {
         return $this->request('PUT', $path, [], $body);
     }

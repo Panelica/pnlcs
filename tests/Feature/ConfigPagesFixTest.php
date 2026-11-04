@@ -7,6 +7,7 @@ use App\Models\Download;
 use App\Models\DownloadCategory;
 use App\Models\Promotion;
 use App\Models\User;
+use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\DB;
 
 /**
@@ -225,4 +226,55 @@ test('payment notification and payment method translation keys resolve', functio
         ->and(__('client.payment_methods.type'))->toBe('Type')
         ->and(__('messages.success.category_deleted'))->toBe('Category deleted.')
         ->and(__('client.security.session_revoked'))->toBe('Session revoked.');
+});
+
+test('bulk delete removes the checked TLDs, and every TLD on select-all', function () {
+    $a = DomainPricing::create(['extension' => '.aaa', 'register_price' => 1, 'renew_price' => 1, 'transfer_price' => 1]);
+    $b = DomainPricing::create(['extension' => '.bbb', 'register_price' => 1, 'renew_price' => 1, 'transfer_price' => 1]);
+    $c = DomainPricing::create(['extension' => '.ccc', 'register_price' => 1, 'renew_price' => 1, 'transfer_price' => 1]);
+
+    $this->actingAs(cfgAdmin(), 'admin')
+        ->post(route('admin.config.domain-pricing.bulk-delete'), ['ids' => [$a->id, $b->id]])
+        ->assertSessionHas('success');
+
+    expect(DomainPricing::find($a->id))->toBeNull()
+        ->and(DomainPricing::find($b->id))->toBeNull()
+        ->and(DomainPricing::find($c->id))->not->toBeNull();
+
+    $this->actingAs(cfgAdmin(), 'admin')
+        ->post(route('admin.config.domain-pricing.bulk-delete'), ['select_all' => '1'])
+        ->assertSessionHas('success');
+
+    expect(DomainPricing::count())->toBe(0);
+});
+
+test('select-all respects the search filter, deleting only the matching TLDs', function () {
+    DomainPricing::create(['extension' => '.com', 'register_price' => 1, 'renew_price' => 1, 'transfer_price' => 1]);
+    DomainPricing::create(['extension' => '.net', 'register_price' => 1, 'renew_price' => 1, 'transfer_price' => 1]);
+    DomainPricing::create(['extension' => '.org', 'register_price' => 1, 'renew_price' => 1, 'transfer_price' => 1]);
+
+    $this->actingAs(cfgAdmin(), 'admin')
+        ->post(route('admin.config.domain-pricing.bulk-delete'), ['select_all' => '1', 'search' => '.co'])
+        ->assertSessionHas('success');
+
+    expect(DomainPricing::where('extension', '.com')->exists())->toBeFalse()
+        ->and(DomainPricing::where('extension', '.net')->exists())->toBeTrue()
+        ->and(DomainPricing::where('extension', '.org')->exists())->toBeTrue();
+});
+
+test('csv import refuses a row with a non-numeric price instead of casting it to zero', function () {
+    $csv = "extension,register_price,transfer_price,renew_price,restore_price,privacy_price,grace_period,redemption_grace_period,min_years,max_years,category,auto_registrar,enabled,is_popular,sort_order\n"
+        .".test,10,11,12,13,14,,,,,,,,,\n"
+        .".bad,abc,11,12,13,14,,,,,,,,,\n"
+        .".good,20,21,22,23,24,,,,,,,,,\n";
+
+    $file = UploadedFile::fake()->createWithContent('prices.csv', $csv);
+
+    $this->actingAs(cfgAdmin(), 'admin')
+        ->post(route('admin.config.domain-pricing.import'), ['file' => $file])
+        ->assertSessionHas('success');
+
+    expect(DomainPricing::where('extension', '.test')->exists())->toBeTrue()
+        ->and(DomainPricing::where('extension', '.bad')->exists())->toBeFalse()
+        ->and(DomainPricing::where('extension', '.good')->exists())->toBeTrue();
 });

@@ -20,6 +20,7 @@ function ovhSettings(): void
     RegistrarSettings::updateOrCreate(['registrar' => 'ovh', 'setting' => 'app_key'], ['value' => 'key']);
     RegistrarSettings::updateOrCreate(['registrar' => 'ovh', 'setting' => 'app_secret'], ['value' => 'secret']);
     RegistrarSettings::updateOrCreate(['registrar' => 'ovh', 'setting' => 'consumer_key'], ['value' => 'consumer']);
+    RegistrarSettings::updateOrCreate(['registrar' => 'ovh', 'setting' => 'subsidiary'], ['value' => 'PL']);
 }
 
 function ovhDomain(array $attrs = []): Domain
@@ -192,17 +193,24 @@ it('maps OVH name server objects back to hostnames', function () {
  * every price for every TLD, and the panel's price columns are
  * `decimal NOT NULL` — so both have to be handled before a number is written.
  */
-function ovhCartFake(array $prices, string $currency = 'PLN'): void
+function ovhPlan(string $tld, float $register, float $renew, ?float $transfer = null): array
+{
+    $pricings = [
+        ['mode' => 'create-default', 'phase' => 0, 'interval' => 12, 'price' => $register * 100000000],
+        ['mode' => 'create-default', 'phase' => 1, 'interval' => 12, 'price' => $renew * 100000000],
+    ];
+    if ($transfer !== null) {
+        $pricings[] = ['mode' => 'transfer-default', 'phase' => 0, 'interval' => 12, 'price' => $transfer * 100000000];
+    }
+
+    return ['planCode' => $tld, 'pricings' => $pricings];
+}
+
+function ovhCatalogFake(array $plans, string $currency = 'PLN'): void
 {
     Http::fake([
-        '*/order/cart/cart-1/domain*' => Http::sequence()
-            // The availability lookup, then the item that carries the prices.
-            ->push([['pricingMode' => 'create-default', 'offerId' => 'off-1']], 200)
-            ->push(['prices' => array_map(fn (array $p) => [
-                'label' => $p[0],
-                'price' => ['value' => $p[1], 'currencyCode' => $currency],
-            ], $prices)], 200),
-        '*/order/cart' => Http::response(['cartId' => 'cart-1'], 200),
+        '*/me' => Http::response(['currency' => ['code' => $currency]], 200),
+        '*/order/catalog/public/domain*' => Http::response(['plans' => $plans], 200),
     ]);
 }
 
@@ -223,48 +231,89 @@ function ovhShop(string $code): void
     Currency::updateOrCreate(['code' => $code], ['name' => $code, 'prefix' => '', 'suffix' => ' '.$code, 'rate' => 1.0, 'is_default' => true]);
 }
 
-it('writes the prices OVH quotes, with the margin, rounded up', function () {
+it('writes the prices OVH quotes, with the margin', function () {
     ovhSettings();
     ovhShop('PLN');
     $tld = ovhTld('.pl');
     RegistrarSettings::updateOrCreate(['registrar' => 'ovh', 'setting' => 'margin_percent'], ['value' => '20']);
-    ovhCartFake([['FEE', 46.0], ['RENEW', 50.0]]);
+    ovhCatalogFake([ovhPlan('pl', 46.0, 50.0, 40.0)]);
 
     $result = app(OvhRegistrar::class)->syncPrices();
 
     expect($result['success'])->toBeTrue()
         ->and($result['updated'])->toBe(1)
-        ->and((float) $tld->fresh()->register_price)->toBe(56.0)   // 46 * 1.2 → 55.2 → 56
+        ->and((float) $tld->fresh()->register_price)->toBe(55.2)   // 46 * 1.2
         ->and((float) $tld->fresh()->renew_price)->toBe(60.0)
-        // OVH quoted no transfer price: the operator's own number stays, and
-        // the column (decimal NOT NULL) is never handed a null.
-        ->and((float) $tld->fresh()->transfer_price)->toBe(1.0);
+        ->and((float) $tld->fresh()->transfer_price)->toBe(48.0);  // 40 * 1.2
 });
 
-it('refuses to write prices quoted in a currency the shop does not price in', function () {
+it('converts foreign-currency prices into the shop currency', function () {
     ovhSettings();
     ovhShop('USD');
+    Currency::create(['code' => 'PLN', 'name' => 'PLN', 'prefix' => '', 'suffix' => ' PLN', 'rate' => 2.0, 'is_default' => false]);
+    RegistrarSettings::updateOrCreate(['registrar' => 'ovh', 'setting' => 'margin_percent'], ['value' => '20']);
     $tld = ovhTld('.pl');
-    ovhCartFake([['FEE', 46.0]], 'PLN');
+    ovhCatalogFake([ovhPlan('pl', 46.0, 50.0)], 'PLN');
 
     $result = app(OvhRegistrar::class)->syncPrices();
 
-    expect($result['success'])->toBeFalse()
-        ->and($result['message'])->toContain('PLN')
-        ->and($result['message'])->toContain('USD')
-        ->and((float) $tld->fresh()->register_price)->toBe(1.0);
+    // 46 PLN @ 2 PLN/USD = 23 USD; +20% → 27.6.
+    expect($result['success'])->toBeTrue()
+        ->and((float) $tld->fresh()->register_price)->toBe(27.6);
+});
+
+it('rounds to the cent so a repeat sync reports no change', function () {
+    ovhSettings();
+    ovhShop('PLN');
+    $tld = ovhTld('.pl');
+    RegistrarSettings::updateOrCreate(['registrar' => 'ovh', 'setting' => 'margin_percent'], ['value' => '17']);
+    ovhCatalogFake([ovhPlan('pl', 9.99, 9.99)]);
+
+    $first = app(OvhRegistrar::class)->syncPrices();
+    expect($first['success'])->toBeTrue()
+        ->and($first['updated'])->toBe(1)
+        ->and((float) $tld->fresh()->register_price)->toBe(11.69);
+
+    $second = app(OvhRegistrar::class)->syncPrices();
+    expect($second['updated'])->toBe(0)
+        ->and($second['unchanged'])->toBe(1);
 });
 
 it('leaves another registrar\'s TLDs alone', function () {
     ovhSettings();
     ovhShop('PLN');
     $other = ovhTld('.de', 'hrd');
-    Http::fake();
+    ovhCatalogFake([]);
 
     $result = app(OvhRegistrar::class)->syncPrices();
 
     expect($result)->toMatchArray(['success' => true, 'updated' => 0, 'unchanged' => 0, 'skipped' => 0])
         ->and((float) $other->fresh()->register_price)->toBe(1.0);
+});
+
+it('refuses the sync when the account currency cannot be read', function () {
+    ovhSettings();
+    ovhShop('PLN');
+    ovhTld('.pl');
+    Http::fake(['*/me' => Http::response(['message' => 'Not credited'], 403)]);
+
+    $result = app(OvhRegistrar::class)->syncPrices();
+
+    expect($result['success'])->toBeFalse()
+        ->and($result['message'])->toBe(__('admin.registrars.sync_currency_unavailable', ['registrar' => 'OVH', 'shop' => 'PLN']));
+});
+
+it('refuses the sync when no subsidiary is configured', function () {
+    ovhSettings();
+    RegistrarSettings::where('registrar', 'ovh')->where('setting', 'subsidiary')->delete();
+    ovhShop('PLN');
+    ovhTld('.pl');
+    Http::fake(['*/me' => Http::response(['currency' => ['code' => 'PLN']], 200)]);
+
+    $result = app(OvhRegistrar::class)->syncPrices();
+
+    expect($result['success'])->toBeFalse()
+        ->and($result['message'])->toBe(__('admin.registrars.sync_subsidiary_unset'));
 });
 
 /*
