@@ -906,7 +906,7 @@ class ConfigController extends Controller
     {
         $query = DomainPricing::query();
 
-        if ($search = trim((string) $request->query('search'))) {
+        if ($search = trim((string) $request->input('search'))) {
             $query->where('extension', 'like', '%'.$search.'%');
         }
 
@@ -975,13 +975,34 @@ class ConfigController extends Controller
         fgetcsv($handle); // header row
 
         $columns = ['register_price', 'transfer_price', 'renew_price', 'restore_price', 'privacy_price', 'grace_period', 'redemption_grace_period', 'min_years', 'max_years', 'category', 'auto_registrar', 'enabled', 'is_popular', 'sort_order'];
+        $priceColumns = ['register_price', 'transfer_price', 'renew_price', 'restore_price', 'privacy_price'];
         $imported = 0;
+        $skipped = 0;
 
         while (($row = fgetcsv($handle)) !== false) {
             $row = array_map('trim', $row);
             $extension = ltrim((string) ($row[0] ?? ''), "'");
             $extension = '.'.ltrim($extension, '.');
             if ($extension === '.') {
+                continue;
+            }
+
+            // A non-numeric price cell is refused rather than cast to 0.0,
+            // which would put the TLD on sale for nothing.
+            $invalid = false;
+            foreach ($columns as $i => $column) {
+                if (! in_array($column, $priceColumns, true)) {
+                    continue;
+                }
+                $cell = trim((string) ($row[$i + 1] ?? ''));
+                if ($cell !== '' && ! is_numeric($cell)) {
+                    $invalid = true;
+                    break;
+                }
+            }
+            if ($invalid) {
+                $skipped++;
+
                 continue;
             }
 
@@ -999,14 +1020,19 @@ class ConfigController extends Controller
 
         fclose($handle);
 
-        return back()->with('success', __('admin.domain_pricing.import_success', ['count' => $imported]));
+        $message = __('admin.domain_pricing.import_success', ['count' => $imported]);
+        if ($skipped > 0) {
+            $message .= ' '.__('admin.domain_pricing.import_skipped', ['count' => $skipped]);
+        }
+
+        return back()->with('success', $message);
     }
 
-    /** Delete the checked TLDs, or every TLD when "select all" was used. */
+    /** Delete the checked TLDs, or every TLD matching the search when "select all" was used. */
     public function bulkDeleteTlds(Request $request)
     {
         if ($request->boolean('select_all')) {
-            $count = DomainPricing::query()->delete();
+            $count = $this->tldQuery($request)->delete();
         } else {
             $ids = array_values(array_filter(array_map('intval', (array) $request->input('ids', []))));
             if ($ids === []) {

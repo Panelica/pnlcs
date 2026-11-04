@@ -50,6 +50,7 @@
 <form id="tld-bulk-form" method="POST" action="{{ route('admin.config.domain-pricing.bulk-delete') }}">
     @csrf
     <input type="hidden" name="select_all" id="tld-select-all-flag" value="0">
+    <input type="hidden" name="search" value="{{ request('search') }}">
 </form>
 
 <div class="card">
@@ -188,7 +189,14 @@ document.getElementById('tld-select-all').addEventListener('change', function ()
 });
 document.querySelectorAll('.tld-row-checkbox').forEach(function (cb) {
     cb.addEventListener('change', function () {
-        document.getElementById('tld-select-all-flag').value = '0';
+        // The header checkbox mirrors the rows: ticking every row keeps it on,
+        // unticking one turns it off so the dialog does not promise a delete
+        // of "all" while the form carries only the ticked ids.
+        var rows = document.querySelectorAll('.tld-row-checkbox');
+        var checked = document.querySelectorAll('.tld-row-checkbox:checked').length;
+        var allChecked = rows.length > 0 && checked === rows.length;
+        document.getElementById('tld-select-all').checked = allChecked;
+        document.getElementById('tld-select-all-flag').value = allChecked ? '1' : '0';
     });
 });
 document.getElementById('tld-bulk-delete').addEventListener('click', function (e) {

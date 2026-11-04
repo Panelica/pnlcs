@@ -106,7 +106,7 @@ it('reads the domain prices out of the pricings answer', function () {
         ->and($prices['com.pl'])->toBe(['register' => '10.50', 'renew' => null, 'transfer' => null, 'restore' => null]);
 });
 
-it('writes the prices with the margin, rounded up, onto its own TLDs only', function () {
+it('writes the prices with the margin onto its own TLDs only', function () {
     zlotyShop();
     $pl = hrdTld('.pl');
     $comPl = hrdTld('.com.pl');
@@ -116,15 +116,15 @@ it('writes the prices with the margin, rounded up, onto its own TLDs only', func
 
     expect($result['success'])->toBeTrue()
         ->and($result['updated'])->toBe(2)
-        // 46 * 1.20 = 55.2, rounded up to a whole złoty.
-        ->and((float) $pl->fresh()->register_price)->toBe(56.0)
+        // 46 * 1.20 = 55.2.
+        ->and((float) $pl->fresh()->register_price)->toBe(55.2)
         ->and((float) $pl->fresh()->restore_price)->toBe(66.0)
         // A price HRD does not charge stays at zero, not at the old number.
         ->and((float) $pl->fresh()->transfer_price)->toBe(0.0)
         // HRD publishes no renewal price for .com.pl: the operator's own
         // number stays rather than becoming zero.
         ->and((float) $comPl->fresh()->renew_price)->toBe(1.0)
-        ->and((float) $comPl->fresh()->register_price)->toBe(13.0)
+        ->and((float) $comPl->fresh()->register_price)->toBe(12.6)
         // Another registrar's TLD is not this sync's business.
         ->and((float) $other->fresh()->register_price)->toBe(1.0);
 });
@@ -146,9 +146,9 @@ it('converts złoty prices into the shop currency', function () {
 
     $result = hrdRegistrarWith(hrdPricings(HRD_PRICINGS), ['margin_percent' => '20'])->syncPrices();
 
-    // 46 PLN @ 2 PLN/USD = 23 USD; +20% → 27.6 → 28.
+    // 46 PLN @ 2 PLN/USD = 23 USD; +20% → 27.6.
     expect($result['success'])->toBeTrue()
-        ->and((float) $pl->fresh()->register_price)->toBe(28.0);
+        ->and((float) $pl->fresh()->register_price)->toBe(27.6);
 });
 
 /** The id number HRD is given for this client's registrant. */

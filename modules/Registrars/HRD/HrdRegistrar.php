@@ -234,7 +234,7 @@ class HrdRegistrar implements RegistrarModuleInterface, SyncsDomainData
         }
     }
 
-    /** A purchase price, converted and with the margin applied, rounded up. */
+    /** A purchase price, converted and with the margin applied. */
     protected function withMargin(?string $price, float $margin, float $factor = 1.0): ?float
     {
         if ($price === null || trim($price) === '') {
@@ -243,7 +243,7 @@ class HrdRegistrar implements RegistrarModuleInterface, SyncsDomainData
 
         $value = (float) $price * $factor;
 
-        return $value > 0 ? ceil($value * (1 + $margin / 100)) : 0.0;
+        return $value > 0 ? $value * (1 + $margin / 100) : 0.0;
     }
 
     /**

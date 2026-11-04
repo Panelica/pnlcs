@@ -320,14 +320,27 @@ class OvhRegistrar implements RegistrarModuleInterface, SyncsDomainData
             $margin = (float) ($this->settings['margin_percent'] ?? 0);
 
             // The catalog quotes every TLD in one call, in the account's
-            // currency. Resolve the conversion factor once from that currency.
-            $quoted = $this->accountCurrency() ?? 'PLN';
+            // currency. Resolve that currency once, then the conversion factor.
+            // A currency that cannot be read refuses the sync: guessing the
+            // shop currency would write wrong prices into the live list.
+            $quoted = $this->accountCurrency();
+            if ($quoted === null) {
+                return ['success' => false, 'message' => __('admin.registrars.sync_currency_unavailable', [
+                    'registrar' => 'OVH',
+                    'shop' => Currency::getDefault()?->code ?? '—',
+                ])];
+            }
             $factor = Currency::rateToShop($quoted);
             if ($factor === null) {
                 return ['success' => false, 'message' => __('admin.registrars.sync_currency_unavailable', [
                     'registrar' => $quoted,
                     'shop' => Currency::getDefault()?->code ?? '—',
                 ])];
+            }
+
+            $subsidiary = $this->subsidiary();
+            if ($subsidiary === '') {
+                return ['success' => false, 'message' => __('admin.registrars.sync_subsidiary_unset')];
             }
 
             $catalog = $this->catalogPrices();
@@ -465,12 +478,12 @@ class OvhRegistrar implements RegistrarModuleInterface, SyncsDomainData
 
     /**
      * The OVH subsidiary every cart is opened under (e.g. "PL"). OVH refuses
-     * a cart without it, and the offers/prices depend on it, so it is a
-     * module setting rather than a guess.
+     * a cart without it, and the offers/prices depend on it, so it is never
+     * guessed: it must be set explicitly, and an empty value refuses the sync.
      */
     protected function subsidiary(): string
     {
-        return strtoupper(trim((string) ($this->settings['subsidiary'] ?? 'PL')));
+        return strtoupper(trim((string) ($this->settings['subsidiary'] ?? '')));
     }
 
     /** Open an order cart under the account's subsidiary. */
@@ -483,20 +496,15 @@ class OvhRegistrar implements RegistrarModuleInterface, SyncsDomainData
      * The offers OVH returns for a domain: create-default / create-premium
      * (available), transfer-* (taken but transferable), aftermarket.
      *
-     * A cart may be reused across lookups (the offers query does not modify
-     * it), which is what a price sync does to avoid opening one per TLD.
-     *
      * @return array<int, array<string, mixed>>
      */
-    protected function domainOffers(string $domain, ?string $cartId = null): array
+    protected function domainOffers(string $domain): array
     {
-        if ($cartId === null || $cartId === '') {
-            $cart = $this->createCart();
-            $cartId = (string) ($cart['cartId'] ?? '');
+        $cart = $this->createCart();
+        $cartId = (string) ($cart['cartId'] ?? '');
 
-            if ($cartId === '') {
-                throw new \RuntimeException('OVH: could not create an order cart.');
-            }
+        if ($cartId === '') {
+            throw new \RuntimeException('OVH: could not create an order cart.');
         }
 
         return $this->client()->get('/order/cart/'.$cartId.'/domain', ['domain' => $domain]);
@@ -787,7 +795,7 @@ class OvhRegistrar implements RegistrarModuleInterface, SyncsDomainData
         return $this->client;
     }
 
-    /** A purchase price with the margin applied, rounded up to a whole unit. */
+    /** A purchase price with the margin applied. */
     protected function withMargin(?float $price, float $margin, float $factor = 1.0): ?float
     {
         if ($price === null) {
@@ -796,7 +804,7 @@ class OvhRegistrar implements RegistrarModuleInterface, SyncsDomainData
 
         $value = $price * $factor;
 
-        return $value > 0 ? ceil($value * (1 + $margin / 100)) : 0.0;
+        return $value > 0 ? $value * (1 + $margin / 100) : 0.0;
     }
 
     /**
