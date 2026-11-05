@@ -288,12 +288,16 @@ class AffiliateService
             return (float) $invoice->total;
         }
 
+        // With prices that include tax a line carries its tax: count what is
+        // left of it, as the invoice's own tax does.
+        $inclusive = $invoice->tax_mode === Invoice::TAX_INCLUSIVE;
+
         // A payment for several invoices is no sale either: each invoice it
         // pays earns its own commission when it is settled.
         return round($invoice->items()
             ->whereNotIn('type', ['AddFunds', MassPaymentService::ITEM_TYPE])
             ->get()
-            ->sum(fn ($item) => (float) $item->amount * (int) $item->qty), 2);
+            ->sum(fn ($item) => $inclusive ? $invoice->lineTax($item)['net'] : (float) $item->amount * (int) $item->qty), 2);
     }
 
     public function calculateCommission(Affiliate $affiliate, float $invoiceTotal, ?float $rate = null): float
