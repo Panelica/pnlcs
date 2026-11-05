@@ -40,8 +40,14 @@ class LateFeeCommand extends Command
                 continue;
             }
 
+            // A percentage of what the lines add up to. With prices that
+            // include tax the subtotal has the tax taken out, so a fee on it
+            // came to less than the same percentage of the invoice; with tax
+            // added on top the two are the same figure.
+            $linesAmount = (float) $invoice->items->sum(fn ($item) => (float) $item->amount * (int) $item->qty);
+
             $fee = $lateFeeType === 'percent'
-                ? round((float) $invoice->subtotal * ($lateFeeAmount / 100), 2)
+                ? round($linesAmount * ($lateFeeAmount / 100), 2)
                 : $lateFeeAmount;
 
             if ($fee <= 0) {
