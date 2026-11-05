@@ -2,6 +2,72 @@
 
 All notable changes to PNLCS are documented here. Newest first.
 
+## 1.20.0 — 2026-11-05
+
+A stable release, offered to every installation. Two registrars can now quote
+their prices in the currency the shop sells in, and the rest is the second half
+of the VAT family that 1.19.0 started: with **Prices include tax** switched on,
+a promo code and a percentage late fee were both worked out on the wrong
+figure.
+
+Thank you [@hedon77](https://github.com/hedon77) (#391) and
+[@5eBeKs](https://github.com/5eBeKs) (#394, #395, #396).
+
+**Two things to know after upgrading**, both only with **Prices include tax**
+on, and neither touching anything already issued.
+
+A promo code now comes off the price the customer was shown. It was taken off
+the net, so a 10% code on a 120 line at 20% VAT took 10 off instead of 12 and
+the customer paid 110 for what the shop advertised at 108.
+
+A percentage late fee is now a percentage of what the invoice lines add up to,
+rather than of the subtotal — which in that mode is the figure with the tax
+already taken out. A 5% fee on an overdue 120 was 5 and is now 6. A flat fee
+does not change, and neither mode changes when prices have tax added on top.
+Fees already charged stay as they are.
+
+### Added
+
+- **Registrar prices in the shop's currency.** HRD and OVH quote in their own
+  currency; what they hand over is now converted into the currency the
+  installation sells in before it reaches the price list, so the margin is
+  worked out on comparable figures. **Setup → Registrars → Add TLDs**.
+- **Work with the price list once it is long.** Domain pricing sorts by any
+  column, exports and imports as CSV, and rows can be deleted in bulk — the
+  screen an import of several hundred extensions leaves behind (#391).
+
+### Changed
+
+- **The OVH price sync reads the public order catalogue**, which answers for
+  every extension at once instead of one cart per extension.
+- **The bulk delete button sits in the page header** with the other actions on
+  the domain pricing screen, rather than below the table.
+
+### Fixed
+
+- **A promo code comes off the price shown, with prices that include tax.**
+  The code was applied to the net and the tax recalculated on top, so the
+  discount the customer saw was not the discount they got (#395).
+- **A percentage late fee is a percentage of the invoice.** It was worked out
+  on the subtotal, which with prices that include tax has the tax taken out,
+  so the fee came to less than the rate the operator set (#396).
+- **A promo code takes tax off its taxed share only.** On an invoice mixing
+  taxed and untaxed lines the whole discount was treated as taxed (#394).
+- **OVH cart prices are actually fetched.** The call that read them asked for a
+  cart that had not been filled, so every extension came back without a price.
+- **A margined price is rounded to the cent.** A margin on a converted price
+  produced figures with four decimals, which the price list then stored.
+- **The register column on the pricing screen is labelled**, and export and
+  import line up with the rest of the toolbar.
+- **One page of apps asks the panel one question less** on the Panelica server
+  module, and stops asking at all once the panel answers 429 (#386).
+- **Polish says "Import CSV"** where it had been left as the English string
+  without being marked as such.
+
+### Views a theme may override that changed
+
+- `resources/views/admin/config/domain-pricing.blade.php`
+
 ## 1.19.0 — 2026-11-03
 
 A stable release, offered to every installation. Two registrars can now fill
