@@ -1,0 +1,15 @@
+{
+  "name": "monobank",
+  "type": "gateway",
+  "version": "0.5.2",
+  "display_name": "Monobank Acquiring",
+  "description": "Secure hosted Monobank acquiring; persistent sessions, atomic settlement, signed callbacks and reconciliation",
+  "author": {
+    "name": "TopAdmin integration"
+  },
+  "class": "Modules\\Gateways\\Monobank\\MonobankModule",
+  "provider": "Modules\\Gateways\\Monobank\\MonobankServiceProvider",
+  "requires": {
+    "pnlcs": ">=1.7 <2"
+  }
+}
