@@ -2812,6 +2812,8 @@ return [
     'settings.invoice_renewals_separately' => 'Wystawiaj osobną fakturę za każde odnowienie, aby klient mógł odnowić jedną usługę, a inną pozostawić',
     'settings.default_nameservers' => 'Domyślne serwery DNS',
     'settings.default_nameservers_hint' => 'Używane przy rejestracji i transferze domen, gdy nie podano innych serwerów DNS.',
+    'settings.domain_sync_rdap_max' => 'Maks. zapytań RDAP na synchronizację',
+    'settings.domain_sync_rdap_max_hint' => 'Gdy domena nie ma daty rejestracji, codzienna synchronizacja uzupełnia ją z RDAP. Limit zapytań w jednym uruchomieniu; 0 wyłącza. Domyślnie 100.',
     'settings.themes' => 'Motywy',
     'settings.white_label' => 'White-Label',
     'sidebar' => [

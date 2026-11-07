@@ -3,6 +3,7 @@
 use App\Models\Client;
 use App\Models\Domain;
 use App\Models\RegistrarSettings;
+use App\Models\Setting;
 use App\Services\Module\ModuleRegistry;
 use Carbon\Carbon;
 use Illuminate\Support\Facades\Http;
@@ -28,6 +29,7 @@ function syncDomainFor(string $registrar, array $attrs = []): Domain
         'registrar' => $registrar,
         'status' => 'active',
         'registration_period' => 1,
+        'registration_date' => '2015-01-01',
         'expiry_date' => '2026-01-01',
         'first_payment_amount' => 10,
         'recurring_amount' => 10,
@@ -202,4 +204,77 @@ test('an unchanged domain is not rewritten', function () {
     $this->artisan('pnlcs:domain-sync')->assertSuccessful();
 
     expect($domain->fresh()->updated_at->eq($before))->toBeTrue();
+});
+
+// ---------------------------------------------------------------------------
+// Missing registration date filled from RDAP
+// ---------------------------------------------------------------------------
+
+function rdapResponse(string $registrationDate): array
+{
+    return [
+        'objectClassName' => 'domain',
+        'ldhName' => 'sync-example.com',
+        'events' => [
+            ['eventAction' => 'registration', 'eventDate' => $registrationDate.'T04:00:00Z'],
+        ],
+    ];
+}
+
+test('a domain without a registration date gets it filled from RDAP', function () {
+    Http::fake([
+        '*namecheap*' => Http::response(namecheapListXml('sync-example.com', '06/02/2027'), 200),
+        'rdap.org/*' => Http::response(rdapResponse('1995-08-14'), 200),
+    ]);
+    $domain = syncDomainFor('Namecheap', ['registration_date' => null]);
+
+    $this->artisan('pnlcs:domain-sync')->assertSuccessful();
+
+    expect($domain->fresh()->registration_date->toDateString())->toBe('1995-08-14');
+});
+
+test('a domain with a known registration date is never asked of RDAP', function () {
+    Http::fake(['*namecheap*' => Http::response(namecheapListXml('sync-example.com', '06/02/2027'), 200)]);
+    $domain = syncDomainFor('Namecheap');
+
+    $this->artisan('pnlcs:domain-sync')->assertSuccessful();
+
+    Http::assertNotSent(fn ($request) => str_contains($request->url(), 'rdap.org'));
+    expect($domain->fresh()->registration_date->toDateString())->toBe('2015-01-01');
+});
+
+test('dry run reports the RDAP fill without writing it', function () {
+    Http::fake([
+        '*namecheap*' => Http::response(namecheapListXml('sync-example.com', '06/02/2027'), 200),
+        'rdap.org/*' => Http::response(rdapResponse('1995-08-14'), 200),
+    ]);
+    $domain = syncDomainFor('Namecheap', ['registration_date' => null]);
+
+    $this->artisan('pnlcs:domain-sync', ['--dry-run' => true])->assertSuccessful();
+
+    expect($domain->fresh()->registration_date)->toBeNull();
+});
+
+test('an RDAP miss leaves the registration date null without stopping the sync', function () {
+    Http::fake([
+        '*namecheap*' => Http::response(namecheapListXml('sync-example.com', '06/02/2027'), 200),
+        'rdap.org/*' => Http::response(['errorCode' => 404, 'title' => 'Not Found'], 404),
+    ]);
+    $domain = syncDomainFor('Namecheap', ['registration_date' => null]);
+
+    $this->artisan('pnlcs:domain-sync')->assertSuccessful();
+
+    expect($domain->fresh()->registration_date)->toBeNull()
+        ->and($domain->fresh()->expiry_date->toDateString())->toBe('2027-06-02');
+});
+
+test('the per-run RDAP limit is read from the setting, and zero disables it', function () {
+    Setting::set('DomainSyncRdapMaxPerRun', '0', 'general');
+    Http::fake(['*namecheap*' => Http::response(namecheapListXml('sync-example.com', '06/02/2027'), 200)]);
+    $domain = syncDomainFor('Namecheap', ['registration_date' => null]);
+
+    $this->artisan('pnlcs:domain-sync')->assertSuccessful();
+
+    Http::assertNotSent(fn ($request) => str_contains($request->url(), 'rdap.org'));
+    expect($domain->fresh()->registration_date)->toBeNull();
 });

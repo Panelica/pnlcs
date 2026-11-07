@@ -42,4 +42,10 @@ return [
         'base_url' => env('OPENAI_BASE_URL', 'https://api.openai.com/v1'),
     ],
 
+    // RDAP bootstrap (App\Services\RdapRegistrationDate): read the registry's
+    // creation date for a domain when the panel does not know it yet.
+    'rdap' => [
+        'base' => env('RDAP_BASE', 'https://rdap.org'),
+    ],
+
 ];

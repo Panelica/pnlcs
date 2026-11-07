@@ -8,7 +8,9 @@ use App\Enums\DomainStatus;
 use App\Models\Domain;
 use App\Models\DomainPricing;
 use App\Models\RegistrarSettings;
+use App\Models\Setting;
 use App\Services\Module\ModuleRegistry;
+use App\Services\RdapRegistrationDate;
 use Carbon\Carbon;
 use Illuminate\Console\Command;
 use Illuminate\Support\Collection;
@@ -156,11 +158,61 @@ class DomainSyncCommand extends Command
             Log::info("Domain sync updated {$domain->domain}: {$summary}");
         }
 
+        $datesFilled = $this->fillMissingRegistrationDates($domains, $dryRun);
+
         $lapsed = $dryRun ? 0 : $this->applyLifecycle($domains);
 
-        $this->info("Domain sync: {$checked} checked, {$updated} updated, {$skipped} without a syncing module, {$failed} failed, {$lapsed} past expiry.");
+        $this->info("Domain sync: {$checked} checked, {$updated} updated, {$skipped} without a syncing module, {$failed} failed, {$datesFilled} registration dates filled from RDAP, {$lapsed} past expiry.");
 
         return Command::SUCCESS;
+    }
+
+    /**
+     * Fill a missing registration date from RDAP, once, for every domain the
+     * sync runs over. The date is immutable, so once it is stored it is never
+     * asked for again; the setting caps how many lookups one run makes so a
+     * first run over a long list does not hammer the registry.
+     *
+     * @param  Collection<int, Domain>  $domains
+     */
+    private function fillMissingRegistrationDates(Collection $domains, bool $dryRun): int
+    {
+        $limit = max(0, (int) Setting::get('DomainSyncRdapMaxPerRun', '100'));
+        if ($limit === 0) {
+            return 0;
+        }
+
+        $rdap = app(RdapRegistrationDate::class);
+        $filled = 0;
+
+        foreach ($domains as $domain) {
+            if ($filled >= $limit) {
+                break;
+            }
+
+            // Never overwrite a date the panel already knows.
+            if ($domain->registration_date) {
+                continue;
+            }
+
+            $date = $rdap->forDomain($domain->domain);
+            if (! $date) {
+                continue;
+            }
+
+            $filled++;
+
+            if ($dryRun) {
+                $this->line("would set registration_date {$date} for {$domain->domain} (RDAP)");
+
+                continue;
+            }
+
+            $domain->update(['registration_date' => $date]);
+            Log::info("Domain {$domain->domain} registration date filled from RDAP: {$date}");
+        }
+
+        return $filled;
     }
 
     /**
