@@ -266,7 +266,7 @@ class TranslationController extends Controller
         }
 
         if (! $ai->configured()) {
-            return response()->json(['message' => __('admin.messages.openai_not_configured')], 422);
+            return response()->json(['message' => __('admin.messages.ai_not_configured')], 422);
         }
 
         try {

@@ -430,7 +430,6 @@ class TranslationSeeder extends Seeder
     'messages.notification_provider_updated' => 'Notification provider updated.',
     'messages.notification_rule_created' => 'Notification rule created.',
     'messages.notification_rule_deleted' => 'Notification rule deleted.',
-    'messages.openai_not_configured' => 'OpenAI API key not configured. Go to Settings > Languages.',
     'messages.order_accepted' => 'Order #:num has been accepted and services activated.',
     'messages.order_cancelled' => 'Order #:num has been cancelled.',
     'messages.order_deleted' => 'Order #:num has been deleted.',
