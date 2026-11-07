@@ -67,7 +67,7 @@ These need no setting; they are here so you know what is already covered.
   set a stricter one there.
 - **Credential settings are encrypted at rest**, with `APP_KEY`: the mail
   password, the Google and GitHub client secrets, the reCAPTCHA secret and the
-  OpenAI, Twilio, FraudLabs, MaxMind and official-rate keys. Gateway, addon,
+  OpenAI, Anthropic, Twilio, FraudLabs, MaxMind and official-rate keys. Gateway, addon,
   registrar and server credentials already were. A copy of the database — a
   backup, a dump sent to support — no longer hands them over. The flip side is
   in the checklist above: a backup without `.env` cannot be read back.

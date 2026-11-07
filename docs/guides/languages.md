@@ -27,8 +27,10 @@ page.
 ## Translate with AI
 
 1. **Setup → Languages**: the **AI Translation Settings** card at the top of the
-   page takes an **OpenAI API Key** and the **OpenAI Model**. Save them once.
-   The key is never shown again; leave the field empty to keep it.
+   page takes the **Provider** - OpenAI or Anthropic (Claude) - and that
+   provider's **API Key** and **Model**. Save them once. A key is never shown
+   again; leave the field empty to keep it. Each provider keeps its own key
+   and model, so switching between them loses nothing.
 2. Press **Translate** next to a language. The **Translate with AI** panel at
    the top of the editor offers two choices, each with the number of texts it
    covers:
@@ -37,9 +39,9 @@ page.
     - **Everything again from English**: translates the whole language anew and
       replaces the current texts. Use it for a language whose texts you cannot
       trust.
-3. Press **Start**. Texts go to OpenAI in batches of 30 and are saved as each
-   batch comes back; the progress bar moves and every translated line appears
-   in the panel as it arrives. **Stop** halts after the current batch, and
+3. Press **Start**. Texts go to the chosen provider in batches of 30 and are
+   saved as each batch comes back; the progress bar moves and every translated
+   line appears in the panel as it arrives. **Stop** halts after the current batch, and
    **Continue** carries on from where it stopped, even after the page was
    closed.
 
