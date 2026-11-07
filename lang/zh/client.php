@@ -400,7 +400,7 @@ return [
         'new_tlds' => '新域名后缀',
         'no_results' => '没有符合搜索条件的域名后缀。',
         'note' => '注意',
-        'note_text' => '所有价格均为每年美元价格。',
+        'note_text' => '所有价格均按年计费。',
         'note_text_2' => '以查看特定域名的当前价格。',
         'popular' => '热门',
         'search_availability' => '查询域名是否可注册',

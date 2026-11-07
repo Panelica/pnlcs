@@ -1241,6 +1241,8 @@ return [
     'domains.notes' => 'Notatki',
     'domains.order' => 'Zamówienie',
     'domains.payment_method' => 'Metoda płatności',
+    'domains.client_payment_method' => 'Metoda płatności klienta',
+    'domains.billing_saved' => 'Rozliczenia zaktualizowane.',
     'domains.period' => 'Okres',
     'domains.premium' => 'Premium',
     'domains.recurring_amount' => 'Kwota cykliczna',
@@ -1251,6 +1253,9 @@ return [
     'domains.actions' => 'Akcje',
     'domains.sync' => 'Synchronizuj',
     'domains.synced' => 'Domena zsynchronizowana z rejestratorem.',
+    'domains.delete' => 'Usuń',
+    'domains.delete_confirm' => 'Usunąć tę domenę z panelu? Domena pozostanie zarejestrowana u rejestratora, a faktury zachowają historię.',
+    'domains.deleted' => 'Domena :domain usunięta.',
     'domains.sync_unavailable' => 'Ten rejestrator nie obsługuje synchronizacji.',
     'domains.sync_failed' => 'Synchronizacja nie powiodła się.',
     'domains.last_sync' => 'Ostatnia synchronizacja',
@@ -3427,6 +3432,8 @@ return [
     'clients.domain_first_payment' => 'Kwota pierwszej płatności',
     'clients.add_domain_renewal_note' => 'Faktura za odnowienie jest wystawiana automatycznie na podstawie następnego terminu płatności i ceny odnowienia, o ile cena odnowienia jest większa od zera.',
     'clients.domain_added' => 'Domena została dodana do klienta.',
+    'clients.domain_invalid' => 'Domena musi być nazwą domeny.',
+    'clients.domain_exists' => 'Ta domena jest już w panelu.',
 
     // Platnosc automatyczna: przelaczniki operatora dla obciazania zapisanej karty.
     'settings.auto_charge' => 'Płatność automatyczna',

@@ -401,7 +401,7 @@ return [
         'new_tlds' => 'New TLDs',
         'no_results' => 'No extensions match your search.',
         'note' => 'Note',
-        'note_text' => 'All prices are in USD per year.',
+        'note_text' => 'All prices are billed per year.',
         'note_text_2' => 'to see current pricing for a specific domain.',
         'popular' => 'Popular',
         'search_availability' => 'Search Domain Availability',

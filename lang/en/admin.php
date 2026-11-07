@@ -1241,6 +1241,8 @@ return [
     'domains.notes' => 'Notes',
     'domains.order' => 'Order',
     'domains.payment_method' => 'Payment Method',
+    'domains.client_payment_method' => 'Client\'s payment method',
+    'domains.billing_saved' => 'Billing updated.',
     'domains.period' => 'Period',
     'domains.premium' => 'Premium',
     'domains.recurring_amount' => 'Recurring Amount',
@@ -1251,6 +1253,9 @@ return [
     'domains.actions' => 'Actions',
     'domains.sync' => 'Sync',
     'domains.synced' => 'Domain synced with the registrar.',
+    'domains.delete' => 'Delete',
+    'domains.delete_confirm' => 'Delete this domain from the panel? It stays registered at the registrar, and invoices keep their own history.',
+    'domains.deleted' => 'Domain :domain deleted.',
     'domains.sync_unavailable' => 'This registrar does not support syncing.',
     'domains.sync_failed' => 'Sync failed.',
     'domains.last_sync' => 'Last sync',
@@ -3427,6 +3432,8 @@ return [
     'clients.domain_first_payment' => 'First payment amount',
     'clients.add_domain_renewal_note' => 'A renewal invoice is raised automatically from the next due date and the renewal price, as long as the renewal price is above zero.',
     'clients.domain_added' => 'Domain added to the client.',
+    'clients.domain_invalid' => 'The domain must be a domain name.',
+    'clients.domain_exists' => 'This domain is already in the panel.',
 
     // Automatic payment: the operator switches for charging a stored card.
     'settings.auto_charge' => 'Automatic Payment',

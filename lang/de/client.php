@@ -400,7 +400,7 @@ return [
         'new_tlds' => 'Neue Domainendungen',
         'no_results' => 'Keine passenden Domainendungen gefunden.',
         'note' => 'Hinweis',
-        'note_text' => 'Alle Preise gelten in USD pro Jahr.',
+        'note_text' => 'Alle Preise werden jährlich abgerechnet.',
         'note_text_2' => ', um die aktuellen Preise für eine bestimmte Domain zu sehen.',
         'popular' => 'Beliebt',
         'search_availability' => 'Domainverfügbarkeit prüfen',
