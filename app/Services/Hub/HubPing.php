@@ -5,6 +5,7 @@ namespace App\Services\Hub;
 use App\Models\Admin;
 use App\Models\Setting;
 use App\Services\Updates\Installation;
+use Carbon\Carbon;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Log;
@@ -121,12 +122,36 @@ class HubPing
 
         $last = Setting::get('hub_last_ping_at');
 
-        return ! $last || \Carbon\Carbon::parse($last)->lessThanOrEqualTo(now()->subDays(7));
+        return ! $last || Carbon::parse($last)->lessThanOrEqualTo(now()->subDays(7));
     }
 
     public function hour(): int
     {
         return (int) (hexdec(substr(hash('sha256', $this->identity()), 0, 6)) % 24);
+    }
+
+    /**
+     * How PNLCS was put on this server, as the install guide names the ways:
+     * docker, script (install.sh, which marks the .env it writes), git, or
+     * package (the release package unpacked by hand or in a hosting panel;
+     * the two leave the same files, so they are one value). unknown when
+     * none of these can be told.
+     */
+    public function installMethod(): string
+    {
+        if (Installation::inContainer()) {
+            return 'docker';
+        }
+
+        if (config('hub.installed_by') === 'script') {
+            return 'script';
+        }
+
+        return match ($this->installation->mode()) {
+            Installation::GIT => 'git',
+            Installation::PACKAGE => 'package',
+            default => 'unknown',
+        };
     }
 
     /** @return array<string, mixed> */
@@ -156,6 +181,7 @@ class HubPing
             'version' => (string) ($this->installation->version() ?? ''),
             'install_mode' => $this->installation->mode(),
             'docker' => Installation::inContainer(),
+            'install_method' => $this->installMethod(),
             'php' => PHP_VERSION,
             'db' => $this->databaseVersion(),
         ];

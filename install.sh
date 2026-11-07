@@ -295,7 +295,7 @@ install_app() {
         }
         file_put_contents(".env", App\Support\EnvWriter::apply(file_get_contents(".env"), $values));' \
         APP_ENV=production APP_DEBUG=false "APP_URL=$APP_URL" DB_CONNECTION=mysql "DB_HOST=$DB_HOST" "DB_PORT=$DB_PORT" \
-        "DB_DATABASE=$DB_NAME" "DB_USERNAME=$DB_USER" "DB_PASSWORD=$DB_PASSWORD" ${mail_env[@]+"${mail_env[@]}"}
+        "DB_DATABASE=$DB_NAME" "DB_USERNAME=$DB_USER" "DB_PASSWORD=$DB_PASSWORD" PNLCS_INSTALLED_BY=script ${mail_env[@]+"${mail_env[@]}"}
     chmod 640 .env
 
     say "Creating the database tables (a minute or two)"

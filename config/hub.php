@@ -10,6 +10,10 @@ return [
 
     // The page that lists every field the ping sends; linked from the install
     // wizard and from the one-time box on existing installs.
+    // Set to "script" in .env by install.sh, so the ping can tell the
+    // one-command install from a package unpacked by hand.
+    'installed_by' => env('PNLCS_INSTALLED_BY'),
+
     'what_is_sent_url' => 'https://docs.pnlcs.com/hub/what-is-sent/',
 
     /*

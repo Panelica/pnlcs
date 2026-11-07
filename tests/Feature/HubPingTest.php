@@ -4,8 +4,15 @@ use App\Models\Admin;
 use App\Models\AdminRole;
 use App\Models\Setting;
 use App\Services\Hub\HubPing;
+use App\Services\Hub\NoticeBoard;
+use App\Services\Updates\FileSets\PackageFileSet;
+use App\Services\Updates\Installation;
+use App\Services\Updates\PackageStore;
+use App\Services\Updates\ReleaseIndex;
 use Illuminate\Http\Client\ConnectionException;
+use Illuminate\Http\Client\Factory;
 use Illuminate\Http\Client\Request;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Http;
 
 /*
@@ -22,7 +29,7 @@ function hubAnswer(array $extra = []): array
 function hubFake(array $answer = []): void
 {
     // A fresh fake each time: stubs added to an existing fake do not replace it.
-    Http::swap(new \Illuminate\Http\Client\Factory);
+    Http::swap(new Factory);
     Http::fake(['hub.pnlcs.com/*' => Http::response(hubAnswer($answer))]);
 }
 
@@ -44,7 +51,7 @@ test('the ping carries the contact details, address and versions, and nothing el
 
         return $request->url() === 'https://hub.pnlcs.com/v1/ping'
             && str_starts_with($request->header('User-Agent')[0] ?? '', 'PNLCS/')
-            && array_keys($body) === ['protocol', 'install_id', 'install_secret', 'url', 'company_name', 'company_email', 'phone', 'country', 'admin_name', 'admin_email', 'locale', 'version', 'install_mode', 'docker', 'php', 'db']
+            && array_keys($body) === ['protocol', 'install_id', 'install_secret', 'url', 'company_name', 'company_email', 'phone', 'country', 'admin_name', 'admin_email', 'locale', 'version', 'install_mode', 'docker', 'install_method', 'php', 'db']
             && $body['company_name'] === 'Acme Hosting'
             && $body['phone'] === '+90 (212) 555-01-01'
             && $body['country'] === 'TR'
@@ -215,7 +222,7 @@ test('the wizard asks the two questions and says what is sent', function () {
     }
 
     try {
-        \Illuminate\Support\Facades\DB::table('admins')->delete();
+        DB::table('admins')->delete();
         $this->get('/install/app')->assertOk()
             ->assertSee('name="hub_source"', false)
             ->assertSee('name="hub_community_profile"', false)
@@ -279,4 +286,46 @@ test('only staff who may change settings answer the questions or close a notice'
     $this->actingAs($staff, 'admin')->post(route('admin.hub.notices.dismiss', 'any'))->assertForbidden();
 
     expect(Setting::get('InstallPurpose'))->toBeNull();
+});
+
+test('the ping says how PNLCS was installed', function () {
+    $root = sys_get_temp_dir().'/hub-install-'.bin2hex(random_bytes(4));
+    mkdir($root);
+    $method = function () use ($root) {
+        $installation = new Installation(app(PackageStore::class), app(ReleaseIndex::class), $root);
+
+        return (new HubPing($installation, app(NoticeBoard::class)))->installMethod();
+    };
+
+    try {
+        putenv('PNLCS_DIR=/app');
+        expect($method())->toBe('docker');
+        putenv('PNLCS_DIR');
+
+        if (Installation::inContainer()) {
+            return; // The suite itself runs in a container: every answer is docker.
+        }
+
+        expect($method())->toBe('unknown');
+
+        mkdir($root.'/.git');
+        expect($method())->toBe('git');
+        rmdir($root.'/.git');
+
+        file_put_contents($root.'/'.PackageFileSet::MANIFEST, '{}');
+        expect($method())->toBe('package');
+
+        // install.sh writes PNLCS_INSTALLED_BY=script into the .env it makes.
+        config(['hub.installed_by' => 'script']);
+        expect($method())->toBe('script');
+    } finally {
+        putenv('PNLCS_DIR');
+        @unlink($root.'/'.PackageFileSet::MANIFEST);
+        @rmdir($root.'/.git');
+        @rmdir($root);
+    }
+});
+
+test('install.sh marks the install it makes', function () {
+    expect(file_get_contents(base_path('install.sh')))->toContain('PNLCS_INSTALLED_BY=script');
 });
