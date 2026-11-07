@@ -35,9 +35,9 @@
                     <label class="pn-label">{{ __('client.invoices.pn_amount') }}
                         @if(has_billing_conversion($invoice)) ({{ strtoupper($invoice->billing_currency) }}) @endif *</label>
                     <input type="number" name="amount" class="pn-input" step="0.01" min="0.01"
-                           value="{{ old('amount', number_format(billing_amount((float) ($balance ?? $invoice->total), $invoice), 2, '.', '')) }}" required>
+                           value="{{ old('amount', number_format(billing_amount((float) ($balance ?? $invoice->amountDue()), $invoice), 2, '.', '')) }}" required>
                     @if(has_billing_conversion($invoice))
-                    <small class="text-muted">{{ __('client.invoices.pn_amount_hint', ['amount' => invoice_money_fmt($balance ?? $invoice->total, $invoice)]) }}</small>
+                    <small class="text-muted">{{ __('client.invoices.pn_amount_hint', ['amount' => invoice_money_fmt($balance ?? $invoice->amountDue(), $invoice)]) }}</small>
                     @endif
                 </div>
                 <div>

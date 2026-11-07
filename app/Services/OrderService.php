@@ -263,10 +263,11 @@ class OrderService
         // moment the order is placed, without waiting for payment.
         $this->provisionOnOrderPlacement($order);
 
-        // Zero-total invoices (free products, 100% promotions) settle
-        // immediately, which drives the normal payment→provisioning chain.
+        // Invoices that owe nothing (free products, 100% promotions, or fully
+        // covered by account credit) settle immediately, which drives the
+        // normal payment→provisioning chain.
         $invoice = $order->invoice()->first();
-        if ($invoice && (float) $invoice->total <= 0.009) {
+        if ($invoice && $invoice->amountDue() <= 0.009) {
             $this->invoiceService->markPaid($invoice, null, 'system');
         }
 

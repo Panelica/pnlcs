@@ -56,8 +56,10 @@ test('accepting a quote spends the credit the customer already has', function ()
 
     $invoice = app(QuoteService::class)->convertToInvoice($fx['quote']);
 
-    // 120 quoted, 50 already paid in: they owe 70, not 120.
-    expect((float) $invoice->fresh()->total)->toBe(70.0)
+    // 120 quoted, 50 already paid in: they owe 70, not 120. The total is the
+    // gross value; the credit is taken off in amountDue().
+    expect((float) $invoice->fresh()->total)->toBe(120.0)
+        ->and($invoice->fresh()->amountDue())->toBe(70.0)
         ->and((float) $fx['client']->fresh()->credit)->toBe(0.0);
 });
 

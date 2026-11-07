@@ -125,11 +125,10 @@ use Illuminate\Support\Sleep;
  *
  * 4. THE CLIENT HAS ACCOUNT CREDIT COVERING PART OF THE INVOICE.
  *    The card is asked for PaymentService::balance(), which is the invoice
- *    total minus what has been recorded against it — and the total is already
- *    net of any credit that has been applied (InvoiceService::applyCredit
- *    lowers total and raises invoices.credit as one transaction). So credit
- *    that has been applied is never charged, and an invoice fully covered by it
- *    has no balance and is not selected at all.
+ *    total minus the payments recorded against it and minus any account credit
+ *    spent on it (invoices.credit). The total stays the gross invoice value;
+ *    credit is a payment, so it is never charged again, and an invoice fully
+ *    covered by it has no balance and is not selected at all.
  *    Credit the customer holds but that has NOT been applied to this invoice is
  *    left alone, deliberately. Applying it is InvoiceService's job and it
  *    already happens when the invoice is raised (InvoiceService:87); spending a
@@ -711,8 +710,8 @@ class AutoChargeService
         }
 
         // Read fresh, and read through the same method the invoice page and
-        // every Pay Now button read: total minus what has been recorded
-        // against it. A payment that landed between the query above and this
+        // every Pay Now button read: total minus payments and minus credit
+        // spent on it. A payment that landed between the query above and this
         // line lowers it, and a fully covered invoice drops out here rather
         // than being presented to a card for nothing.
         $amount = round($this->payments->balance($invoice), 2);

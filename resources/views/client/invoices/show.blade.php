@@ -77,14 +77,24 @@
                 <span>{{ invoice_money_fmt($invoice->tax2, $invoice) }}</span>
             </div>
             @endif
+            @if((float) ($invoice->credit ?? 0) > 0.009)
+            <div style="display:flex;justify-content:space-between;padding:7px 0;font-size:13.5px;border-bottom:1px solid #f1f5f9">
+                <span class="text-muted">{{ __('pdf.vat_gross_total') }}</span>
+                <span>{{ invoice_money_fmt((float) $invoice->total, $invoice) }}</span>
+            </div>
+            <div style="display:flex;justify-content:space-between;padding:7px 0;font-size:13.5px;border-bottom:1px solid #f1f5f9">
+                <span class="text-muted">{{ __('pdf.credit') }}</span>
+                <span>-{{ invoice_money_fmt((float) $invoice->credit, $invoice) }}</span>
+            </div>
+            @endif
             <div style="display:flex;justify-content:space-between;padding:12px 0 4px;font-size:17px;font-weight:800;color:var(--primary)">
                 <span>{{ __('client.invoices.total_due') }}</span>
-                <span>{{ invoice_money_fmt($invoice->total, $invoice) }}</span>
+                <span>{{ invoice_money_fmt($invoice->amountDue(), $invoice) }}</span>
             </div>
             @if(billing_rate_note($invoice))
             <div style="display:flex;justify-content:space-between;gap:16px;font-weight:700;font-size:17px;padding-top:8px;border-top:2px solid var(--border,#e5e7eb);margin-top:6px;">
                 <span>{{ __('pdf.amount_in') }}</span>
-                <span>{{ billing_money_fmt($invoice->total, $invoice) }}</span>
+                <span>{{ billing_money_fmt($invoice->amountDue(), $invoice) }}</span>
             </div>
             <div class="text-muted" style="font-size:12px;margin-top:8px;line-height:1.5;">{{ billing_rate_note($invoice) }}</div>
             @endif
@@ -167,7 +177,7 @@
     <div class="pn-card-header" style="background:linear-gradient(135deg,var(--primary),#1e5fa0);border-radius:12px 12px 0 0">
         <span style="font-size:15px;font-weight:700;color:#fff">
             <svg width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24" style="display:inline;vertical-align:-2px;margin-right:6px"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z"/></svg>
-            {{ __('client.invoices.pay_this_invoice') }} — {{ dual_money_fmt($balance ?? $invoice->total, $invoice) }}
+            {{ __('client.invoices.pay_this_invoice') }} — {{ dual_money_fmt($balance ?? $invoice->amountDue(), $invoice) }}
         </span>
     </div>
     <div class="pn-card-body">
@@ -199,7 +209,7 @@
         <p class="text-muted text-sm mb-16 pn-currency-note">{{ __('client.invoices.currency_charge_note', [
             'billing' => strtoupper((string) $invoice->billing_currency),
             'shop' => strtoupper((string) ($invoice->source_currency ?: currency_code_default())),
-            'amount' => invoice_money_fmt($balance ?? $invoice->total, $invoice),
+            'amount' => invoice_money_fmt($balance ?? $invoice->amountDue(), $invoice),
         ]) }}</p>
         @endif
         <p class="text-muted text-sm mb-16">{{ __('client.invoices.select_payment_method') }}</p>
@@ -224,7 +234,7 @@
                         <em style="color:var(--muted);font-size:13px">{{ __('client.invoices.stripe_placeholder') }}</em>
                     </div>
                     <button type="button" onclick="stripePayNow({{ $invoice->id }})" class="btn btn-primary">
-                        {{ __('client.invoices.pay_with_card', ['amount' => number_format($invoice->total, 2)]) }}
+                        {{ __('client.invoices.pay_with_card', ['amount' => number_format($invoice->amountDue(), 2)]) }}
                     </button>
                 </div>
             @elseif($gw === "paypal")

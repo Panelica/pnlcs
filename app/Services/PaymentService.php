@@ -173,7 +173,9 @@ class PaymentService
     {
         $paid = (float) $this->invoicePayments($invoice)->sum(DB::raw('amount_in - amount_out'));
 
-        return round((float) $invoice->total - $paid, 2);
+        // Account credit spent on the invoice is a payment: the total is the
+        // gross value and credit is recorded separately (invoices.credit).
+        return round((float) $invoice->total - $paid - (float) $invoice->credit, 2);
     }
 
     /**
@@ -290,11 +292,10 @@ class PaymentService
                     'amount' => $fromCredit,
                 ]);
 
-                // Mirrors what cancelling does: the invoice stops counting that
-                // balance as settling it, and its total is what it was again.
+                // The credit never reduced the total — it is the gross value —
+                // so returning it only clears the part spent on this invoice.
                 $invoice->update([
                     'credit' => max(0, round((float) $invoice->credit - $fromCredit, 2)),
-                    'total' => round((float) $invoice->total + $fromCredit, 2),
                 ]);
             }
 

@@ -100,7 +100,7 @@ class GatewayWebhookController extends Controller
 
         // Under PayPal's id for the capture, so one capture is one payment
         // however the browser spelled it.
-        $this->recordTransaction($invoice, "paypal", (string) ($verified["id"] ?? $captureId), (float) ($verified["amount"] ?? $invoice->total));
+        $this->recordTransaction($invoice, "paypal", (string) ($verified["id"] ?? $captureId), (float) ($verified["amount"] ?? $invoice->amountDue()));
 
         return response()->json([
             "success"      => true,
@@ -227,7 +227,7 @@ class GatewayWebhookController extends Controller
             return response()->json(["success" => false, "message" => $verified["message"] ?? "Payment could not be verified."]);
         }
 
-        $this->recordTransaction($invoice, "stripe", $verified["transaction_id"] ?? $paymentIntentId, (float) ($verified["amount"] ?? $invoice->total));
+        $this->recordTransaction($invoice, "stripe", $verified["transaction_id"] ?? $paymentIntentId, (float) ($verified["amount"] ?? $invoice->amountDue()));
 
         // The tick on the pay form is the customer's agreement to be charged
         // automatically, recorded the way the card-add page records its own:
@@ -354,7 +354,7 @@ class GatewayWebhookController extends Controller
         if ($invoiceId && $txnId) {
             $invoice = Invoice::find($invoiceId);
             if ($invoice) {
-                $this->recordTransaction($invoice, $gateway, $txnId, $amount ?? (float) $invoice->total);
+                $this->recordTransaction($invoice, $gateway, $txnId, $amount ?? (float) $invoice->amountDue());
             }
         }
 
@@ -639,7 +639,7 @@ class GatewayWebhookController extends Controller
                 return response()->json(["success" => false, "message" => $verified["message"] ?? "Payment could not be verified."]);
             }
 
-            $this->recordTransaction($invoice, "razorpay", $verified["transaction_id"] ?? $paymentId, (float) ($verified["amount"] ?? $invoice->total));
+            $this->recordTransaction($invoice, "razorpay", $verified["transaction_id"] ?? $paymentId, (float) ($verified["amount"] ?? $invoice->amountDue()));
             return response()->json(["success" => true, "redirect_url" => url("/client/invoices/{$invoice->id}?payment=success")]);
         }
         // Create order
