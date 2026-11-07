@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers\Client;
 
+use App\Contracts\CannotManageTransferLock;
 use App\Contracts\RegistrarModuleInterface;
 use App\Http\Controllers\Concerns\ResolvesClient;
 use App\Http\Controllers\Controller;
@@ -44,7 +45,10 @@ class DomainController extends Controller
         $locked = null;
         $module = $this->registrarFor($domain);
 
-        if ($module) {
+        // A registrar with no transfer-lock control (CannotManageTransferLock)
+        // must not claim a state it cannot read: null is shown as "unknown",
+        // which is what this really is.
+        if ($module && ! $module instanceof CannotManageTransferLock) {
             try {
                 $locked = $module->getLockStatus($domain);
             } catch (\Throwable $e) {
@@ -154,7 +158,9 @@ class DomainController extends Controller
 
         $module = $this->registrarFor($domain);
 
-        if (! $module) {
+        // No module, or one whose registry has no lock control: there is
+        // nothing to toggle, so do not report a change that never happened.
+        if (! $module || $module instanceof CannotManageTransferLock) {
             return redirect()->route('client.domains.show', $domain)
                 ->with('error', __('client.domains.lock_unavailable'));
         }

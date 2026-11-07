@@ -83,3 +83,18 @@ test('a domain with no registrar module says so instead of inventing a code', fu
 
     expect($response->json('epp_code'))->not->toBe(md5($fx['domain']->domain.$fx['domain']->id));
 });
+
+test('a registrar with no lock control shows the lock as unknown and refuses to toggle it', function () {
+    // HRD has no registrar-lock endpoint (CannotManageTransferLock).
+    $fx = customerDomain('hrd');
+
+    $response = $this->actingAs($fx['user'])->get(route('client.domains.show', $fx['domain']))->assertOk();
+
+    expect($response->viewData('locked'))->toBeNull();
+
+    $this->actingAs($fx['user'])->post(route('client.domains.lock', $fx['domain']))
+        ->assertRedirect(route('client.domains.show', $fx['domain']))
+        ->assertSessionHas('error', __('client.domains.lock_unavailable'));
+
+    expect(strtolower($fx['domain']->fresh()->status))->toBe('active');
+});

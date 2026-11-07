@@ -16,8 +16,9 @@ All notable changes to PNLCS are documented here. Newest first.
 
 ### Changed
 
-- The domain screen hides the transfer-lock control for a registrar whose API
-  has none (HRD, Manual), instead of reporting a change it did not make.
+- The domain screen — staff and client — hides the transfer-lock control for a
+  registrar whose API has none (HRD, Manual), instead of reporting a change it
+  did not make.
 
 ### For theme and module authors
 
