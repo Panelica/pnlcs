@@ -39,6 +39,13 @@ return [
         'immediate' => 'Sofort',
         'terminated_shortly' => 'Ihr Dienst wird in Kürze beendet.',
     ],
+    'card_request' => [
+        'body' => 'Bitte hinterlegen Sie in Ihrem Kundenkonto eine Zahlungskarte, damit Ihre Rechnungen damit bezahlt werden können. Die Karte können nur Sie selbst hinterlegen: Sie geben die Daten im sicheren Formular unseres Zahlungsanbieters ein.',
+        'button' => 'Karte hinzufügen',
+        'not_expected' => 'Wenn Sie diese E-Mail nicht erwartet haben, können Sie sie ignorieren; an Ihrem Konto ändert sich nichts.',
+        'own_hands' => 'Unsere Mitarbeiter sehen Ihre Kartendaten zu keinem Zeitpunkt.',
+        'subject' => 'Hinterlegen Sie eine Zahlungskarte',
+    ],
     'cc_expiry' => [
         'body' => 'Ihre hinterlegte Kreditkarte läuft bald ab. Bitte aktualisieren Sie Ihre Zahlungsmethode.',
         'card_expiring' => 'Ihre Kreditkarte mit der Endnummer :last_four läuft am :expiry_date ab.',

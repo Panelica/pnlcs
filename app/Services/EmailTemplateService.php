@@ -32,6 +32,7 @@ class EmailTemplateService
         'AutoChargeActionRequiredMail' => 'Automatic Payment Authentication Required',
         'AutoChargeFailedMail' => 'Automatic Payment Failed',
         'CancellationConfirmMail' => 'Cancellation Confirmation',
+        'CardSetupRequestMail' => 'Card Setup Request',
         'ConfirmationCodeMail' => 'Confirmation Code',
         'DomainRegistrationMail' => 'Domain Registration Confirmation',
         'EmailVerificationMail' => 'Email Verification',
@@ -274,6 +275,9 @@ class EmailTemplateService
             'offeredDomain' => 'domain',
             'offeredBy' => 'from_name',
             'offerEnds' => 'expires_on',
+            // Staff asking the customer to add a card: the customer's own Add
+            // card page, which is where they land after signing in.
+            'addCardUrl' => 'add_card_url',
         ] as $property => $name) {
             $value = $data[$property] ?? null;
 

@@ -89,6 +89,10 @@ return [
         'subject' => 'Bestellbestätigung #{order_num} – {CompanyName}',
         'message' => "Guten Tag {client_name},\n\nVielen Dank für Ihre Bestellung #{order_num}!\n\nBestellbetrag: {order_total}\n\nMit freundlichen Grüßen\nIhr {CompanyName}-Team",
     ],
+    'Card Setup Request' => [
+        'subject' => 'Bitte hinterlegen Sie eine Zahlungskarte – {CompanyName}',
+        'message' => "Guten Tag {client_name},\n\nbitte hinterlegen Sie in Ihrem Kundenkonto eine Zahlungskarte, damit Ihre Rechnungen damit bezahlt werden können. Die Karte können nur Sie selbst hinterlegen: Sie geben die Daten im sicheren Formular unseres Zahlungsanbieters ein, unsere Mitarbeiter sehen sie nie.\n\n{add_card_url}\n\nWenn Sie diese E-Mail nicht erwartet haben, können Sie sie ignorieren; an Ihrem Konto ändert sich nichts.\n\nMit freundlichen Grüßen\nIhr {CompanyName}-Team",
+    ],
     'Credit Card Expiry Notice' => [
         'subject' => 'Ihre Zahlungskarte läuft bald ab – {CompanyName}',
         'message' => "Guten Tag {client_name},\n\nDie für Ihr Kundenkonto hinterlegte Zahlungskarte läuft demnächst ab. Bitte aktualisieren Sie Ihre Kartendaten unter {whmcs_url}, damit die nächste Zahlung nicht abgelehnt wird.\n\nMit freundlichen Grüßen\nIhr {CompanyName}-Team",

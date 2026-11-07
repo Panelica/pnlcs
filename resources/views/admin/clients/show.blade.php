@@ -39,6 +39,18 @@
             <strong style="font-size:13px;">{{ __('admin.clients.tax_exempt') }}:</strong>
             <span style="font-size:13px;">{{ $client->tax_exempt ? 'Yes' : 'No' }}</span>
         </div>
+        @if($cardRequestOffered || $storedCardCount > 0)
+        <div style="display:flex;align-items:center;gap:8px;">
+            <strong style="font-size:13px;">{{ __('admin.clients.stored_cards') }}:</strong>
+            <span style="font-size:13px;">{{ $storedCardCount }}</span>
+            @if($cardRequestOffered && auth('admin')->user()?->hasPermission('edit_clients'))
+            <form method="POST" action="{{ route('admin.clients.card-request', $client) }}" style="display:inline;">
+                @csrf
+                <button type="submit" class="btn btn-default btn-sm" title="{{ __('admin.clients.card_request_hint') }}" onclick="return pnConfirm(event, @js(__('admin.clients.card_request_confirm', ['email' => $client->email])))">{{ __('admin.clients.card_request') }}</button>
+            </form>
+            @endif
+        </div>
+        @endif
     </div>
 </div>
 

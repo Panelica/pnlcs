@@ -98,6 +98,10 @@ Route::middleware(['admin.auth', 'admin.2fa'])->prefix('admin')->name('admin.')-
         Route::post('clients/{client}/domains', [ClientController::class, 'storeDomainForClient'])->name('clients.domains.store');
         Route::get('servers/{server}/accounts', [ClientController::class, 'serverAccounts'])->name('clients.server-accounts');
         Route::post('clients/{client}/impersonate', [ClientController::class, 'impersonate'])->name('clients.impersonate');
+        // Staff cannot store a card for the customer; this emails the customer
+        // the link to add one themselves.
+        Route::post('clients/{client}/card-request', [ClientController::class, 'sendCardRequest'])
+            ->middleware('throttle:6,1')->name('clients.card-request');
         Route::get('impersonation/stop', [ClientController::class, 'stopImpersonation'])->name('clients.stop-impersonation');
     });
     Route::middleware('admin.permission:delete_clients')->group(function () {

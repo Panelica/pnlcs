@@ -81,6 +81,10 @@ return [
         'subject' => 'Potwierdzenie zamówienia #{order_num} - {CompanyName}',
         'message' => "Szanowny {client_name},\n\nDziękujemy za zamówienie #{order_num}.\n\nSuma zamówienia: {order_total}\n\n{CompanyName}",
     ],
+    'Card Setup Request' => [
+        'subject' => 'Dodaj kartę do swojego konta - {CompanyName}',
+        'message' => "Szanowny {client_name},\n\nDodaj kartę do swojego konta, aby można było nią opłacać faktury. Kartę możesz dodać tylko Ty: wpisujesz ją samodzielnie w bezpiecznym formularzu naszego operatora płatności, a nasi pracownicy nigdy jej nie widzą.\n\n{add_card_url}\n\nJeśli nie spodziewałeś się tej wiadomości, możesz ją zignorować; na Twoim koncie nic się nie zmieni.\n\n{CompanyName}",
+    ],
     'Credit Card Expiry Notice' => [
         'subject' => 'Twoja karta wkrótce wygaśnie - {CompanyName}',
         'message' => "Szanowny {client_name},\n\nKarta, którą przechowujemy dla Twojego konta, wkrótce wygaśnie. Zaktualizuj ją w {whmcs_url}, aby kolejna faktura nie została odrzucona.\n\n{CompanyName}",

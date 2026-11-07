@@ -39,6 +39,13 @@ return [
         'immediate' => 'Hemen',
         'terminated_shortly' => 'Hizmetiniz kısa süre içinde sonlandırılacak.',
     ],
+    'card_request' => [
+        'body' => 'Faturalarınızın kartla ödenebilmesi için lütfen hesabınıza bir kart ekleyin. Kartı yalnız siz ekleyebilirsiniz: bilgileri ödeme sağlayıcımızın güvenli formuna kendiniz girersiniz.',
+        'button' => 'Kart ekle',
+        'not_expected' => 'Bunu beklemiyorsanız bu e-postayı yok sayabilirsiniz; hesabınızda hiçbir şey değişmez.',
+        'own_hands' => 'Kart bilgilerinizi çalışanlarımız hiçbir zaman görmez.',
+        'subject' => 'Hesabınıza kart ekleyin',
+    ],
     'cc_expiry' => [
         'body' => 'Kayıtlı kredi kartınızın son kullanma tarihi yaklaşıyor. Lütfen ödeme yönteminizi güncelleyin.',
         'card_expiring' => ':last_four ile biten kredi kartınızın son kullanma tarihi :expiry_date.',

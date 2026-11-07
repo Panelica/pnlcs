@@ -57,6 +57,17 @@ class AutoCharge
     }
 
     /**
+     * Can a customer store a card at all? The shop collects by card and has a
+     * gateway that can take a payment with the customer absent. The customer's
+     * Add card button and the staff's "send a card link" both ask this, so a
+     * link is never sent to a page that would answer 404.
+     */
+    public static function cardStorageOffered(): bool
+    {
+        return self::enabled() && app(\App\Services\Module\ModuleRegistry::class)->tokenisedGateways() !== [];
+    }
+
+    /**
      * How early an invoice may be charged, in days before its due date.
      *
      * InvoiceGenerationService raises renewal invoices up to fourteen days
