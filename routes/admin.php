@@ -246,6 +246,8 @@ Route::middleware(['admin.auth', 'admin.2fa'])->prefix('admin')->name('admin.')-
     });
     Route::middleware('admin.permission:manage_domains')->group(function () {
         Route::get('domains/{domain}', [DomainController::class, 'show'])->name('domains.show');
+        Route::post('domains/{domain}/billing', [DomainController::class, 'updateBilling'])->name('domains.billing');
+        Route::delete('domains/{domain}', [DomainController::class, 'destroy'])->name('domains.destroy');
         Route::post('domains/{domain}/sync', [DomainController::class, 'sync'])->name('domains.sync');
         Route::post('domains/{domain}/renew', [DomainController::class, 'renew'])->name('domains.renew');
         Route::post('domains/{domain}/register', [DomainController::class, 'retryRegistration'])->name('domains.register');

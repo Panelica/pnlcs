@@ -524,8 +524,22 @@ class ClientController extends Controller
      */
     public function storeDomainForClient(Request $request, Client $client)
     {
+        // Validate what the operator meant, not the raw paste: normalise the
+        // scheme, www, path, port and trailing dot away first, then require a
+        // real domain name that is not already in the panel for anyone.
+        $request->merge(['domain' => Domain::normalise($request->input('domain'))]);
+
         $validated = $request->validate([
-            'domain' => ['required', 'string', 'max:255'],
+            'domain' => ['required', 'string', 'max:253', function ($attribute, $value, $fail) {
+                if (! filter_var($value, FILTER_VALIDATE_DOMAIN, FILTER_FLAG_HOSTNAME) || ! str_contains((string) $value, '.')) {
+                    $fail(__('admin.clients.domain_invalid'));
+
+                    return;
+                }
+                if (Domain::where('domain', $value)->exists()) {
+                    $fail(__('admin.clients.domain_exists'));
+                }
+            }],
             'registrar' => ['nullable', 'string', 'max:100'],
             'registration_date' => ['nullable', 'date'],
             'expiry_date' => ['nullable', 'date'],

@@ -109,3 +109,35 @@ it('requires a status from the domain status set and a recurring price', functio
             'domain' => 'y.test', 'status' => 'active',
         ])->assertSessionHasErrors('recurring_amount');
 });
+
+it('rejects a value that is not a domain name', function () {
+    $this->withoutMiddleware(VerifyCsrfToken::class);
+    $client = Client::factory()->create();
+
+    $this->actingAs(addDomainAdmin(), 'admin')
+        ->post(route('admin.clients.domains.store', $client), [
+            'domain' => 'not a domain',
+            'recurring_amount' => '5',
+            'status' => 'active',
+        ])->assertSessionHasErrors('domain');
+
+    expect(Domain::where('client_id', $client->id)->exists())->toBeFalse();
+});
+
+it('rejects a domain that is already in the panel', function () {
+    $this->withoutMiddleware(VerifyCsrfToken::class);
+    Domain::create([
+        'client_id' => Client::factory()->create()->id, 'type' => 'register',
+        'domain' => 'taken.test', 'status' => 'active', 'recurring_amount' => 10,
+    ]);
+    $client = Client::factory()->create();
+
+    $this->actingAs(addDomainAdmin(), 'admin')
+        ->post(route('admin.clients.domains.store', $client), [
+            'domain' => 'https://taken.test/',
+            'recurring_amount' => '5',
+            'status' => 'active',
+        ])->assertSessionHasErrors('domain');
+
+    expect(Domain::where('client_id', $client->id)->exists())->toBeFalse();
+});
