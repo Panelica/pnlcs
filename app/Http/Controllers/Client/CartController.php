@@ -356,7 +356,15 @@ class CartController extends Controller
         // admin screen and read by nothing.
         $orderFields = $clientId ? collect() : \App\Models\CustomField::orderFields()->get();
 
-        return view('client.cart.checkout', compact('cart', 'totals', 'currency', 'paymentMethods', 'freeOrder', 'client', 'needsBillingAddress', 'needsPhone', 'countries', 'orderFields'));
+        // The account balance is applied to the order invoice when it is
+        // created, so show it and what is left to pay before the customer
+        // chooses how to pay the rest.
+        $balance = (float) ($client?->credit ?? 0);
+        $total = (float) ($totals['total'] ?? 0);
+        $creditApplied = min($balance, $total);
+        $amountToPay = max(0.0, $total - $balance);
+
+        return view('client.cart.checkout', compact('cart', 'totals', 'currency', 'paymentMethods', 'freeOrder', 'client', 'needsBillingAddress', 'needsPhone', 'countries', 'orderFields', 'balance', 'creditApplied', 'amountToPay'));
     }
 
     /**
@@ -385,7 +393,9 @@ class CartController extends Controller
         // written onto the order and the service as a gateway nobody can
         // refund through.
         $request->validate([
-            'payment_method' => ['required', 'string', Rule::in(array_keys($this->getAvailablePaymentMethods()))],
+            // 'credit' is the account balance: it needs no gateway, but only
+            // when it covers the whole order (checked once the total is known).
+            'payment_method' => ['required', 'string', Rule::in([...array_keys($this->getAvailablePaymentMethods()), 'credit'])],
             'terms' => 'accepted',
         ]);
 
@@ -492,6 +502,17 @@ class CartController extends Controller
                 ->with('error', __('messages.error.cart_is_empty'));
         }
 
+        // Paying the whole order from the balance needs no gateway, but it does
+        // need the balance to actually cover it. A partial balance is applied
+        // automatically and the rest is paid by the chosen gateway on the
+        // invoice, so 'credit' is only valid when it covers the total.
+        if ($request->input('payment_method') === 'credit'
+            && (float) $client->credit + 0.009 < (float) ($totals['total'] ?? 0)) {
+            return back()
+                ->withErrors(['payment_method' => __('client.checkout.insufficient_balance')])
+                ->withInput($request->except(['password', 'password_confirmation']));
+        }
+
         // One order per press. A second submit while the first is still placing
         // (a double click, a reload of the spinning page) would place the same
         // basket again; it now finds the order on its way.
@@ -519,8 +540,11 @@ class CartController extends Controller
         // Only a zero total: a test account's order is settled without money
         // too (AutoApproveOrderEmails), and that one did cost something.
         $invoice = $order->invoice_id ? \App\Models\Invoice::find($order->invoice_id) : null;
-        if ($invoice && strtolower((string) $invoice->status) === 'paid'
-            && (float) $invoice->total <= 0.009 && (float) $invoice->credit <= 0.009) {
+        if ($invoice && strtolower((string) $invoice->status) === 'paid' && (float) $invoice->total <= 0.009) {
+            // Paid from the balance is not the same as free: the money came
+            // out of the customer's account, so do not call it a free order.
+            $paidFromCredit = (float) $invoice->credit > 0.009;
+
             $awaitingReview = strtolower((string) $order->fresh()?->status) === 'pending'
                 && \App\Models\Service::where('order_id', $order->id)->where('status', 'pending')
                     ->whereHas('product', fn ($q) => $q->where('auto_setup', 'manual'))->exists();
@@ -530,9 +554,12 @@ class CartController extends Controller
             $settingUp = ! $awaitingReview && \App\Models\Service::where('order_id', $order->id)->where('status', 'pending')
                 ->whereHas('product', fn ($q) => $q->whereNotNull('server_type')->where('server_type', '!=', ''))->exists();
 
+            $placedKey = $awaitingReview ? 'messages.success.order_placed_free_review'
+                : ($settingUp ? 'messages.success.order_placed_setting_up'
+                : ($paidFromCredit ? 'messages.success.order_placed' : 'messages.success.order_placed_free'));
+
             return redirect()->route('client.services.index')
-                ->with('success', __($awaitingReview ? 'messages.success.order_placed_free_review'
-                    : ($settingUp ? 'messages.success.order_placed_setting_up' : 'messages.success.order_placed_free'), ['num' => $order->order_num]));
+                ->with('success', __($placedKey, ['num' => $order->order_num]));
         }
 
         return redirect()->route('client.invoices.show', $order->invoice_id)
