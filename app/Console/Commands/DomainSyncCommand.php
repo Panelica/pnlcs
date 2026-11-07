@@ -190,12 +190,7 @@ class DomainSyncCommand extends Command
                 break;
             }
 
-            // Never overwrite a date the panel already knows.
-            if ($domain->registration_date) {
-                continue;
-            }
-
-            $date = $rdap->forDomain($domain->domain);
+            $date = $rdap->forMissing($domain);
             if (! $date) {
                 continue;
             }

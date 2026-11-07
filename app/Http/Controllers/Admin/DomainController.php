@@ -9,6 +9,7 @@ use App\Models\RegistrarSettings;
 use App\Services\DomainRegistrarActions;
 use App\Services\DomainService;
 use App\Services\Module\ModuleRegistry;
+use App\Services\RdapRegistrationDate;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
 
@@ -235,6 +236,16 @@ class DomainController extends Controller
         }
         if (is_bool($result['id_protection'] ?? null)) {
             $changes['id_protection'] = $result['id_protection'];
+        }
+
+        // The registrar does not say when the name was first registered, so a
+        // domain without a date asks RDAP for it here, exactly like the daily
+        // sync does.
+        if (! $domain->registration_date) {
+            $date = app(RdapRegistrationDate::class)->forMissing($domain);
+            if ($date) {
+                $changes['registration_date'] = $date;
+            }
         }
 
         $domain->update($changes);

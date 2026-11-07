@@ -2,6 +2,8 @@
 
 namespace App\Services;
 
+use App\Models\Domain;
+use App\Models\Setting;
 use Carbon\Carbon;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Log;
@@ -21,6 +23,25 @@ use Illuminate\Support\Facades\Log;
  */
 class RdapRegistrationDate
 {
+    /**
+     * The registration date for a domain whose panel date is still unknown,
+     * or null. This is the guard every sync path shares: an existing date is
+     * never overwritten, and a lookup is not made while the operator has
+     * switched RDAP off (DomainSyncRdapMaxPerRun = 0).
+     */
+    public function forMissing(Domain $domain): ?string
+    {
+        if ($domain->registration_date) {
+            return null;
+        }
+
+        if ((int) Setting::get('DomainSyncRdapMaxPerRun', '100') === 0) {
+            return null;
+        }
+
+        return $this->forDomain($domain->domain);
+    }
+
     public function forDomain(string $domain): ?string
     {
         $base = rtrim((string) config('services.rdap.base', 'https://rdap.org'), '/');
