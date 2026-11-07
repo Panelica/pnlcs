@@ -99,7 +99,7 @@
     <div style="position:relative;background:#fff;border-radius:4px;width:620px;max-width:95%;box-shadow:0 5px 30px rgba(0,0,0,0.3);max-height:90vh;overflow-y:auto;">
         <div style="padding:15px 20px;border-bottom:1px solid #e5e5e5;display:flex;align-items:center;justify-content:space-between;">
             <h4 style="margin:0;font-size:16px;">{{ __('admin.servers.add_server') }}</h4>
-            <button type="button" onclick="this.closest('[id]').style.display='none'" style="background:none;border:none;font-size:22px;cursor:pointer;color:#777;">&times;</button>
+            <button type="button" onclick="this.closest('[id^=modal-]').style.display='none'" style="background:none;border:none;font-size:22px;cursor:pointer;color:#777;">&times;</button>
         </div>
         <form method="POST" action="{{ route('admin.config.servers.store') }}">
             @csrf
@@ -157,7 +157,7 @@
                 </div>
             </div>
             <div style="padding:12px 20px;border-top:1px solid #e5e5e5;display:flex;gap:8px;justify-content:flex-end;">
-                <button type="button" onclick="this.closest('[id]').style.display='none'" class="btn btn-default btn-sm">{{ __('common.actions.cancel') }}</button>
+                <button type="button" onclick="this.closest('[id^=modal-]').style.display='none'" class="btn btn-default btn-sm">{{ __('common.actions.cancel') }}</button>
                 <button type="submit" class="btn btn-primary btn-sm">{{ __('admin.servers.add_server') }}</button>
             </div>
         </form>
@@ -170,7 +170,7 @@
     <div style="position:relative;background:#fff;border-radius:4px;width:620px;max-width:95%;box-shadow:0 5px 30px rgba(0,0,0,0.3);max-height:90vh;overflow-y:auto;">
         <div style="padding:15px 20px;border-bottom:1px solid #e5e5e5;display:flex;align-items:center;justify-content:space-between;">
             <h4 style="margin:0;font-size:16px;">{{ __('admin.servers.edit_server') }}</h4>
-            <button type="button" onclick="this.closest('[id]').style.display='none'" style="background:none;border:none;font-size:22px;cursor:pointer;color:#777;">&times;</button>
+            <button type="button" onclick="this.closest('[id^=modal-]').style.display='none'" style="background:none;border:none;font-size:22px;cursor:pointer;color:#777;">&times;</button>
         </div>
         <form id="form-edit-server" method="POST" action="">
             @csrf @method("PUT")
@@ -224,7 +224,7 @@
                 </div>
             </div>
             <div style="padding:12px 20px;border-top:1px solid #e5e5e5;display:flex;gap:8px;justify-content:flex-end;">
-                <button type="button" onclick="this.closest('[id]').style.display='none'" class="btn btn-default btn-sm">{{ __('common.actions.cancel') }}</button>
+                <button type="button" onclick="this.closest('[id^=modal-]').style.display='none'" class="btn btn-default btn-sm">{{ __('common.actions.cancel') }}</button>
                 <button type="submit" class="btn btn-primary btn-sm">{{ __('common.actions.save_changes') }}</button>
             </div>
         </form>
