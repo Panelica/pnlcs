@@ -44,12 +44,14 @@
             <input type="number" name="years" value="1" min="1" max="10" class="form-control" style="width:70px;font-size:13px;padding:2px 6px;">
             <button type="submit" class="btn btn-success btn-sm">{{ __('admin.domains.renew') }}</button>
         </form>
+        @if($canToggleLock)
         <form method="POST" action="{{ route('admin.domains.lock', $domain) }}" style="display:inline;" onsubmit="return pnConfirm(event, @js(__('admin.domains.confirm_lock')))">
             @csrf
             <button type="submit" class="btn btn-{{ $locked ? 'warning' : 'default' }} btn-sm">
                 {{ $locked ? __('admin.domains.unlock') : __('admin.domains.lock') }}
             </button>
         </form>
+        @endif
         <form method="POST" action="{{ route('admin.domains.autorenew', $domain) }}" style="display:inline;">
             @csrf
             <button type="submit" class="btn btn-default btn-sm">{{ $domain->auto_renew ? __('admin.domains.autorenew_disable') : __('admin.domains.autorenew_enable') }}</button>

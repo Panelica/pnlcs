@@ -384,3 +384,53 @@ it('calls no extension local when the installation has not said which country it
     // .pl is then simply another country's extension, not "ours".
     expect(DomainPricing::where('extension', '.pl')->value('category'))->toBe('country');
 });
+
+/** An HRD client whose domain/info and privacySet are recorded instead of sent. */
+class PrivacyHrdClient extends HrdClient
+{
+    public ?string $lastName = null;
+
+    public ?bool $lastPrivacy = null;
+
+    public function __construct(private string $privacy = 'false')
+    {
+        parent::__construct('login', 'pass', '00');
+    }
+
+    public function domainInfo(string $domain): array
+    {
+        return ['name' => $domain, 'status' => 'registered', 'exDate' => '2027-01-01', 'privacy' => $this->privacy];
+    }
+
+    public function domainPrivacySet(string $domain, bool $privacy): void
+    {
+        $this->lastName = $domain;
+        $this->lastPrivacy = $privacy;
+    }
+}
+
+it('switches WHOIS privacy through domain/privacySet', function () {
+    $client = new PrivacyHrdClient;
+    $domain = Domain::factory()->create([
+        'client_id' => Client::factory()->create()->id,
+        'domain' => 'privacy.pl',
+        'registrar' => 'hrd',
+    ]);
+
+    $result = hrdRegistrarWith($client)->setPrivacy($domain, true);
+
+    expect($result['success'])->toBeTrue()
+        ->and($client->lastName)->toBe('privacy.pl')
+        ->and($client->lastPrivacy)->toBeTrue();
+});
+
+it('reads the WHOIS privacy flag back when syncing a domain', function () {
+    $domain = Domain::factory()->create([
+        'client_id' => Client::factory()->create()->id,
+        'domain' => 'privacy.pl',
+        'registrar' => 'hrd',
+    ]);
+
+    expect(hrdRegistrarWith(new PrivacyHrdClient('true'))->syncDomain($domain)['id_protection'])->toBeTrue()
+        ->and(hrdRegistrarWith(new PrivacyHrdClient('false'))->syncDomain($domain)['id_protection'])->toBeFalse();
+});
