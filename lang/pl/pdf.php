@@ -45,7 +45,8 @@ return [
     'vat_summary_desc' => 'Opis',
     'vat_net_total' => 'Razem netto',
     'vat_total' => 'Razem VAT',
-    'vat_gross_total' => 'Do zapłaty (brutto)',
+    'vat_gross_total' => 'Razem brutto',
+    'amount_due' => 'Do zapłaty',
     'thank_you' => 'Dziękujemy za Twoje zamówienie!',
     'total' => 'Razem',
 ];

@@ -54,7 +54,8 @@ it('moves money from the balance onto the invoice, not the other way round', fun
 
     expect((float) $client->fresh()->credit)->toBe(20.0)
         ->and((float) $invoice->fresh()->credit)->toBe(30.0)
-        ->and((float) $invoice->fresh()->total)->toBe(50.0);
+        ->and((float) $invoice->fresh()->total)->toBe(80.0)
+        ->and($invoice->fresh()->amountDue())->toBe(50.0);
 });
 
 it('marks the invoice paid when the credit covers it', function () {

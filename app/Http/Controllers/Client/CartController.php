@@ -520,7 +520,12 @@ class CartController extends Controller
         // too (AutoApproveOrderEmails), and that one did cost something.
         $invoice = $order->invoice_id ? \App\Models\Invoice::find($order->invoice_id) : null;
         if ($invoice && strtolower((string) $invoice->status) === 'paid'
-            && (float) $invoice->total <= 0.009 && (float) $invoice->credit <= 0.009) {
+            && $invoice->amountDue() <= 0.009
+            && ((float) $invoice->total <= 0.009 || (float) $invoice->credit > 0.009)) {
+            // Paid from the balance is not the same as free: the money came out
+            // of the customer's account. A test account's settled order keeps
+            // its own path, so only a zero total or a credit payment lands here.
+            $paidFromCredit = (float) $invoice->credit > 0.009;
             $awaitingReview = strtolower((string) $order->fresh()?->status) === 'pending'
                 && \App\Models\Service::where('order_id', $order->id)->where('status', 'pending')
                     ->whereHas('product', fn ($q) => $q->where('auto_setup', 'manual'))->exists();
@@ -530,9 +535,12 @@ class CartController extends Controller
             $settingUp = ! $awaitingReview && \App\Models\Service::where('order_id', $order->id)->where('status', 'pending')
                 ->whereHas('product', fn ($q) => $q->whereNotNull('server_type')->where('server_type', '!=', ''))->exists();
 
+            $placedKey = $awaitingReview ? 'messages.success.order_placed_free_review'
+                : ($settingUp ? 'messages.success.order_placed_setting_up'
+                : ($paidFromCredit ? 'messages.success.order_placed' : 'messages.success.order_placed_free'));
+
             return redirect()->route('client.services.index')
-                ->with('success', __($awaitingReview ? 'messages.success.order_placed_free_review'
-                    : ($settingUp ? 'messages.success.order_placed_setting_up' : 'messages.success.order_placed_free'), ['num' => $order->order_num]));
+                ->with('success', __($placedKey, ['num' => $order->order_num]));
         }
 
         return redirect()->route('client.invoices.show', $order->invoice_id)

@@ -287,8 +287,10 @@ class InvoiceService
             $subtotal -= $taxAmount;
         }
 
-        $credit = (float) $invoice->credit;
-        $total = max(0, $subtotal + $taxAmount - $credit);
+        // The total is the invoice's gross value. Credit spent on it is a
+        // payment, not a discount: it is recorded in invoices.credit and taken
+        // off in PaymentService::balance(), so the document keeps its amount.
+        $total = max(0, $subtotal + $taxAmount);
 
         $invoice->update([
             'subtotal' => $subtotal,
@@ -380,9 +382,11 @@ class InvoiceService
                 return null;
             }
 
+            // Credit is a payment, not a discount: it is recorded here and
+            // subtracted in PaymentService::balance(), leaving the invoice's
+            // gross total untouched.
             $locked->update([
                 'credit' => (float) $locked->credit + $amount,
-                'total' => max(0, (float) $locked->total - $amount),
             ]);
 
             // Deduct from client credit balance
@@ -539,10 +543,9 @@ class InvoiceService
                 'amount' => $applied,
             ]);
 
-            $invoice->update([
-                'credit' => 0,
-                'total' => round((float) $invoice->total + $applied, 2),
-            ]);
+            // The credit never reduced the total, so there is nothing to add
+            // back: clearing it is enough for the balance to reflect the cancel.
+            $invoice->update(['credit' => 0]);
         });
     }
 

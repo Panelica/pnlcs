@@ -70,8 +70,9 @@ it('shows the discount as the promotion, not as credit', function () {
 it('still gives back balance the customer actually paid in', function () {
     [$client, $invoice] = invoiceWithPromo('BOTH', 100.00, 10.0, startingCredit: 30.00);
 
-    // 100 less a 10 discount, less 30 of balance.
-    expect(round((float) $invoice->total, 2))->toBe(60.00);
+    // 100 less a 10 discount = 90 gross; the 30 of balance is a payment.
+    expect(round((float) $invoice->total, 2))->toBe(90.00);
+    expect($invoice->amountDue())->toBe(60.00);
     expect(round((float) $client->credit, 2))->toBe(0.00);
 
     app(InvoiceService::class)->cancelInvoice($invoice);

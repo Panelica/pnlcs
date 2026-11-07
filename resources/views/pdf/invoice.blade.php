@@ -162,10 +162,11 @@
             @if((float)($invoice->tax2 ?? 0) > 0)
             <tr><td>{{ __('pdf.tax') }} 2{{ $invoice->tax_rate2 ? ' ('.rtrim(rtrim(number_format((float)$invoice->tax_rate2, 2), '0'), '.').'%)' : '' }}:</td><td class="text-right">{{ invoice_money_fmt((float)$invoice->tax2, $invoice) }}</td><td class="text-right"></td></tr>
             @endif
+            <tr class="total-row"><td>{{ __('pdf.total') }}:</td><td class="text-right"></td><td class="text-right">{{ invoice_money_fmt((float)$invoice->total, $invoice) }}</td></tr>
             @if((float)$invoice->credit > 0)
             <tr><td>{{ __('pdf.credit') }}:</td><td class="text-right">-{{ invoice_money_fmt((float)$invoice->credit, $invoice) }}</td><td class="text-right"></td></tr>
+            <tr class="total-row"><td>{{ __('pdf.amount_due') }}:</td><td class="text-right"></td><td class="text-right">{{ invoice_money_fmt($invoice->amountDue(), $invoice) }}</td></tr>
             @endif
-            <tr class="total-row"><td>{{ __('pdf.total') }}:</td><td class="text-right"></td><td class="text-right">{{ invoice_money_fmt((float)$invoice->total, $invoice) }}</td></tr>
             @if(billing_rate_note($invoice))
             {{-- What the customer actually pays, in the currency they pay in,
                  under the rate the document was struck at. --}}

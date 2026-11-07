@@ -513,6 +513,19 @@ class InvoicePdfService
             .'<td>'.e(invoice_money_fmt((float) $invoice->total, $invoice)).'</td>'
             .'</tr>';
 
+        // Credit spent on the invoice is a payment: the gross above is the
+        // invoice's value, this is how much of it the balance covered.
+        if ((float) $invoice->credit > 0.009) {
+            $rows .= '<tr>'
+                .'<td>'.e(__('pdf.credit')).'</td>'
+                .'<td>-'.e(invoice_money_fmt((float) $invoice->credit, $invoice)).'</td>'
+                .'</tr>';
+            $rows .= '<tr class="total">'
+                .'<td>'.e(__('pdf.amount_due')).'</td>'
+                .'<td>'.e(invoice_money_fmt($invoice->amountDue(), $invoice)).'</td>'
+                .'</tr>';
+        }
+
         return '<table class="vat-summary"><thead><tr>'
             .'<th>'.e(__('pdf.vat_summary_desc')).'</th>'
             .'<th>'.e(__('pdf.amount')).'</th>'

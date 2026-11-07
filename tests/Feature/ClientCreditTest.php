@@ -80,7 +80,9 @@ test('credit that only covers part of the bill leaves the rest to pay', function
 
     $invoice = Invoice::where('client_id', $client->id)->latest('id')->firstOrFail();
 
-    expect((float) $invoice->total)->toBe(20.0)
+    // The total is the gross; the 10 credit is a payment taken off in amountDue.
+    expect((float) $invoice->total)->toBe(30.0)
+        ->and($invoice->amountDue())->toBe(20.0)
         ->and($invoice->status)->not->toBe('paid')
         ->and((float) $client->fresh()->credit)->toBe(0.0);
 });
@@ -104,7 +106,8 @@ test('an overpayment comes back as credit and is then usable', function () {
         ['type' => 'Hosting', 'rel_id' => 0, 'description' => 'Second month', 'amount' => 30, 'taxed' => false],
     ]);
 
-    expect((float) $second->fresh()->total)->toBe(10.0)
+    expect((float) $second->fresh()->total)->toBe(30.0)
+        ->and($second->fresh()->amountDue())->toBe(10.0)
         ->and((float) $client->fresh()->credit)->toBe(0.0);
 });
 

@@ -45,7 +45,8 @@ return [
     'vat_summary_desc' => 'Description',
     'vat_net_total' => 'Net total',
     'vat_total' => 'Total VAT',
-    'vat_gross_total' => 'Amount due (gross)',
+    'vat_gross_total' => 'Gross total',
+    'amount_due' => 'Amount due',
     'thank_you' => 'Thank you for your business!',
     'total' => 'Total',
 ];
