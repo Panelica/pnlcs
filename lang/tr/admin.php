@@ -2786,6 +2786,8 @@ return [
     'settings.invoice_renewals_separately' => 'Her yenilemeyi ayrı faturala; müşteri bir hizmeti yenileyip diğerini bırakabilsin',
     'settings.default_nameservers' => 'Varsayılan Ad Sunucuları',
     'settings.default_nameservers_hint' => 'Başka ad sunucusu sağlanmadığında alan adları kaydedilirken veya aktarılırken kullanılır.',
+    'settings.domain_sync_rdap_max' => 'Eşitleme çalışması başına en fazla RDAP sorgusu',
+    'settings.domain_sync_rdap_max_hint' => 'Bir alan adının kayıt tarihi yoksa günlük eşitleme onu RDAP\'tan doldurur. Bu, tek çalışmadaki sorguları sınırlar; 0 kapatır. Varsayılan 100.',
     'settings.themes' => 'Temalar',
     'settings.white_label' => 'Beyaz Etiket',
     'sidebar' => [

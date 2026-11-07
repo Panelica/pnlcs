@@ -2812,6 +2812,8 @@ return [
     'settings.invoice_renewals_separately' => 'Jede Verlängerung separat abrechnen, damit ein Kunde einen Dienst verlängern und einen anderen auslaufen lassen kann',
     'settings.default_nameservers' => 'Standard-Nameserver',
     'settings.default_nameservers_hint' => 'Wird bei der Registrierung oder Übertragung von Domains verwendet, wenn keine anderen Nameserver bereitgestellt werden.',
+    'settings.domain_sync_rdap_max' => 'Max. RDAP-Abfragen pro Synchronisierungslauf',
+    'settings.domain_sync_rdap_max_hint' => 'Fehlt einer Domain das Registrierungsdatum, ergänzt es die tägliche Synchronisierung aus RDAP. Dies begrenzt die Abfragen pro Lauf; 0 schaltet es ab. Standard 100.',
     'settings.themes' => 'Themen',
     'settings.white_label' => 'Eigenmarke',
     'sidebar' => [

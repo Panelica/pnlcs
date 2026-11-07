@@ -740,6 +740,11 @@
                     <div style="font-size:12px;color:#777;margin-top:4px;">{{ __('admin.settings.disallowed_subdomains_hint', ['names' => implode(', ', \App\Support\FreeSubdomains::DEFAULT_DISALLOWED)]) }}</div>
                 </div>
             </div>
+            <div class="form-group" style="margin-top:18px;">
+                <label class="form-label" for="domain-sync-rdap-max">{{ __('admin.settings.domain_sync_rdap_max') }}</label>
+                <input type="number" id="domain-sync-rdap-max" name="DomainSyncRdapMaxPerRun" value="{{ $settings['DomainSyncRdapMaxPerRun'] ?? '100' }}" class="form-control" min="0" max="10000" style="max-width:180px;">
+                <div style="font-size:12px;color:#777;margin-top:4px;">{{ __('admin.settings.domain_sync_rdap_max_hint') }}</div>
+            </div>
         </div>
     </div>
 

@@ -2812,6 +2812,8 @@ return [
     'settings.invoice_renewals_separately' => '每项续费单独开具账单，客户可以续费一项服务而让另一项到期',
     'settings.default_nameservers' => '默认域名服务器',
     'settings.default_nameservers_hint' => '在注册或转入域名时，未提供其他域名服务器则使用这些。',
+    'settings.domain_sync_rdap_max' => '每次同步最多 RDAP 查询次数',
+    'settings.domain_sync_rdap_max_hint' => '域名缺少注册日期时，每日同步会从 RDAP 补填。此项限制单次运行的查询次数；0 表示关闭。默认 100。',
     'settings.themes' => '主题',
     'settings.white_label' => '白标',
     'sidebar' => [

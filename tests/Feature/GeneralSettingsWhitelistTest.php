@@ -95,3 +95,19 @@ test('a screen without the mail switch cannot turn mail off', function () {
 
     expect(Setting::get('MailEnabled'))->toBe('1');
 });
+
+test('the RDAP per-run limit saves', function () {
+    $this->actingAs(generalSettingsAdmin(), 'admin')
+        ->post(route('admin.settings.general.update'), ['DomainSyncRdapMaxPerRun' => '250'])
+        ->assertRedirect();
+
+    expect(Setting::get('DomainSyncRdapMaxPerRun'))->toBe('250');
+});
+
+test('an invalid RDAP per-run limit is rejected', function () {
+    $this->actingAs(generalSettingsAdmin(), 'admin')
+        ->post(route('admin.settings.general.update'), ['DomainSyncRdapMaxPerRun' => '-5'])
+        ->assertSessionHasErrors('DomainSyncRdapMaxPerRun');
+
+    expect(Setting::get('DomainSyncRdapMaxPerRun', '100'))->toBe('100');
+});

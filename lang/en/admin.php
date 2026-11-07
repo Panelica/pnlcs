@@ -2812,6 +2812,8 @@ return [
     'settings.invoice_renewals_separately' => 'Invoice each renewal separately, so a customer can renew one service and let another lapse',
     'settings.default_nameservers' => 'Default Nameservers',
     'settings.default_nameservers_hint' => 'Used when registering or transferring domains when no other nameservers are supplied.',
+    'settings.domain_sync_rdap_max' => 'Max RDAP lookups per sync run',
+    'settings.domain_sync_rdap_max_hint' => 'When a domain has no registration date, the daily sync fills it from RDAP. This caps the lookups in one run; 0 turns it off. Default 100.',
     'settings.themes' => 'Themes',
     'settings.white_label' => 'White-Label',
     'sidebar' => [

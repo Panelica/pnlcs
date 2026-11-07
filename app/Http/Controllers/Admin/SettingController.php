@@ -139,6 +139,9 @@ class SettingController extends Controller
         // Names under the shop's own domains a hosting order can take, and the
         // first labels nobody may take (App\Support\FreeSubdomains).
         'FreeSubdomains', 'DisallowedSubdomainPrefixes',
+        // How many RDAP lookups one domain sync run makes to fill a missing
+        // registration date (0 disables; default 100).
+        'DomainSyncRdapMaxPerRun',
         // Paying renewal invoices with a card the customer has already stored.
         // Off by default; read through App\Support\AutoCharge so the screen
         // and the code cannot disagree about what a blank setting means.
@@ -171,6 +174,7 @@ class SettingController extends Controller
             'AutoChargeMaxAttempts' => 'sometimes|nullable|integer|min:1',
             'AutoChargeRetryDays' => 'sometimes|nullable|integer|min:'.\App\Support\AutoCharge::MINIMUM_RETRY_DAYS,
             'DomainSuggestionCount' => 'sometimes|nullable|integer|between:1,12',
+            'DomainSyncRdapMaxPerRun' => 'sometimes|nullable|integer|min:0|max:10000',
             'RegistrarBalanceThreshold' => 'sometimes|nullable|numeric|min:0',
         ]);
 

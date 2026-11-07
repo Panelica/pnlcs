@@ -476,6 +476,7 @@ class HrdRegistrar implements RegistrarModuleInterface, SyncsDomainData
 
             return [
                 'success' => true,
+                'registration_date' => $this->parseDate($info['crDate'] ?? null),
                 'expiry_date' => $this->parseDate($info['exDate'] ?? null),
                 'status' => $this->mapStatus($info['status'] ?? null),
                 'locked' => true,
