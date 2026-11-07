@@ -12,15 +12,21 @@
     </div>
 </div>
 
-{{-- AI TRANSLATION - first on the page: the key and model every
+{{-- AI TRANSLATION - first on the page: the provider, key and model every
      language's "Translate with AI" uses. Posts to the general-settings
-     handler, which keeps the stored key when the field is left empty. --}}
+     handler, which keeps a stored key when its field is left empty. Both
+     providers keep their own key and model; the fields of the one not
+     chosen are hidden, not emptied. --}}
 @php
-    $aiKeySaved = trim((string) \App\Models\Setting::get('OpenAIApiKey', '')) !== '';
-    $currentModel = trim((string) \App\Models\Setting::get('OpenAIModel', '')) ?: \App\Services\AiTranslationService::DEFAULT_MODEL;
-    $models = \App\Services\AiTranslationService::MODELS;
-    if (! in_array($currentModel, $models, true)) { $models[] = $currentModel; }
+    $ai = app(\App\Services\AiTranslationService::class);
+    $aiProvider = $ai->provider();
+    $aiKeySaved = $ai->configured();
+    $aiKeyPlaceholders = ['openai' => 'sk-...', 'anthropic' => 'sk-ant-...'];
 @endphp
+<style>
+    .ai-provider-fields { display: flex; flex-wrap: wrap; gap: 12px; align-items: flex-end; }
+    .ai-provider-fields[hidden] { display: none; }
+</style>
 <div class="card" id="ai-settings" style="margin-bottom:16px;">
     <div class="card-header" style="display:flex;justify-content:space-between;align-items:center;gap:8px;flex-wrap:wrap;">
         <strong><i class="fas fa-robot"></i> {{ __('admin.config.languages.ai_settings') }}</strong>
@@ -33,20 +39,37 @@
     <div class="card-body">
         <form method="POST" action="{{ route('admin.settings.general.update') }}" style="display:flex;flex-wrap:wrap;gap:12px;align-items:flex-end;">
             @csrf
-            <div class="form-group" style="margin:0;flex:1;min-width:240px;max-width:420px;">
-                <label class="form-label" for="ai-key">{{ __('admin.config.languages.openai_api_key') }}</label>
-                {{-- The stored key is never echoed back: blank means keep. --}}
-                <input type="password" id="ai-key" name="OpenAIApiKey" autocomplete="new-password" class="form-control"
-                    placeholder="{{ $aiKeySaved ? __('admin.settings.smtp_password_keep') : 'sk-...' }}">
-            </div>
             <div class="form-group" style="margin:0;">
-                <label class="form-label" for="ai-model">{{ __('admin.config.languages.openai_model') }}</label>
-                <select id="ai-model" name="OpenAIModel" class="form-control" style="min-width:180px;">
-                    @foreach($models as $model)
-                    <option value="{{ $model }}" {{ $currentModel === $model ? 'selected' : '' }}>{{ $model }}</option>
+                <label class="form-label" for="ai-provider">{{ __('admin.config.languages.ai_provider') }}</label>
+                <select id="ai-provider" name="AiTranslationProvider" class="form-control" style="min-width:180px;" onchange="showAiProvider(this.value)">
+                    @foreach(\App\Services\AiTranslationService::PROVIDERS as $provider)
+                    <option value="{{ $provider }}" {{ $aiProvider === $provider ? 'selected' : '' }}>{{ __('admin.config.languages.ai_provider_'.$provider) }}</option>
                     @endforeach
                 </select>
             </div>
+            @foreach(\App\Services\AiTranslationService::PROVIDERS as $provider)
+            @php
+                $keySetting = \App\Services\AiTranslationService::KEY_SETTINGS[$provider];
+                $modelSetting = \App\Services\AiTranslationService::MODEL_SETTINGS[$provider];
+                $currentModel = $ai->model($provider);
+            @endphp
+            <div class="ai-provider-fields" data-provider="{{ $provider }}" @if($provider !== $aiProvider) hidden @endif>
+                <div class="form-group" style="margin:0;flex:1;min-width:240px;max-width:420px;">
+                    <label class="form-label" for="ai-key-{{ $provider }}">{{ __('admin.config.languages.'.$provider.'_api_key') }}</label>
+                    {{-- The stored key is never echoed back: blank means keep. --}}
+                    <input type="password" id="ai-key-{{ $provider }}" name="{{ $keySetting }}" autocomplete="new-password" class="form-control"
+                        placeholder="{{ $ai->configured($provider) ? __('admin.settings.smtp_password_keep') : $aiKeyPlaceholders[$provider] }}">
+                </div>
+                <div class="form-group" style="margin:0;">
+                    <label class="form-label" for="ai-model-{{ $provider }}">{{ __('admin.config.languages.'.$provider.'_model') }}</label>
+                    <select id="ai-model-{{ $provider }}" name="{{ $modelSetting }}" class="form-control" style="min-width:180px;">
+                        @foreach($ai->models($provider) as $model)
+                        <option value="{{ $model }}" {{ $currentModel === $model ? 'selected' : '' }}>{{ $model }}</option>
+                        @endforeach
+                    </select>
+                </div>
+            </div>
+            @endforeach
             <button type="submit" class="btn btn-primary">{{ __('common.actions.save_changes') }}</button>
         </form>
         <p style="margin:10px 0 0;font-size:12px;color:#666;">{{ __('admin.config.languages.ai_settings_hint') }}</p>
@@ -160,6 +183,11 @@
 </div>
 
 <script>
+function showAiProvider(provider) {
+    document.querySelectorAll('.ai-provider-fields').forEach(function (fields) {
+        fields.hidden = fields.dataset.provider !== provider;
+    });
+}
 function showTab(tab) {
     document.getElementById('panel-languages').style.display = tab === 'languages' ? '' : 'none';
     document.getElementById('panel-settings').style.display = tab === 'settings' ? '' : 'none';

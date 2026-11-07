@@ -65,6 +65,44 @@ function fakeOpenAi(callable $translate): void
     }]);
 }
 
+/**
+ * Answer every Messages API call by passing each English text through
+ * $translate. Claude answers in content blocks, a thinking block first.
+ */
+function fakeAnthropic(callable $translate): void
+{
+    Http::fake(['api.anthropic.com/*' => function (ClientRequest $request) use ($translate) {
+        $items = json_decode($request->data()['messages'][0]['content'], true);
+        $out = [];
+        foreach ($items as $key => $english) {
+            $out[$key] = $translate($english, $key);
+        }
+
+        return Http::response(anthropicAnswer(json_encode($out, JSON_UNESCAPED_UNICODE)));
+    }]);
+}
+
+/** The body of a Messages API answer whose text is $text. */
+function anthropicAnswer(string $text, string $stopReason = 'end_turn'): array
+{
+    return [
+        'id' => 'msg_test', 'type' => 'message', 'role' => 'assistant', 'model' => 'claude-opus-5-5',
+        'content' => [
+            ['type' => 'thinking', 'thinking' => '', 'signature' => 'sig'],
+            ['type' => 'text', 'text' => $text],
+        ],
+        'stop_reason' => $stopReason,
+        'usage' => ['input_tokens' => 10, 'output_tokens' => 10],
+    ];
+}
+
+function useAnthropic(string $model = 'claude-opus-5-5'): void
+{
+    Setting::set('AiTranslationProvider', 'anthropic', 'general');
+    Setting::set('AnthropicApiKey', 'sk-ant-test-key', 'general');
+    Setting::set('AnthropicModel', $model, 'general');
+}
+
 function batch(object $test, string $locale, string $mode, ?string $cursor = null)
 {
     return $test->actingAs(aiAdmin(), 'admin')
@@ -364,6 +402,153 @@ test('a stored text is shown at once, whatever group it is in', function () {
 });
 
 /*
+ * ===== The same run through Anthropic =====
+ */
+
+test('with Anthropic chosen the batch goes to the Messages API with its key, version, model and instructions', function () {
+    aiLanguage();
+    useAnthropic('claude-sonnet-5-5');
+    fakeAnthropic(fn ($english) => 'TR '.$english);
+    $first = array_slice(app(AiTranslationService::class)->candidates('tr', 'all'), 0, AiTranslationService::BATCH_SIZE, true);
+
+    $r = batch($this, 'tr', 'all')->assertOk()->json();
+
+    expect(count($r['items']))->toBe(count($first));
+    Http::assertSent(function (ClientRequest $r) use ($first) {
+        $data = $r->data();
+
+        return $r->url() === 'https://api.anthropic.com/v1/messages'
+            && $r->hasHeader('x-api-key', 'sk-ant-test-key')
+            && $r->hasHeader('anthropic-version', config('services.anthropic.version'))
+            && ! $r->hasHeader('Authorization')
+            && $data['model'] === 'claude-sonnet-5-5'
+            && $data['max_tokens'] > 0
+            && ! array_key_exists('temperature', $data)
+            && str_contains($data['system'], 'to Turkish (Türkçe).')
+            && $data['messages'][0]['role'] === 'user'
+            && array_keys(json_decode($data['messages'][0]['content'], true)) === array_keys($first);
+    });
+
+    $row = DynamicTranslation::where('language', 'tr')->latest('id')->first();
+    expect($row->value)->toStartWith('TR ')
+        ->and($row->is_auto_translated)->toBeTrue();
+});
+
+test('the Anthropic key does not count while OpenAI is chosen, and the other way round', function () {
+    aiLanguage('fr');
+    Http::fake();
+
+    // OpenAI chosen (the default), only an Anthropic key saved.
+    Setting::set('OpenAIApiKey', '', 'general');
+    Setting::set('AnthropicApiKey', 'sk-ant-test-key', 'general');
+    batch($this, 'fr', 'missing')->assertStatus(422);
+
+    // Anthropic chosen, only an OpenAI key saved.
+    Setting::set('AiTranslationProvider', 'anthropic', 'general');
+    Setting::set('OpenAIApiKey', 'sk-test-key', 'general');
+    Setting::set('AnthropicApiKey', '', 'general');
+    batch($this, 'fr', 'missing')->assertStatus(422);
+
+    Http::assertNothingSent();
+});
+
+test('a provider nobody knows means OpenAI', function () {
+    Setting::set('AiTranslationProvider', 'gemini', 'general');
+    $ai = app(AiTranslationService::class);
+
+    expect($ai->provider())->toBe('openai')
+        ->and($ai->model())->toBe('gpt-4o-mini');
+});
+
+test('each provider has its own default model and remembers a hand-entered one', function () {
+    $ai = app(AiTranslationService::class);
+    Setting::set('OpenAIModel', '', 'general');
+    Setting::set('AnthropicModel', 'claude-opus-4-8', 'general');
+
+    expect($ai->model('openai'))->toBe('gpt-4o-mini')
+        ->and($ai->model('anthropic'))->toBe('claude-opus-4-8')
+        ->and($ai->models('anthropic'))->toContain('claude-opus-4-8')
+        ->and($ai->models('openai'))->toBe(AiTranslationService::MODELS['openai']);
+});
+
+test('a JSON answer wrapped in a code fence is still read', function () {
+    aiLanguage('fr');
+    useAnthropic();
+    Http::fake(['api.anthropic.com/*' => function (ClientRequest $request) {
+        $items = json_decode($request->data()['messages'][0]['content'], true);
+        $out = array_map(fn ($english) => 'FR '.$english, $items);
+
+        return Http::response(anthropicAnswer("```json\n".json_encode($out, JSON_UNESCAPED_UNICODE)."\n```"));
+    }]);
+
+    $r = batch($this, 'fr', 'missing')->assertOk()->json();
+
+    expect(count($r['items']))->toBe(AiTranslationService::BATCH_SIZE)
+        ->and($r['skipped'])->toBe([]);
+});
+
+test('an Anthropic error stops the run with its message and stores nothing', function () {
+    aiLanguage('fr');
+    useAnthropic();
+    Http::fake(['api.anthropic.com/*' => Http::response([
+        'type' => 'error', 'error' => ['type' => 'authentication_error', 'message' => 'invalid x-api-key'],
+    ], 401)]);
+    $before = DynamicTranslation::where('language', 'fr')->count();
+
+    $r = batch($this, 'fr', 'missing')->assertStatus(502)->json();
+
+    expect($r['message'])->toContain('invalid x-api-key')
+        ->and(DynamicTranslation::where('language', 'fr')->count())->toBe($before);
+});
+
+test('a refused batch stops the run and says why', function () {
+    aiLanguage('fr');
+    useAnthropic();
+    $answer = anthropicAnswer('', 'refusal');
+    $answer['stop_details'] = ['type' => 'refusal', 'category' => 'general_harms', 'explanation' => 'Not this one.'];
+    Http::fake(['api.anthropic.com/*' => Http::response($answer)]);
+    $before = DynamicTranslation::where('language', 'fr')->count();
+
+    $r = batch($this, 'fr', 'missing')->assertStatus(502)->json();
+
+    expect($r['message'])->toContain('declined')
+        ->and($r['message'])->toContain('Not this one.')
+        ->and(DynamicTranslation::where('language', 'fr')->count())->toBe($before);
+});
+
+test('an answer without a text block is not a JSON object', function () {
+    aiLanguage('fr');
+    useAnthropic();
+    $answer = anthropicAnswer('');
+    $answer['content'] = [['type' => 'thinking', 'thinking' => '', 'signature' => 'sig']];
+    Http::fake(['api.anthropic.com/*' => Http::response($answer)]);
+
+    $r = batch($this, 'fr', 'missing')->assertStatus(502)->json();
+
+    expect($r['message'])->toContain('did not return a JSON object');
+});
+
+test('the Anthropic address can be pointed elsewhere', function () {
+    aiLanguage('fr');
+    useAnthropic();
+    config(['services.anthropic.base_url' => 'https://claude-proxy.example.com/']);
+    Http::fake(['claude-proxy.example.com/*' => Http::response(anthropicAnswer('{}'))]);
+
+    batch($this, 'fr', 'missing')->assertOk();
+
+    Http::assertSent(fn (ClientRequest $r) => $r->url() === 'https://claude-proxy.example.com/v1/messages');
+});
+
+test('the editor shows the model of the chosen provider', function () {
+    aiLanguage();
+    useAnthropic('claude-haiku-5-5');
+    $html = $this->actingAs(aiAdmin(), 'admin')->get(route('admin.config.languages.translations', 'tr'))->assertOk()->getContent();
+
+    expect($html)->toContain('claude-haiku-5-5')
+        ->and($html)->toContain('id="ai-start"');
+});
+
+/*
  * ===== The screens =====
  */
 
@@ -372,8 +557,11 @@ test('the AI settings are the first thing on the languages page and the old AI b
     $html = $this->actingAs(aiAdmin(), 'admin')->get(route('admin.config.languages.index'))->assertOk()->getContent();
 
     expect(strpos($html, 'id="ai-settings"'))->toBeLessThan(strpos($html, 'id="panel-languages"'))
+        ->and($html)->toContain('name="AiTranslationProvider"')
         ->and($html)->toContain('name="OpenAIApiKey"')
         ->and($html)->toContain('name="OpenAIModel"')
+        ->and($html)->toContain('name="AnthropicApiKey"')
+        ->and($html)->toContain('name="AnthropicModel"')
         ->and($html)->not->toContain('sk-test-key')
         ->and($html)->not->toContain('/ai-translate/tr"');
 });
