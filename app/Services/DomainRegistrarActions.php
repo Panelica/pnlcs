@@ -2,6 +2,7 @@
 
 namespace App\Services;
 
+use App\Contracts\CannotManageTransferLock;
 use App\Contracts\ManagesChildNameservers;
 use App\Contracts\ManagesDomainContacts;
 use App\Contracts\ManagesWhoisPrivacy;
@@ -33,6 +34,18 @@ class DomainRegistrarActions
         $module = $this->registrar($domain);
 
         return $module instanceof ManagesWhoisPrivacy && $this->isActive($domain) ? $module : null;
+    }
+
+    /**
+     * Whether the registrar can actually change the transfer lock. A module
+     * that cannot (see CannotManageTransferLock) gets no Lock/Unlock control:
+     * showing one whose success is a lie is worse than showing none.
+     */
+    public function canManageTransferLock(Domain $domain): bool
+    {
+        $module = $this->registrar($domain);
+
+        return $module !== null && ! $module instanceof CannotManageTransferLock;
     }
 
     public function contactsModule(Domain $domain): ?ManagesDomainContacts

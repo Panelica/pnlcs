@@ -2,6 +2,7 @@
 
 namespace Modules\Registrars\Manual;
 
+use App\Contracts\CannotManageTransferLock;
 use App\Contracts\RegistrarModuleInterface;
 use App\Models\Domain;
 
@@ -11,7 +12,7 @@ use App\Models\Domain;
  * For domains managed manually (no API integration).
  * Register/transfer/renew operations update the domain record locally.
  */
-class ManualRegistrar implements RegistrarModuleInterface
+class ManualRegistrar implements CannotManageTransferLock, RegistrarModuleInterface
 {
     public function getModuleName(): string
     {

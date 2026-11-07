@@ -103,11 +103,12 @@ class DomainController extends Controller
         // What staff can do at the registrar on the customer's behalf: the
         // same actions the client area offers, where the registrar can.
         $actions = app(DomainRegistrarActions::class);
+        $canToggleLock = $actions->canManageTransferLock($domain);
         $canTogglePrivacy = $actions->privacyModule($domain) !== null;
         $canEditContacts = $actions->contactsModule($domain) !== null;
         $canManageGlue = $actions->glueModule($domain) !== null;
 
-        return view('admin.domains.show', compact('domain', 'locked', 'registrarOptions', 'canTogglePrivacy', 'canEditContacts', 'canManageGlue'));
+        return view('admin.domains.show', compact('domain', 'locked', 'registrarOptions', 'canToggleLock', 'canTogglePrivacy', 'canEditContacts', 'canManageGlue'));
     }
 
     /**
@@ -290,7 +291,9 @@ class DomainController extends Controller
     {
         $module = app(ModuleRegistry::class)->getRegistrarModule((string) $domain->registrar);
 
-        if (! $module) {
+        // A module that cannot change the lock at the registry must not report
+        // a change it did not make (see CannotManageTransferLock).
+        if (! $module || ! app(DomainRegistrarActions::class)->canManageTransferLock($domain)) {
             return back()->with('error', __('admin.domains.lock_unavailable'));
         }
 

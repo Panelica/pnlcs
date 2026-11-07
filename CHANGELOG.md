@@ -2,6 +2,31 @@
 
 All notable changes to PNLCS are documented here. Newest first.
 
+## Unreleased
+
+### Added
+
+- **WHOIS privacy for HRD and OVH.** Both registrars can now switch a domain's
+  WHOIS privacy from the panel (client area and admin), and the daily sync reads
+  the state back into `id_protection`: HRD via `domain/privacySet`, OVH via its
+  WHOIS opt-in (OWO).
+- **A registrar can say it has no transfer lock.** A module implementing the new
+  `App\Contracts\CannotManageTransferLock` marker (HRD, Manual) no longer shows
+  a Lock/Unlock control that could only pretend to work.
+
+### Changed
+
+- The domain screen — staff and client — hides the transfer-lock control for a
+  registrar whose API has none (HRD, Manual), instead of reporting a change it
+  did not make.
+
+### For theme and module authors
+
+- New optional marker `App\Contracts\CannotManageTransferLock`: implement it in
+  a registrar module that cannot change the registry lock; the panel then hides
+  the Lock/Unlock control for its domains. Modules that do not implement it keep
+  the control, so nothing changes for them.
+
 ## 1.20.0 — 2026-11-05
 
 A stable release, offered to every installation. Two registrars can now quote
