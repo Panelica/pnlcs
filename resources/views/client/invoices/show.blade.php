@@ -88,7 +88,7 @@
             </div>
             <div class="text-muted" style="font-size:12px;margin-top:8px;line-height:1.5;">{{ billing_rate_note($invoice) }}</div>
             @endif
-            @if(isset($balance) && $balance > 0 && $balance < (float) $invoice->total)
+            @if(isset($balance) && $balance > 0 && $balance < (float) $invoice->total && ! in_array(strtolower($invoice->status), \App\Enums\InvoiceStatus::settled(), true))
             <div style="display:flex;justify-content:space-between;padding:7px 0;font-size:13.5px;border-top:1px solid #f1f5f9">
                 <span class="text-muted">{{ __('client.invoices.amount_paid') }}</span>
                 <span>{{ invoice_money_fmt((float) $invoice->total - $balance, $invoice) }}</span>

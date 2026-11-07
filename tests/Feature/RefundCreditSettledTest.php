@@ -70,7 +70,7 @@ it('gives back only what was asked for', function () {
     app(PaymentService::class)->refundInvoice($invoice, 40.0, ['gateway_refund' => false]);
 
     expect((float) $client->fresh()->credit)->toBe(40.0)
-        ->and($invoice->fresh()->status)->toBe(InvoiceStatus::PartiallyPaid->value);
+        ->and($invoice->fresh()->status)->toBe(InvoiceStatus::Paid->value);
 });
 
 it('still refuses more than was ever paid', function () {

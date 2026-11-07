@@ -41,7 +41,7 @@ test('full gateway refund reverses the payment and marks the invoice refunded', 
         && ($r->data()['payment_intent'] ?? null) === 'pi_abc');
 });
 
-test('partial refund leaves the invoice partially paid', function () {
+test('partial refund leaves a paid invoice paid', function () {
     Http::fake(['api.stripe.com/*' => Http::response(['id' => 're_partial'], 200)]);
 
     $invoice = paidInvoice('stripe', 'pi_partial', 100.0);
@@ -49,7 +49,7 @@ test('partial refund leaves the invoice partially paid', function () {
     $result = app(PaymentService::class)->refundInvoice($invoice, 30.0);
 
     expect($result['success'])->toBeTrue()
-        ->and($invoice->fresh()->status)->toBe(InvoiceStatus::PartiallyPaid->value)
+        ->and($invoice->fresh()->status)->toBe(InvoiceStatus::Paid->value)
         ->and(app(PaymentService::class)->amountPaid($invoice->fresh()))->toBe(70.0);
 });
 
