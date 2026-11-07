@@ -68,4 +68,12 @@ return [
     'next_gateway' => '3. Skonfiguruj co najmniej jedną bramkę płatności',
     'next_modules' => '4. Dodaj moduły serwerów i rejestratorów',
     'go_login' => 'Przejdź do logowania administratora →',
+    'hub_community_profile' => 'Utwórz mój profil w społeczności PNLCS',
+    'hub_purpose' => 'Do czego służy ta instalacja?',
+    'hub_purpose_hint' => 'Informuje tylko zespół PNLCS, które instalacje są używane; nic tu się nie zmienia. Możesz to później zmienić w Ustawienia → Ogólne.',
+    'hub_purpose_live' => 'Moja działająca firma',
+    'hub_purpose_test' => 'Kopia testowa lub próbna',
+    'hub_source' => 'Skąd dowiedziałeś się o PNLCS? (opcjonalnie)',
+    'hub_what_is_sent' => 'PNLCS raz dziennie wysyła zespołowi PNLCS dane kontaktowe firmy i administratora, adres strony oraz wersję, abyśmy mogli kontaktować się w sprawie bezpieczeństwa i aktualizacji.',
+    'hub_what_is_sent_link' => 'Co jest wysyłane',
 ];

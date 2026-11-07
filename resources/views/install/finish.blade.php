@@ -24,6 +24,8 @@
             <p class="text-amber-800 mt-1 text-xs">{{ __('install.cron_note') }}</p>
         </div>
 
+        <p class="text-slate-500 text-xs max-w-md mx-auto mb-6">{{ __('install.hub_what_is_sent') }} <a href="{{ config('hub.what_is_sent_url') }}" target="_blank" rel="noopener" class="underline">{{ __('install.hub_what_is_sent_link') }} &rarr;</a></p>
+
         <a href="/admin/login" class="inline-flex items-center px-6 py-3 bg-blue-600 text-white font-semibold rounded hover:bg-blue-700">
             {{ __('install.go_login') }}
         </a>

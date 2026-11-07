@@ -3844,4 +3844,17 @@ return [
     'settings.disallowed_subdomains_hint' => 'Virgül ya da satırla ayırın. Boşsa şunlar kullanılır: :names',
     'settings.test_email_mail_off' => 'Deneme e-postası gönderilmedi: giden e-posta bu sayfada kapalı.',
     'settings.test_email_cancelled' => 'Deneme e-postası gönderilmedi: bir e-posta kancası onu iptal etti.',
+    'hub' => [
+        'purpose' => 'Bu kurulum ne için?',
+        'purpose_hint' => 'Yalnız PNLCS ekibine hangi kurulumların kullanımda olduğunu bildirir; burada hiçbir şey değişmez. Sonradan Ayarlar → Genel\'den değiştirebilirsiniz.',
+        'purpose_live' => 'Canlı işletmem',
+        'purpose_test' => 'Deneme veya test kopyası',
+        'community_profile' => 'PNLCS topluluk profilimi oluştur',
+        'mail_footer' => 'Bu ileti, PNLCS ekibinin imzaladığı bir duyuru üzerine :url adresindeki PNLCS kurulumunuz tarafından gönderildi.',
+        'not_now' => 'Şimdi değil',
+        'read_more' => 'Ayrıntılar',
+        'source' => 'PNLCS\'i nereden duydunuz? (isteğe bağlı)',
+        'what_is_sent' => 'PNLCS, güvenlik ve güncellemeler konusunda size ulaşabilmemiz için firma ve yönetici iletişim bilgilerinizi, site adresinizi ve sürümünüzü günde bir kez PNLCS ekibine gönderir.',
+        'what_is_sent_link' => 'Ne gönderiliyor',
+    ],
 ];

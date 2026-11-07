@@ -68,4 +68,12 @@ return [
     'next_gateway' => '3. Mindestens ein Zahlungs-Gateway einrichten',
     'next_modules' => '4. Server- und Registrar-Module hinzufügen',
     'go_login' => 'Zur Administrator-Anmeldung →',
+    'hub_community_profile' => 'Mein PNLCS-Community-Profil anlegen',
+    'hub_purpose' => 'Wofür ist diese Installation?',
+    'hub_purpose_hint' => 'Teilt dem PNLCS-Team nur mit, welche Installationen genutzt werden; hier ändert sich nichts. Sie können es später unter Einstellungen → Allgemein ändern.',
+    'hub_purpose_live' => 'Mein Live-Betrieb',
+    'hub_purpose_test' => 'Eine Test- oder Probeinstallation',
+    'hub_source' => 'Wie haben Sie von PNLCS erfahren? (optional)',
+    'hub_what_is_sent' => 'PNLCS sendet einmal täglich die Kontaktdaten Ihrer Firma und Ihres Administrators, die Adresse Ihrer Website und die Version an das PNLCS-Team, damit wir Sie zu Sicherheit und Updates erreichen können.',
+    'hub_what_is_sent_link' => 'Was gesendet wird',
 ];

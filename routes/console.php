@@ -122,6 +122,9 @@ Schedule::call(fn () => run_hook('DailyCronJob'))->dailyAt('00:10')->name('hook:
 // update or check an administrator asked for there: the admin area cannot run
 // a twenty-minute job inside a web request.
 Schedule::command('pnlcs:update-check')->dailyAt('05:10')->withoutOverlapping();
+// The ping to hub.pnlcs.com: every hour, but it sends once a day at this
+// install's own hour (HubPing::due), so installs do not all call at once.
+Schedule::command('pnlcs:hub-ping')->hourly()->withoutOverlapping(10)->runInBackground();
 // Even in maintenance mode: an operator may put the site down to update it.
 Schedule::command('pnlcs:update --from-request')->everyMinute()->evenInMaintenanceMode()->runInBackground();
 // Self-healing: an update whose process died (killed, server restarted, PHP-FPM

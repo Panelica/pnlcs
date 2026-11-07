@@ -296,6 +296,10 @@ Route::middleware(['admin.auth', 'admin.2fa'])->prefix('admin')->name('admin.')-
     Route::middleware('admin.permission:manage_settings')->group(function () {
         Route::get('settings', [SettingController::class, 'general'])->name('settings.general');
         Route::post('settings', [SettingController::class, 'updateGeneral'])->name('settings.general.update');
+        // hub.pnlcs.com: closing an info notice closes it for every admin, and
+        // the one-time questions are this install's settings.
+        Route::post('hub/notices/{notice}/dismiss', [\App\Http\Controllers\Admin\HubController::class, 'dismiss'])->name('hub.notices.dismiss');
+        Route::post('hub/answers', [\App\Http\Controllers\Admin\HubController::class, 'answers'])->name('hub.answers');
         Route::post('settings/test-email', [SettingController::class, 'testEmail'])->name('settings.test-email');
         Route::post('settings/invoice-template', [SettingController::class, 'uploadInvoiceTemplate'])->name('settings.invoice-template.upload');
         Route::delete('settings/invoice-template', [SettingController::class, 'removeInvoiceTemplate'])->name('settings.invoice-template.remove');

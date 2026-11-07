@@ -570,7 +570,7 @@
      CONTENT AREA
      ═══════════════════════════════════════════════ --}}
 <div class="contentarea" id="contentarea">
-    
+    @include('admin.partials.hub-critical')
 
     {{-- Flash Messages --}}
     @if(session('success'))

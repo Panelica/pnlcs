@@ -520,6 +520,15 @@
             <div style="display:flex;flex-direction:column;gap:8px;">
                 <label style="font-size:13px;display:flex;align-items:center;gap:6px;cursor:pointer;"><input type="hidden" name="MaintenanceMode" value="0"><input type="checkbox" name="MaintenanceMode" value="1" {{ !empty($settings['MaintenanceMode']) ? 'checked' : '' }}> {{ __('admin.settings.maintenance_mode_label') }}</label>
             </div>
+            <div class="form-group" style="max-width:50%;margin-top:12px;">
+                <label class="form-label" for="install-purpose">{{ __('admin.hub.purpose') }}</label>
+                <select id="install-purpose" name="InstallPurpose" class="form-control">
+                    @if(! in_array($settings['InstallPurpose'] ?? null, ['live', 'test'], true))<option value="" selected>—</option>@endif
+                    <option value="live" @selected(($settings['InstallPurpose'] ?? null) === 'live')>{{ __('admin.hub.purpose_live') }}</option>
+                    <option value="test" @selected(($settings['InstallPurpose'] ?? null) === 'test')>{{ __('admin.hub.purpose_test') }}</option>
+                </select>
+                <small style="color:var(--pn-muted,#888);">{{ __('admin.hub.purpose_hint') }}</small>
+            </div>
         </div>
     </div>
 

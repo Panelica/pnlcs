@@ -68,4 +68,12 @@ return [
     'next_gateway' => '3. Configure al menos una pasarela de pago',
     'next_modules' => '4. Añada los módulos de servidores y de registradores',
     'go_login' => 'Ir al inicio de sesión de administración →',
+    'hub_community_profile' => 'Crear mi perfil en la comunidad de PNLCS',
+    'hub_purpose' => '¿Para qué es esta instalación?',
+    'hub_purpose_hint' => 'Solo indica al equipo de PNLCS qué instalaciones están en uso; aquí no cambia nada. Puede cambiarlo después en Configuración → General.',
+    'hub_purpose_live' => 'Mi negocio en producción',
+    'hub_purpose_test' => 'Una copia de prueba',
+    'hub_source' => '¿Cómo conoció PNLCS? (opcional)',
+    'hub_what_is_sent' => 'PNLCS envía una vez al día al equipo de PNLCS los datos de contacto de su empresa y de su administrador, la dirección de su sitio y la versión, para que podamos avisarle sobre seguridad y actualizaciones.',
+    'hub_what_is_sent_link' => 'Qué se envía',
 ];

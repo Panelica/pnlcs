@@ -3844,4 +3844,17 @@ return [
     'settings.disallowed_subdomains_hint' => '用逗号或换行分隔。留空时使用：:names',
     'settings.test_email_mail_off' => '测试邮件未发送：此页面已关闭外发邮件。',
     'settings.test_email_cancelled' => '测试邮件未发送：某个邮件钩子取消了它。',
+    'hub' => [
+        'purpose' => '此安装的用途是什么？',
+        'purpose_hint' => '仅告知 PNLCS 团队哪些安装正在使用；此处不会有任何变化。之后可在 设置 → 常规 中更改。',
+        'purpose_live' => '我的正式业务',
+        'purpose_test' => '测试或试用副本',
+        'community_profile' => '创建我的 PNLCS 社区资料',
+        'mail_footer' => '此邮件由您位于 :url 的 PNLCS 安装根据 PNLCS 团队签名的通知发送。',
+        'not_now' => '以后再说',
+        'read_more' => '了解更多',
+        'source' => '您是如何了解 PNLCS 的？（可选）',
+        'what_is_sent' => 'PNLCS 每天向 PNLCS 团队发送一次您公司和管理员的联系方式、网站地址及版本，以便我们就安全和更新事宜联系您。',
+        'what_is_sent_link' => '发送了哪些内容',
+    ],
 ];

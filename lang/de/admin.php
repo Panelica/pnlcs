@@ -3840,4 +3840,17 @@ return [
     'settings.disallowed_subdomains_hint' => 'Durch Kommas oder Zeilen getrennt. Leer bedeutet: :names',
     'settings.test_email_mail_off' => 'Die Test-E-Mail wurde nicht gesendet: Ausgehende E-Mails sind auf dieser Seite ausgeschaltet.',
     'settings.test_email_cancelled' => 'Die Test-E-Mail wurde nicht gesendet: Ein E-Mail-Hook hat sie abgebrochen.',
+    'hub' => [
+        'purpose' => 'Wofür ist diese Installation?',
+        'purpose_hint' => 'Teilt dem PNLCS-Team nur mit, welche Installationen genutzt werden; hier ändert sich nichts. Sie können es später unter Einstellungen → Allgemein ändern.',
+        'purpose_live' => 'Mein Live-Betrieb',
+        'purpose_test' => 'Eine Test- oder Probeinstallation',
+        'community_profile' => 'Mein PNLCS-Community-Profil anlegen',
+        'mail_footer' => 'Diese Nachricht wurde von Ihrer PNLCS-Installation unter :url aufgrund einer vom PNLCS-Team signierten Mitteilung gesendet.',
+        'not_now' => 'Nicht jetzt',
+        'read_more' => 'Mehr erfahren',
+        'source' => 'Wie haben Sie von PNLCS erfahren? (optional)',
+        'what_is_sent' => 'PNLCS sendet einmal täglich die Kontaktdaten Ihrer Firma und Ihres Administrators, die Adresse Ihrer Website und die Version an das PNLCS-Team, damit wir Sie zu Sicherheit und Updates erreichen können.',
+        'what_is_sent_link' => 'Was gesendet wird',
+    ],
 ];

@@ -22,10 +22,19 @@ class DashboardController extends Controller
     {
         $widgetOutput = $this->widgets->renderAll();
 
+        // Without a cron the daily hub ping never runs; a week without one
+        // and the dashboard sends it, after the page has gone out.
+        $hub = app(\App\Services\Hub\HubPing::class);
+        if (\App\Services\Hub\HubPing::allowed() && $hub->overdue()) {
+            defer(fn () => $hub->send());
+        }
+
         return view('admin.dashboard', [
             'widgetOutput' => $widgetOutput,
             'setup'        => $this->setupChecklist(),
             'waiting'      => $this->waitingOnYou(),
+            'hubInfo'      => app(\App\Services\Hub\NoticeBoard::class)->current('info'),
+            'hubAsk'       => \App\Models\Setting::get('hub_asked') !== '1',
         ]);
     }
 

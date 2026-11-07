@@ -360,6 +360,9 @@ class InstallController extends Controller
             'app_url' => 'required|url|max:255',
             'app_name' => 'required|string|max:64',
             'app_locale' => ['required', Rule::in(array_keys(self::LOCALES))],
+            'hub_source' => 'nullable|string|max:200',
+            'hub_community_profile' => 'nullable|boolean',
+            'install_purpose' => 'nullable|in:live,test',
         ]);
 
         $this->writeEnv([
@@ -376,6 +379,12 @@ class InstallController extends Controller
             'is_default' => true,
         ]);
         Setting::set('DefaultLanguage', $data['app_locale'], 'language');
+        // The two questions for hub.pnlcs.com; they go with the first ping.
+        Setting::set('hub_source', (string) ($data['hub_source'] ?? ''), 'hub');
+        Setting::set('hub_community_profile', $request->boolean('hub_community_profile') ? '1' : '0', 'hub');
+        Setting::set('hub_answers_pending', '1', 'hub');
+        Setting::set('hub_asked', '1', 'hub');
+        Setting::set('InstallPurpose', $data['install_purpose'] ?? 'live', 'general');
         if ($adminId = $request->session()->get('install.admin_id')) {
             Admin::whereKey($adminId)->update(['language' => $data['app_locale']]);
         }
@@ -396,6 +405,17 @@ class InstallController extends Controller
     // ─── Step 5: Finish ─────────────────────────────────────────────────
     public function finish()
     {
+        // The first ping to hub.pnlcs.com, once, from the session that ran the
+        // install: the cron line is not in place yet. At most three seconds;
+        // a failure is only logged and the daily job tries again.
+        if (session('install.admin_id') && ! Setting::get('hub_last_attempt_on') && \App\Services\Hub\HubPing::allowed()) {
+            try {
+                app(\App\Services\Hub\HubPing::class)->send(3);
+            } catch (\Throwable) {
+                // HubPing does not throw; the page must not depend on that.
+            }
+        }
+
         return view('install.finish', [
             'username' => session('install.admin_username', 'admin'),
             // This page stays open after the install; only the session that

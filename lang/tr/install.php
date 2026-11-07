@@ -68,4 +68,12 @@ return [
     'next_gateway' => '3. En az bir ödeme yöntemi kurun',
     'next_modules' => '4. Sunucu ve alan adı kayıt modüllerini ekleyin',
     'go_login' => 'Yönetici girişine git →',
+    'hub_community_profile' => 'PNLCS topluluk profilimi oluştur',
+    'hub_purpose' => 'Bu kurulum ne için?',
+    'hub_purpose_hint' => 'Yalnız PNLCS ekibine hangi kurulumların kullanımda olduğunu bildirir; burada hiçbir şey değişmez. Sonradan Ayarlar → Genel\'den değiştirebilirsiniz.',
+    'hub_purpose_live' => 'Canlı işletmem',
+    'hub_purpose_test' => 'Deneme veya test kopyası',
+    'hub_source' => 'PNLCS\'i nereden duydunuz? (isteğe bağlı)',
+    'hub_what_is_sent' => 'PNLCS, güvenlik ve güncellemeler konusunda size ulaşabilmemiz için firma ve yönetici iletişim bilgilerinizi, site adresinizi ve sürümünüzü günde bir kez PNLCS ekibine gönderir.',
+    'hub_what_is_sent_link' => 'Ne gönderiliyor',
 ];

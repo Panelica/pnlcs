@@ -3807,4 +3807,17 @@ return [
     'settings.disallowed_subdomains_hint' => 'Separados por comas o líneas. Vacío usa: :names',
     'settings.test_email_mail_off' => 'El correo electrónico de prueba no se envió: los correos electrónicos salientes están desactivados en esta página.',
     'settings.test_email_cancelled' => 'El correo electrónico de prueba no se envió: un hook de correo lo canceló.',
+    'hub' => [
+        'purpose' => '¿Para qué es esta instalación?',
+        'purpose_hint' => 'Solo indica al equipo de PNLCS qué instalaciones están en uso; aquí no cambia nada. Puede cambiarlo después en Configuración → General.',
+        'purpose_live' => 'Mi negocio en producción',
+        'purpose_test' => 'Una copia de prueba',
+        'community_profile' => 'Crear mi perfil en la comunidad de PNLCS',
+        'mail_footer' => 'Este mensaje lo envió su instalación de PNLCS en :url, a partir de un aviso firmado por el equipo de PNLCS.',
+        'not_now' => 'Ahora no',
+        'read_more' => 'Más información',
+        'source' => '¿Cómo conoció PNLCS? (opcional)',
+        'what_is_sent' => 'PNLCS envía una vez al día al equipo de PNLCS los datos de contacto de su empresa y de su administrador, la dirección de su sitio y la versión, para que podamos avisarle sobre seguridad y actualizaciones.',
+        'what_is_sent_link' => 'Qué se envía',
+    ],
 ];

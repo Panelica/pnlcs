@@ -68,4 +68,12 @@ return [
     'next_gateway' => '3. Set up at least one payment gateway',
     'next_modules' => '4. Add server & registrar plugins',
     'go_login' => 'Go to Admin Login →',
+    'hub_community_profile' => 'Create my PNLCS community profile',
+    'hub_purpose' => 'What is this install for?',
+    'hub_purpose_hint' => 'Only tells the PNLCS team which installs are in use; nothing here changes. You can change it later in Setup → General.',
+    'hub_purpose_live' => 'My live business',
+    'hub_purpose_test' => 'A test or trial copy',
+    'hub_source' => 'How did you hear about PNLCS? (optional)',
+    'hub_what_is_sent' => 'PNLCS sends your company and admin contact details, site address and version to the PNLCS team once a day, so we can reach you about security and updates.',
+    'hub_what_is_sent_link' => 'What is sent',
 ];

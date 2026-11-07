@@ -1,6 +1,54 @@
 @extends("admin.layouts.app")
 @section("title", __("admin.dashboard.title"))
 @section("content")
+@php
+    $hubManage = auth('admin')->user()?->hasPermission('manage_settings');
+@endphp
+
+{{-- Information from the PNLCS team (App\Services\Hub\NoticeBoard): signed, plain text, can be closed. --}}
+@foreach($hubInfo ?? [] as $hubNotice)
+<div class="alert alert-info" style="display:flex;gap:12px;align-items:flex-start;justify-content:space-between;">
+    <div>
+        <strong>{{ $hubNotice['title'] }}</strong>
+        @if($hubNotice['body'] !== '')<div style="margin-top:4px;white-space:pre-line;">{{ $hubNotice['body'] }}</div>@endif
+        @if($hubNotice['url'] !== '')<div style="margin-top:6px;"><a href="{{ $hubNotice['url'] }}" target="_blank" rel="noopener noreferrer">{{ __('admin.hub.read_more') }} &rarr;</a></div>@endif
+    </div>
+    @if($hubManage)
+    <form method="POST" action="{{ route('admin.hub.notices.dismiss', $hubNotice['id']) }}" style="margin:0;">
+        @csrf
+        <button type="submit" class="btn btn-default btn-sm" title="{{ __('common.actions.close') }}">&times;</button>
+    </form>
+    @endif
+</div>
+@endforeach
+
+{{-- Installs from before the hub: the wizard's two questions, once. --}}
+@if(($hubAsk ?? false) && $hubManage)
+<div class="card" style="margin-bottom:16px;">
+    <div class="card-body" style="padding:16px 20px;">
+        <form method="POST" action="{{ route('admin.hub.answers') }}">
+            @csrf
+            <div class="form-group">
+                <label class="form-label" for="hub-source">{{ __('admin.hub.source') }}</label>
+                <input type="text" id="hub-source" name="source" maxlength="200" class="form-control">
+            </div>
+            <div class="form-group">
+                <span class="form-label">{{ __('admin.hub.purpose') }}</span>
+                <label style="font-weight:normal;margin-right:14px;"><input type="radio" name="purpose" value="live"> {{ __('admin.hub.purpose_live') }}</label>
+                <label style="font-weight:normal;"><input type="radio" name="purpose" value="test"> {{ __('admin.hub.purpose_test') }}</label>
+            </div>
+            <label style="display:flex;gap:8px;align-items:center;font-weight:normal;">
+                <input type="checkbox" name="community_profile" value="1"> {{ __('admin.hub.community_profile') }}
+            </label>
+            <p style="color:var(--pn-muted,#888);font-size:12.5px;margin:10px 0;">{{ __('admin.hub.what_is_sent') }} <a href="{{ config('hub.what_is_sent_url') }}" target="_blank" rel="noopener">{{ __('admin.hub.what_is_sent_link') }} &rarr;</a></p>
+            <div style="display:flex;gap:8px;">
+                <button type="submit" class="btn btn-primary btn-sm">{{ __('common.actions.save') }}</button>
+                <button type="submit" name="skip" value="1" class="btn btn-default btn-sm">{{ __('admin.hub.not_now') }}</button>
+            </div>
+        </form>
+    </div>
+</div>
+@endif
 
 @if(!empty($setup) && !$setup['complete'])
 <div class="card" style="margin-bottom:16px;border-left:4px solid var(--pn-primary,#4f46e5);">

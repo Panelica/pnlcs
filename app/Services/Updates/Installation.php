@@ -32,6 +32,12 @@ class Installation
         private readonly ?string $root = null,
     ) {}
 
+    /** Running inside the PNLCS Docker image (or any container). */
+    public static function inContainer(): bool
+    {
+        return getenv('PNLCS_DIR') !== false || is_file('/.dockerenv');
+    }
+
     public function root(): string
     {
         return rtrim($this->root ?? base_path(), '/');

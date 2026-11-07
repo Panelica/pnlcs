@@ -15,6 +15,8 @@ class Setting extends Model {
         'OpenAIApiKey', 'TwilioAuthToken', 'FraudLabsApiKey', 'MaxMindLicenseKey',
         // The key sent to an operator-added official rate publisher (#372).
         'OfficialRateApiKey',
+        // This install's key at hub.pnlcs.com (App\Services\Hub\HubPing).
+        'hub_install_secret',
     ];
 
     protected $casts = ["value" => \App\Casts\SecretSettingValue::class];

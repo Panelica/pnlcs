@@ -95,6 +95,8 @@ class SettingController extends Controller
         'MailEnabled', 'MailType', 'MaintenanceMode', 'PhoneNumber',
         'SMTPHost', 'SMTPPassword', 'SMTPPort', 'SMTPSecurity', 'SMTPUsername',
         'PrivacyUrl', 'SystemEmailAddress', 'TaxID', 'Timezone', 'TOSUrl',
+        // Live business or a test copy: sent to hub.pnlcs.com, changes nothing here.
+        'InstallPurpose',
         // Saved from the languages screen, which posts to this same endpoint.
         // Its form used to name these settings[OpenAIApiKey] - a shape this
         // handler never reads - so pressing save wrote nothing and said nothing.
@@ -158,6 +160,7 @@ class SettingController extends Controller
             'DpoEmail' => 'sometimes|nullable|email|max:255',
             'Timezone' => 'sometimes|nullable|timezone:all',
             'MailType' => 'sometimes|nullable|in:php_mail,smtp',
+            'InstallPurpose' => 'sometimes|nullable|in:live,test',
             'SMTPPort' => 'sometimes|nullable|integer|between:1,65535',
             'SMTPSecurity' => 'sometimes|nullable|in:tls,ssl,none',
             'InvoiceDueDays' => 'sometimes|nullable|integer|min:0',

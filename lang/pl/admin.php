@@ -3844,4 +3844,17 @@ return [
     'settings.disallowed_subdomains_hint' => 'Oddzielone przecinkami lub wierszami. Puste oznacza: :names',
     'settings.test_email_mail_off' => 'Testowy e-mail nie został wysłany: wysyłanie e-maili jest wyłączone na tej stronie.',
     'settings.test_email_cancelled' => 'Testowy e-mail nie został wysłany: anulował go hook poczty.',
+    'hub' => [
+        'purpose' => 'Do czego służy ta instalacja?',
+        'purpose_hint' => 'Informuje tylko zespół PNLCS, które instalacje są używane; nic tu się nie zmienia. Możesz to później zmienić w Ustawienia → Ogólne.',
+        'purpose_live' => 'Moja działająca firma',
+        'purpose_test' => 'Kopia testowa lub próbna',
+        'community_profile' => 'Utwórz mój profil w społeczności PNLCS',
+        'mail_footer' => 'Tę wiadomość wysłała Twoja instalacja PNLCS pod adresem :url na podstawie komunikatu podpisanego przez zespół PNLCS.',
+        'not_now' => 'Nie teraz',
+        'read_more' => 'Więcej',
+        'source' => 'Skąd dowiedziałeś się o PNLCS? (opcjonalnie)',
+        'what_is_sent' => 'PNLCS raz dziennie wysyła zespołowi PNLCS dane kontaktowe firmy i administratora, adres strony oraz wersję, abyśmy mogli kontaktować się w sprawie bezpieczeństwa i aktualizacji.',
+        'what_is_sent_link' => 'Co jest wysyłane',
+    ],
 ];

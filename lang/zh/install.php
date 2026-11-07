@@ -68,4 +68,12 @@ return [
     'next_gateway' => '3. 至少设置一个支付网关',
     'next_modules' => '4. 添加服务器与域名注册商模块',
     'go_login' => '前往管理员登录 →',
+    'hub_community_profile' => '创建我的 PNLCS 社区资料',
+    'hub_purpose' => '此安装的用途是什么？',
+    'hub_purpose_hint' => '仅告知 PNLCS 团队哪些安装正在使用；此处不会有任何变化。之后可在 设置 → 常规 中更改。',
+    'hub_purpose_live' => '我的正式业务',
+    'hub_purpose_test' => '测试或试用副本',
+    'hub_source' => '您是如何了解 PNLCS 的？（可选）',
+    'hub_what_is_sent' => 'PNLCS 每天向 PNLCS 团队发送一次您公司和管理员的联系方式、网站地址及版本，以便我们就安全和更新事宜联系您。',
+    'hub_what_is_sent_link' => '发送了哪些内容',
 ];

@@ -242,7 +242,7 @@ class Preflight
 
     private function inContainer(): bool
     {
-        return getenv('PNLCS_DIR') !== false || is_file('/.dockerenv');
+        return Installation::inContainer();
     }
 
     private function block(string $code, array $params = []): void
