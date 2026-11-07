@@ -297,6 +297,7 @@ class OvhRegistrar implements RegistrarModuleInterface, SyncsDomainData
 
             return [
                 'success' => true,
+                'registration_date' => $this->parseDate($serviceInfos['creation'] ?? null),
                 'expiry_date' => $this->parseDate($serviceInfos['expiration'] ?? null),
                 'status' => $this->mapStatus($info['status'] ?? null),
                 'locked' => isset($info['transferLockStatus']) ? $info['transferLockStatus'] === 'locked' : null,

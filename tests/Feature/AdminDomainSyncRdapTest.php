@@ -87,3 +87,38 @@ it('does not ask RDAP on the button when the lookups are disabled', function () 
     Http::assertNotSent(fn ($request) => str_contains($request->url(), 'rdap.org'));
     expect($domain->fresh()->registration_date)->toBeNull();
 });
+
+it('prefers the registrar date and does not ask RDAP when the registrar provides one', function () {
+    RegistrarSettings::updateOrCreate(['registrar' => 'ovh', 'setting' => 'app_key'], ['value' => 'k']);
+    RegistrarSettings::updateOrCreate(['registrar' => 'ovh', 'setting' => 'app_secret'], ['value' => 's']);
+    RegistrarSettings::updateOrCreate(['registrar' => 'ovh', 'setting' => 'consumer_key'], ['value' => 'c']);
+
+    Http::fake([
+        '*/domain/ovh-button.com/serviceInfos' => Http::response([
+            'creation' => '2015-04-10T08:00:00+02:00',
+            'expiration' => '2027-06-01T10:00:00+02:00',
+        ], 200),
+        '*/domain/ovh-button.com' => Http::response(['status' => 'ok'], 200),
+    ]);
+
+    $domain = Domain::create([
+        'client_id' => Client::factory()->create()->id,
+        'domain' => 'ovh-button.com',
+        'type' => 'Register',
+        'registrar' => 'OVH',
+        'status' => 'active',
+        'registration_period' => 1,
+        'registration_date' => null,
+        'expiry_date' => '2027-06-01',
+        'next_due_date' => '2027-06-01',
+        'first_payment_amount' => 10,
+        'recurring_amount' => 10,
+    ]);
+
+    $this->actingAs(Admin::factory()->create(), 'admin')
+        ->post(route('admin.domains.sync', $domain))
+        ->assertRedirect();
+
+    Http::assertNotSent(fn ($request) => str_contains($request->url(), 'rdap.org'));
+    expect($domain->fresh()->registration_date->toDateString())->toBe('2015-04-10');
+});

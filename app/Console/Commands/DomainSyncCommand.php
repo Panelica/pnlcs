@@ -280,6 +280,13 @@ class DomainSyncCommand extends Command
     {
         $changes = [];
 
+        // The registrar's own creation date fills a blank one first; RDAP is
+        // only the fallback in the pass below, and never overwrites.
+        $registration = $result['registration_date'] ?? null;
+        if ($registration && ! $domain->registration_date) {
+            $changes['registration_date'] = $registration;
+        }
+
         $expiry = $result['expiry_date'] ?? null;
         if ($expiry && optional($domain->expiry_date)->toDateString() !== $expiry) {
             $changes['expiry_date'] = $expiry;

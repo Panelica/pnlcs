@@ -106,6 +106,32 @@ it('reads the domain prices out of the pricings answer', function () {
         ->and($prices['com.pl'])->toBe(['register' => '10.50', 'renew' => null, 'transfer' => null, 'restore' => null]);
 });
 
+it('reads the registration date back when syncing a domain', function () {
+    $client = new class('login', 'pass', '00') extends HrdClient
+    {
+        public function domainInfo(string $domain): array
+        {
+            return [
+                'name' => $domain,
+                'status' => 'registered',
+                'crDate' => '2015-04-10',
+                'exDate' => '2027-06-01',
+            ];
+        }
+    };
+
+    $domain = Domain::factory()->create([
+        'client_id' => Client::factory()->create()->id,
+        'domain' => 'example.pl',
+        'registrar' => 'hrd',
+    ]);
+
+    $result = hrdRegistrarWith($client)->syncDomain($domain);
+
+    expect($result['success'])->toBeTrue()
+        ->and($result['registration_date'])->toBe('2015-04-10');
+});
+
 it('writes the prices with the margin onto its own TLDs only', function () {
     zlotyShop();
     $pl = hrdTld('.pl');

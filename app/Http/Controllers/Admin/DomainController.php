@@ -238,11 +238,13 @@ class DomainController extends Controller
             $changes['id_protection'] = $result['id_protection'];
         }
 
-        // The registrar does not say when the name was first registered, so a
-        // domain without a date asks RDAP for it here, exactly like the daily
-        // sync does.
+        // Fill a missing registration date: the registrar's own view first
+        // (free), RDAP as the fallback for TLDs the registrar does not date.
         if (! $domain->registration_date) {
-            $date = app(RdapRegistrationDate::class)->forMissing($domain);
+            $date = $result['registration_date'] ?? null;
+            if (! $date) {
+                $date = app(RdapRegistrationDate::class)->forMissing($domain);
+            }
             if ($date) {
                 $changes['registration_date'] = $date;
             }
