@@ -120,11 +120,18 @@ class FundsController extends Controller
             return back()->with('error', __('messages.error.gateway_not_configured', ['gateway' => ucfirst($gateway)]));
         }
 
+        // The number and the type must agree: generateInvoiceNumber() uses the
+        // default type, so an invoice left on the column default ('vat') got a
+        // PRO- number while rendering as an ordinary VAT invoice. A top-up is a
+        // payment on account, so under the proforma scheme it is a proforma.
+        $type = app(InvoiceService::class)->defaultType();
+
         $invoice = Invoice::create([
             'client_id'      => $client->id,
             // Freeze the buyer alongside the money (issue #7)
             ...Invoice::buyerSnapshotFrom($client),
-            'invoice_num'    => app(InvoiceService::class)->generateInvoiceNumber(),
+            'invoice_num'    => app(InvoiceService::class)->generateInvoiceNumber($type),
+            'type'           => $type,
             'date'           => today(),
             'due_date'       => today(),
             'subtotal'       => $validated['amount'],

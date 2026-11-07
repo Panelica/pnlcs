@@ -27,6 +27,13 @@ class ProformaService
             return null;
         }
 
+        // A top-up is a payment on account, not a supply: there is nothing to
+        // invoice yet, so no VAT invoice is issued. The money becomes credit,
+        // and VAT is charged on the services that credit later pays.
+        if ($proforma->items()->where('type', 'AddFunds')->exists()) {
+            return null;
+        }
+
         $existing = Invoice::where('source_invoice_id', $proforma->id)->first();
         if ($existing) {
             return $existing;

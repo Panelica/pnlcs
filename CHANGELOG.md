@@ -2,6 +2,21 @@
 
 All notable changes to PNLCS are documented here. Newest first.
 
+## Unreleased
+
+### Fixed
+
+- **Add Funds invoices follow the proforma scheme.** A top-up is a payment on
+  account, not a supply. It is now numbered and typed the same way — a PRO-
+  proforma when that scheme is on, instead of a PRO- number carrying the `vat`
+  type default that made the document print as an ordinary invoice. A top-up
+  stays untaxed, and paying one issues no VAT invoice: the money becomes
+  credit, and VAT is charged on the services that credit later pays.
+- **A paid Add Funds proforma stays visible.** "Hide paid proformas" hid every
+  paid proforma, assuming a VAT invoice replaced it. A top-up has no VAT
+  invoice, so hiding it made the payment disappear from every list. Only a
+  proforma whose VAT invoice exists is hidden now.
+
 ## 1.20.0 — 2026-11-05
 
 A stable release, offered to every installation. Two registrars can now quote
