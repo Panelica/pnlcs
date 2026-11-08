@@ -136,3 +136,42 @@ test('a German customer gets a German subject line', function () {
 
     expect($subjects->getArrayCopy()[0] ?? '')->toStartWith('Domain example-de.com registriert');
 });
+
+function italianTemplatesMigration(): object
+{
+    return require database_path('migrations/2026_11_08_000001_ship_italian_email_templates.php');
+}
+
+test('Italian has every template', function () {
+    expect(array_keys(ShippedEmailTemplates::for('it')))->toEqualCanonicalizing(array_keys(englishTemplates()));
+});
+
+test('an install with English copies gets Italian where nobody changed the text', function () {
+    $english = englishTemplates();
+    $italian = ShippedEmailTemplates::for('it');
+    EmailTemplate::where('language', 'it')->delete();
+
+    $copy = fn (string $name, array $changes = []) => EmailTemplate::create(array_merge([
+        'type' => $english[$name]->type, 'name' => $name, 'language' => 'it',
+        'subject' => $english[$name]->subject, 'message' => $english[$name]->message, 'custom' => false,
+    ], $changes));
+
+    $untouched = $copy('Invoice Created');
+    $ownSubject = $copy('Invoice Overdue', ['subject' => 'Da pagare: n. {invoice_num}']);
+    $ownTemplate = $copy('Order Confirmation', ['custom' => true]);
+
+    italianTemplatesMigration()->up();
+    italianTemplatesMigration()->up();
+
+    expect($untouched->fresh()->only('subject', 'message'))->toBe($italian['Invoice Created'])
+        ->and($ownSubject->fresh()->subject)->toBe('Da pagare: n. {invoice_num}')
+        ->and($ownSubject->fresh()->message)->toBe($italian['Invoice Overdue']['message'])
+        ->and($ownTemplate->fresh()->subject)->toBe($english['Order Confirmation']->subject);
+
+    italianTemplatesMigration()->down();
+
+    expect($untouched->fresh()->subject)->toBe($english['Invoice Created']->subject)
+        ->and($untouched->fresh()->message)->toBe($english['Invoice Created']->message)
+        ->and($ownSubject->fresh()->subject)->toBe('Da pagare: n. {invoice_num}')
+        ->and($ownSubject->fresh()->message)->toBe($english['Invoice Overdue']->message);
+});
