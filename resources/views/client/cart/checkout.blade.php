@@ -112,6 +112,10 @@
                  one, the first the shop offers, as every order does. --}}
             <input type="hidden" name="payment_method" value="{{ array_key_first($paymentMethods) }}">
             <div class="pn-alert pn-alert-info mb-16" role="status">{{ __('client.checkout.nothing_to_pay') }}</div>
+            @elseif(($creditApplied ?? 0) > 0 && ($amountToPay ?? 1) <= 0)
+            {{-- The balance covers the whole order: nothing left for a gateway. --}}
+            <input type="hidden" name="payment_method" value="credit">
+            <div class="pn-alert pn-alert-info mb-16" role="status">{{ __('client.checkout.paid_from_balance') }}</div>
             @else
             <div class="pn-card mb-16">
                 <div class="pn-card-header"><span class="pn-card-title">{{ __('client.checkout.payment_method') }}</span></div>
@@ -166,11 +170,21 @@
                         <span>{{ __('client.cart.total') }}</span>
                         <span style="color:var(--primary);font-size:18px">{{ display_money_fmt($totals["total"]) }}</span>
                     </div>
+                    @if(($creditApplied ?? 0) > 0)
+                    <div class="pn-order-row" style="color:var(--success)">
+                        <span>{{ __('client.checkout.account_balance') }}</span>
+                        <span>-{{ display_money_fmt($creditApplied) }}</span>
+                    </div>
+                    <div class="pn-order-row">
+                        <span style="font-weight:600">{{ __('client.cart.amount_to_pay') }}</span>
+                        <span style="color:var(--primary);font-size:18px">{{ display_money_fmt($amountToPay) }}</span>
+                    </div>
+                    @endif
                     <button type="submit" class="btn btn-accent" style="width:100%;justify-content:center;margin-top:20px;font-size:15px;padding:12px">
                         {{ __('client.checkout.place_order') }} &rarr;
                     </button>
                     <p class="text-muted text-sm" style="text-align:center;margin-top:10px">
-                        {{ __('client.checkout.secure_checkout') }} &mdash; {{ display_money_fmt($totals["total"]) }}
+                        {{ __('client.checkout.secure_checkout') }} &mdash; {{ display_money_fmt(($creditApplied ?? 0) > 0 ? $amountToPay : $totals["total"]) }}
                     </p>
                     @include('client.cart.partials.currency-note')
                 </div>
