@@ -45,7 +45,8 @@ return [
     'vat_summary_desc' => 'Beschreibung',
     'vat_net_total' => 'Netto gesamt',
     'vat_total' => 'MwSt. gesamt',
-    'vat_gross_total' => 'Zahlbar (brutto)',
+    'vat_gross_total' => 'Bruttosumme',
+    'amount_due' => 'Zahlbar',
     'thank_you' => 'Vielen Dank für Ihr Geschäft!',
     'total' => 'Insgesamt',
 ];

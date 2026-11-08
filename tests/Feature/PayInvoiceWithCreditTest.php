@@ -98,5 +98,7 @@ it('never applies the same balance twice when two requests read it at once', fun
 
     expect((float) $client->fresh()->credit)->toBe(0.0)
         ->and((float) $invoice->fresh()->credit)->toBe(30.0)
-        ->and((float) $invoice->fresh()->total)->toBe(70.0);
+        // The total is the gross; the credit is taken off in amountDue().
+        ->and((float) $invoice->fresh()->total)->toBe(100.0)
+        ->and($invoice->fresh()->amountDue())->toBe(70.0);
 });

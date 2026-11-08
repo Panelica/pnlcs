@@ -199,8 +199,10 @@ test('apply credit reduces invoice total', function () {
 
     $updated = $service->applyCredit($invoice, 10.00);
 
+    // The total stays the invoice's gross value; the credit is a payment.
     expect((float) $updated->credit)->toBe(10.00)
-        ->and((float) $updated->total)->toBe(20.00);
+        ->and((float) $updated->total)->toBe(30.00)
+        ->and($updated->amountDue())->toBe(20.00);
 });
 
 test('apply credit deducts from client credit balance', function () {

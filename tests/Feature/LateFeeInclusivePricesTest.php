@@ -103,9 +103,13 @@ test('with prices that include tax a percentage late fee counts taxed and untaxe
 test('with prices that include tax a percentage late fee is worked out before credit', function () {
     $invoice = inclusiveLateFeeInvoice(120, credit: 20);
 
+    // total is the gross now that credit is a payment rather than a discount
+    // (#405): 120 plus the 6 fee. The 20 of credit is what is left to pay, and
+    // amountDue() is where that shows.
     expect((float) $invoice->credit)->toEqual(20.0)
         ->and(lateFeeCharged($invoice))->toEqual(6.0)
-        ->and((float) $invoice->total)->toEqual(106.0)
+        ->and((float) $invoice->total)->toEqual(126.0)
+        ->and($invoice->amountDue())->toEqual(106.0)
         ->and((float) $invoice->tax)->toEqual(20.0);
 });
 

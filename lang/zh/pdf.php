@@ -45,7 +45,8 @@ return [
     'vat_summary_desc' => '描述',
     'vat_net_total' => '净额合计',
     'vat_total' => '税额合计',
-    'vat_gross_total' => '应付（总额）',
+    'vat_gross_total' => '总额',
+    'amount_due' => '应付金额',
     'thank_you' => '感谢您的惠顾！',
     'total' => '合计',
 ];

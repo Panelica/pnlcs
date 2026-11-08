@@ -15,7 +15,7 @@ class TransactionService
             'gateway' => $data['gateway'] ?? 'manual',
             'date' => now(),
             'description' => $data['description'] ?? "Payment for Invoice #{$invoice->invoice_num}",
-            'amount_in' => $data['amount'] ?? $invoice->total,
+            'amount_in' => $data['amount'] ?? $invoice->amountDue(),
             'fees' => $data['fees'] ?? 0,
             'amount_out' => 0,
             'rate' => 1,
