@@ -140,7 +140,7 @@ The email templates (**Setup → Email Templates**) are database rows, one set
 per language, which the operator edits. A language starts from the set PNLCS
 ships for it in `database/data/email_templates/<code>.php`, template name =>
 subject and message; a language without that file starts from the English
-set. German and Polish are shipped today.
+set. German, Polish and Italian are shipped today.
 
 ```php
 return [
