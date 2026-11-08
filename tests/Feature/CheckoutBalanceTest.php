@@ -78,9 +78,12 @@ test('an order covered by the balance is placed without a gateway', function () 
 
     $response->assertRedirect(route('client.services.index'));
 
+    // Credit is a payment, not a discount (#405): total stays the gross and
+    // amountDue() is what is left to pay.
     expect(strtolower((string) $invoice->status))->toBe('paid')
         ->and((float) $invoice->credit)->toBe(100.0)
-        ->and((float) $invoice->total)->toBe(0.0)
+        ->and((float) $invoice->total)->toBe(100.0)
+        ->and($invoice->amountDue())->toBe(0.0)
         ->and((float) $invoice->client->fresh()->credit)->toBe(50.0);
 });
 
@@ -99,7 +102,8 @@ test('a partial balance is applied and the rest is left to the gateway', functio
     $invoice = Invoice::findOrFail($order->invoice_id);
 
     expect((float) $invoice->credit)->toBe(40.0)
-        ->and((float) $invoice->total)->toBe(60.0)
+        ->and((float) $invoice->total)->toBe(100.0)
+        ->and($invoice->amountDue())->toBe(60.0)
         ->and(strtolower((string) $invoice->status))->toBe('unpaid')
         ->and((float) $invoice->client->fresh()->credit)->toBe(0.0);
 });
