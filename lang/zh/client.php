@@ -203,6 +203,7 @@ return [
         'domain_taken' => ':domain 已被注册。请选择其他名称；如果该域名属于您，请选择转移。',
         'domain_unchecked' => '我们无法确认 :domain 是否可用。请稍后重试。',
         'comes_with' => '随 :product 一起订购',
+        'setup_fee' => '开通费（一次性）',
         'domain_comes_with_hosting' => ':domain 是与 :product 一起订购的，会随其一并移除。若要将两者都移出购物车，请移除 :product。',
         'removed_with_domain' => '主机套餐及其域名 :domain 已从购物车中移除。',
         'domain_not_registered' => ':domain 尚未注册，无法转移。请改为选择注册新域名。',

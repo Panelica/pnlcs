@@ -49,6 +49,10 @@
                                 <div style="font-weight:600">{{ $item["product_name"] ?? $item["name"] ?? __('client.cart.product') }}</div>
                                 @endif
                                 @if(!empty($item["domain"]))<div class="text-muted text-sm">{{ $item["domain"] }}</div>@endif
+                                @if((float) ($item["setup_fee"] ?? 0) > 0)
+                                {{-- Charged once, on this order's invoice. --}}
+                                <div class="text-muted text-sm">{{ __('client.cart.setup_fee') }}: {{ display_money_fmt($item["setup_fee"]) }}</div>
+                                @endif
                                 @if(($item["type"] ?? "") === "domain" && ($item["privacy_price"] ?? null) !== null)
                                 {{-- WHOIS privacy, at the extension's price. --}}
                                 <form method="POST" action="{{ route('client.cart.privacy', $key) }}" class="text-sm" style="margin-top:4px;">

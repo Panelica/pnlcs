@@ -203,6 +203,7 @@ return [
         'domain_taken' => ':domain zaten kayıtlı. Başka bir ad seçin ya da alan adı sizinse Transfer\'i seçin.',
         'domain_unchecked' => ':domain alan adının müsait olup olmadığını doğrulayamadık. Lütfen biraz sonra tekrar deneyin.',
         'comes_with' => ':product ile birlikte',
+        'setup_fee' => 'Kurulum ücreti (tek seferlik)',
         'domain_comes_with_hosting' => ':domain, :product ile birlikte sipariş edildi ve onunla birlikte kaldırılır. İkisini de sepetten çıkarmak için :product paketini kaldırın.',
         'removed_with_domain' => 'Hosting paketi ve :domain alan adı sepetten kaldırıldı.',
         'domain_not_registered' => ':domain henüz kayıtlı değil, bu yüzden transfer edilecek bir şey yok. Bunun yerine Yeni alan adı kaydet\'i seçin.',

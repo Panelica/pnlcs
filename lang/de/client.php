@@ -203,6 +203,7 @@ return [
         'domain_taken' => ':domain ist bereits registriert. Wählen Sie einen anderen Namen oder „Transfer“, wenn die Domain Ihnen gehört.',
         'domain_unchecked' => 'Wir konnten nicht prüfen, ob :domain verfügbar ist. Bitte versuchen Sie es gleich noch einmal.',
         'comes_with' => 'Gehört zu :product',
+        'setup_fee' => 'Einrichtungsgebühr (einmalig)',
         'domain_comes_with_hosting' => ':domain wurde zusammen mit :product bestellt und wird mit diesem entfernt. Entfernen Sie :product, um beides aus dem Warenkorb zu nehmen.',
         'removed_with_domain' => 'Das Hosting-Paket und die Domain :domain wurden aus dem Warenkorb entfernt.',
         'domain_not_registered' => ':domain ist noch nicht registriert, daher gibt es nichts zu transferieren. Wählen Sie stattdessen „Neue Domain registrieren“.',

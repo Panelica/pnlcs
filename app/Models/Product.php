@@ -78,6 +78,25 @@ class Product extends Model
     }
 
     /**
+     * The one-time setup fee for ordering on a cycle, or zero when there is none.
+     *
+     * The product form has always saved a setup fee per cycle, and nothing read
+     * it: an operator who priced a plan at "100 a year plus 50 setup" was paid
+     * 100. A free product never carries one, and a negative value is no fee.
+     */
+    public function setupFeeFor(string $cycle, ?int $currencyId = null): float
+    {
+        $column = BillingCycleHelper::pricingColumn($cycle);
+        $row = $column ? $this->pricingFor($currencyId) : null;
+
+        if ($this->pay_type === 'free' || ! $row) {
+            return 0.0;
+        }
+
+        return max(0.0, round((float) ($row->{$column.'_setup'} ?? 0), 2));
+    }
+
+    /**
      * What one term costs, or null when the product is not sold on that cycle.
      *
      * The pricing table marks an unsold cycle with -1, which is a marker and
