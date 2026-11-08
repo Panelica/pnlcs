@@ -217,6 +217,10 @@ class Invoice extends Model {
     /**
      * Hide proformas that have been settled: once paid, a proforma is replaced
      * by its VAT invoice. Gated on the "hide paid proformas" setting.
+     *
+     * Hidden only when that replacement actually exists. A top-up is a payment
+     * on account and issues no VAT invoice, so hiding it would make a paid
+     * top-up disappear from every list with nothing standing in its place.
      */
     public function scopeExcludeSettledProformas($query)
     {
@@ -224,8 +228,10 @@ class Invoice extends Model {
             return $query;
         }
 
-        return $query->whereNot(function ($q) {
-            $q->where('type', 'proforma')->where('status', InvoiceStatus::Paid->value);
+        return $query->where(function ($q) {
+            $q->where('type', '!=', 'proforma')
+                ->orWhere('status', '!=', InvoiceStatus::Paid->value)
+                ->orWhereDoesntHave('replacementInvoice');
         });
     }
     protected function casts(): array { return ['date' => 'date', 'due_date' => 'date', 'date_paid' => 'datetime', 'subtotal' => 'decimal:2', 'credit' => 'decimal:2', 'tax' => 'decimal:2', 'total' => 'decimal:2', 'buyer_custom_fields' => 'array']; }
@@ -360,6 +366,9 @@ class Invoice extends Model {
 
     /** The proforma this VAT invoice was issued from. */
     public function sourceInvoice() { return $this->belongsTo(self::class, 'source_invoice_id'); }
+
+    /** The VAT invoice issued from this proforma, once it has been paid. */
+    public function replacementInvoice() { return $this->hasOne(self::class, 'source_invoice_id'); }
 
     /** The KSeF submission this invoice has, once it has been handed over. */
     public function ksefInvoice() { return $this->hasOne(KsefInvoice::class); }
