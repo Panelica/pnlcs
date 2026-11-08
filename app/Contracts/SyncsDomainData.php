@@ -19,6 +19,7 @@ interface SyncsDomainData
      * @return array{
      *     success: bool,
      *     message?: string,
+     *     registration_date?: string|null,
      *     expiry_date?: string|null,
      *     status?: string|null,
      *     locked?: bool|null,

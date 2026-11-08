@@ -101,6 +101,22 @@ it('reads the expiry and status when syncing a domain', function () {
         ->and($result['locked'])->toBeTrue();
 });
 
+it('reads the registration date from serviceInfos when syncing', function () {
+    ovhSettings();
+    Http::fake([
+        '*/domain/shop.example.com/serviceInfos' => Http::response([
+            'creation' => '2015-04-10T08:00:00+02:00',
+            'expiration' => '2027-06-01T10:00:00+02:00',
+        ], 200),
+        '*/domain/shop.example.com' => Http::response(['status' => 'ok'], 200),
+    ]);
+
+    $result = app(OvhRegistrar::class)->syncDomain(ovhDomain());
+
+    expect($result['success'])->toBeTrue()
+        ->and($result['registration_date'])->toBe('2015-04-10');
+});
+
 it('renews a domain at OVH', function () {
     ovhSettings();
     Http::fake(['*/domain/shop.example.com/renew' => Http::response([], 200)]);
