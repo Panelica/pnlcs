@@ -6,6 +6,7 @@ use App\Events\TicketOpened;
 use App\Events\TicketReplied;
 use App\Http\Controllers\Concerns\ResolvesClient;
 use App\Http\Controllers\Controller;
+use App\Models\Admin;
 use App\Models\Service;
 use App\Models\Ticket;
 use App\Models\TicketDepartment;
@@ -125,7 +126,7 @@ class TicketController extends Controller
         // A reply stores the staff member's sign-in username (ticket_replies.admin).
         // That is half of an admin login and is not for the customer: they see
         // the staff member's first name, or just "Support Staff".
-        $staffNames = \App\Models\Admin::whereIn('username', $ticket->replies->pluck('admin')->filter()->unique())
+        $staffNames = Admin::whereIn('username', $ticket->replies->pluck('admin')->filter()->unique())
             ->pluck('first_name', 'username');
 
         return view('client.tickets.show', compact('ticket', 'staffNames'));
