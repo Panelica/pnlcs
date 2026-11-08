@@ -88,12 +88,22 @@ it('does not ask RDAP on the button when the lookups are disabled', function () 
     expect($domain->fresh()->registration_date)->toBeNull();
 });
 
-it('prefers the registrar date and does not ask RDAP when the registrar provides one', function () {
+it('asks RDAP for an OVH domain, because OVH reports the transfer date', function () {
     RegistrarSettings::updateOrCreate(['registrar' => 'ovh', 'setting' => 'app_key'], ['value' => 'k']);
     RegistrarSettings::updateOrCreate(['registrar' => 'ovh', 'setting' => 'app_secret'], ['value' => 's']);
     RegistrarSettings::updateOrCreate(['registrar' => 'ovh', 'setting' => 'consumer_key'], ['value' => 'c']);
 
     Http::fake([
+        // RDAP first: "*/domain/ovh-button.com" would otherwise match
+        // rdap.org/domain/ovh-button.com as well, and answer it with OVH's
+        // body, which carries no events.
+        'rdap.org/*' => Http::response([
+            'objectClassName' => 'domain',
+            'ldhName' => 'ovh-button.com',
+            'events' => [
+                ['eventAction' => 'registration', 'eventDate' => '1998-09-15T00:00:00Z'],
+            ],
+        ], 200),
         '*/domain/ovh-button.com/serviceInfos' => Http::response([
             'creation' => '2015-04-10T08:00:00+02:00',
             'expiration' => '2027-06-01T10:00:00+02:00',
@@ -119,6 +129,11 @@ it('prefers the registrar date and does not ask RDAP when the registrar provides
         ->post(route('admin.domains.sync', $domain))
         ->assertRedirect();
 
-    Http::assertNotSent(fn ($request) => str_contains($request->url(), 'rdap.org'));
-    expect($domain->fresh()->registration_date->toDateString())->toBe('2015-04-10');
+    // OVH's serviceInfos.creation is when the service was created in the OVH
+    // account - the transfer date for a domain transferred in. The sync fills
+    // registration_date from the registrar first and RDAP only ever fills a
+    // null one, so taking OVH's value would freeze the wrong date for good.
+    // RDAP is asked instead and answers with the registry's own date.
+    Http::assertSent(fn ($request) => str_contains($request->url(), 'rdap.org'));
+    expect($domain->fresh()->registration_date->toDateString())->toBe('1998-09-15');
 });

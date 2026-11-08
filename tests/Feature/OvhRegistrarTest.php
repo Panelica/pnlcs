@@ -101,7 +101,7 @@ it('reads the expiry and status when syncing a domain', function () {
         ->and($result['locked'])->toBeTrue();
 });
 
-it('reads the registration date from serviceInfos when syncing', function () {
+it('does not offer a registration date, because OVH reports the transfer date', function () {
     ovhSettings();
     Http::fake([
         '*/domain/shop.example.com/serviceInfos' => Http::response([
@@ -113,8 +113,13 @@ it('reads the registration date from serviceInfos when syncing', function () {
 
     $result = app(OvhRegistrar::class)->syncDomain(ovhDomain());
 
+    // serviceInfos.creation is when the service was created in the OVH
+    // account. For a domain transferred in, that is the transfer date. The
+    // sync fills registration_date from the registrar first and RDAP only
+    // fills a null one, so offering it here would freeze the wrong date.
     expect($result['success'])->toBeTrue()
-        ->and($result['registration_date'])->toBe('2015-04-10');
+        ->and($result)->not->toHaveKey('registration_date')
+        ->and($result['expiry_date'])->toBe('2027-06-01');
 });
 
 it('renews a domain at OVH', function () {

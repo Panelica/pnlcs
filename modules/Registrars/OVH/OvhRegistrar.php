@@ -297,7 +297,12 @@ class OvhRegistrar implements RegistrarModuleInterface, SyncsDomainData
 
             return [
                 'success' => true,
-                'registration_date' => $this->parseDate($serviceInfos['creation'] ?? null),
+                // No registration date from here. serviceInfos.creation is when
+                // the service was created in the OVH account, which for a
+                // transferred domain is the transfer date, not the registry's.
+                // Writing it would fill registration_date and RdapRegistrationDate
+                // only ever fills a null one - so the wrong date would stick for
+                // good. RDAP answers with the real one in the pass after the sync.
                 'expiry_date' => $this->parseDate($serviceInfos['expiration'] ?? null),
                 'status' => $this->mapStatus($info['status'] ?? null),
                 'locked' => isset($info['transferLockStatus']) ? $info['transferLockStatus'] === 'locked' : null,
