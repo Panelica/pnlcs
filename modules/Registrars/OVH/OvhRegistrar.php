@@ -2,6 +2,7 @@
 
 namespace Modules\Registrars\OVH;
 
+use App\Contracts\ManagesWhoisPrivacy;
 use App\Contracts\RegistrarModuleInterface;
 use App\Contracts\SyncsDomainData;
 use App\Models\Client;
@@ -29,11 +30,14 @@ use Illuminate\Support\Facades\Log;
  * (nameservers, auth code, transfer lock, renew, info) hit the domain service
  * endpoints directly.
  */
-class OvhRegistrar implements RegistrarModuleInterface, SyncsDomainData
+class OvhRegistrar implements ManagesWhoisPrivacy, RegistrarModuleInterface, SyncsDomainData
 {
     use MapsClientFields;
     use MapsTldCategories;
     use MapsTldGracePeriods;
+
+    /** The WHOIS fields OVH's OWO lets a registrant publish (and we opt back in). */
+    private const WHOIS_FIELDS = ['address', 'city', 'country', 'email', 'fax', 'name', 'organisation', 'phone', 'province', 'zip'];
 
     protected ?OvhClient $client = null;
 
@@ -261,6 +265,44 @@ class OvhRegistrar implements RegistrarModuleInterface, SyncsDomainData
         }
     }
 
+    /**
+     * Switch WHOIS privacy (OVH calls it OWO). Opting in publishes fields, so
+     * enabling protection removes the opt-in and disabling it opts every
+     * field back in.
+     *
+     * @return array{success: bool, message: string}
+     */
+    public function setPrivacy(Domain $domain, bool $enabled): array
+    {
+        try {
+            if ($enabled) {
+                $this->client()->delete('/domain/'.$domain->domain.'/configurations/optin');
+            } else {
+                $this->client()->put('/domain/'.$domain->domain.'/configurations/optin', [
+                    'optin' => [['type' => 'all', 'fields' => self::WHOIS_FIELDS]],
+                ]);
+            }
+
+            return ['success' => true, 'message' => ''];
+        } catch (\Throwable $e) {
+            Log::warning("OVH setPrivacy failed for {$domain->domain}: {$e->getMessage()}");
+
+            return ['success' => false, 'message' => $e->getMessage()];
+        }
+    }
+
+    /** Whether any WHOIS field is opted in for public display. */
+    private function hasPublicWhoisFields(mixed $optin): bool
+    {
+        foreach ((array) $optin as $entry) {
+            if (is_array($entry) && ! empty($entry['fields'])) {
+                return true;
+            }
+        }
+
+        return false;
+    }
+
     public function checkAvailability(string $domain): array
     {
         try {
@@ -295,6 +337,17 @@ class OvhRegistrar implements RegistrarModuleInterface, SyncsDomainData
             // later reconcile) who owns the domain even after a change at OVH.
             $ownerId = $info['contactOwner']['id'] ?? $info['whoisOwner'] ?? null;
 
+            // OVH calls WHOIS privacy "OWO": the fields opted in there are the
+            // ones shown publicly, so a protected domain has nothing opted in.
+            // A domain that cannot report it leaves the stored flag alone.
+            $idProtection = null;
+            try {
+                $optin = $this->client()->get('/domain/'.$domain->domain.'/configurations/optin');
+                $idProtection = ! $this->hasPublicWhoisFields($optin);
+            } catch (\Throwable) {
+                $idProtection = null;
+            }
+
             return [
                 'success' => true,
                 // No registration date from here. serviceInfos.creation is when
@@ -306,6 +359,7 @@ class OvhRegistrar implements RegistrarModuleInterface, SyncsDomainData
                 'expiry_date' => $this->parseDate($serviceInfos['expiration'] ?? null),
                 'status' => $this->mapStatus($info['status'] ?? null),
                 'locked' => isset($info['transferLockStatus']) ? $info['transferLockStatus'] === 'locked' : null,
+                'id_protection' => $idProtection,
                 'nameservers' => $nameservers,
                 'registrar_contact_id' => $ownerId !== null ? (string) $ownerId : null,
             ];

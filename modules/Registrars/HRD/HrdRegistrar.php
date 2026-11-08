@@ -2,6 +2,8 @@
 
 namespace Modules\Registrars\HRD;
 
+use App\Contracts\CannotManageTransferLock;
+use App\Contracts\ManagesWhoisPrivacy;
 use App\Contracts\RegistrarModuleInterface;
 use App\Contracts\SyncsDomainData;
 use App\Models\Currency;
@@ -28,7 +30,7 @@ use Illuminate\Support\Facades\Log;
  * registered asynchronously: domainCreate() returns an action id which can be
  * followed with actionInfo().
  */
-class HrdRegistrar implements RegistrarModuleInterface, SyncsDomainData
+class HrdRegistrar implements CannotManageTransferLock, ManagesWhoisPrivacy, RegistrarModuleInterface, SyncsDomainData
 {
     /** HRD publishes its partner prices in złoty. */
     private const QUOTE_CURRENCY = 'PLN';
@@ -437,16 +439,34 @@ class HrdRegistrar implements RegistrarModuleInterface, SyncsDomainData
         }
     }
 
+    /** HRD has no registrar-lock endpoint (see CannotManageTransferLock). */
     public function getLockStatus(Domain $domain): bool
     {
-        // HRD exposes no registrar-lock endpoint; assume locked (safe default).
         return true;
     }
 
     public function toggleLock(Domain $domain, bool $lock): bool
     {
-        // No lock endpoint in the HRD API — nothing to toggle.
+        // No lock endpoint in the HRD API — the panel hides the control.
         return true;
+    }
+
+    /**
+     * Switch the WHOIS privacy flag at HRD (domain/privacySet).
+     *
+     * @return array{success: bool, message: string}
+     */
+    public function setPrivacy(Domain $domain, bool $enabled): array
+    {
+        try {
+            $this->client()->domainPrivacySet($domain->domain, $enabled);
+
+            return ['success' => true, 'message' => ''];
+        } catch (\Throwable $e) {
+            Log::warning("HRD setPrivacy failed for {$domain->domain}: {$e->getMessage()}");
+
+            return ['success' => false, 'message' => $e->getMessage()];
+        }
     }
 
     public function checkAvailability(string $domain): array
@@ -479,7 +499,9 @@ class HrdRegistrar implements RegistrarModuleInterface, SyncsDomainData
                 'registration_date' => $this->parseDate($info['crDate'] ?? null),
                 'expiry_date' => $this->parseDate($info['exDate'] ?? null),
                 'status' => $this->mapStatus($info['status'] ?? null),
-                'locked' => true,
+                // HRD has no transfer-lock state (CannotManageTransferLock);
+                // privacy comes back as the "privacy" flag on domain/info.
+                'id_protection' => isset($info['privacy']) ? strtolower((string) $info['privacy']) === 'true' : null,
                 'nameservers' => array_map(fn ($entry) => (string) ($entry['name'] ?? ''), (array) ($info['ns'] ?? [])),
             ];
         } catch (\Throwable $e) {

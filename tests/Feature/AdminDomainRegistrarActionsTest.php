@@ -106,3 +106,21 @@ it('is open only to staff who may manage domains', function () {
     test()->actingAs(adrAdmin(['list_domains']), 'admin')->get(route('admin.domains.glue', $domain))->assertForbidden();
     Http::assertNotSent(fn (Request $r) => str_contains($r->url(), 'domains/privacy'));
 });
+
+it('hides the transfer-lock control where the registrar cannot change it', function () {
+    Http::fake(['*' => Http::response([], 200)]);
+
+    // Manual has no registry, HRD has no lock endpoint: neither gets a button.
+    foreach ([['manual', 'manual-lock.com'], ['hrd', 'hrd-lock.pl']] as [$registrar, $name]) {
+        $domain = adrDomain($registrar, ['domain' => $name]);
+        test()->actingAs(adrAdmin(), 'admin')->get(route('admin.domains.show', $domain))->assertOk()
+            ->assertDontSee(route('admin.domains.lock', $domain), false);
+        test()->actingAs(adrAdmin(), 'admin')->post(route('admin.domains.lock', $domain))
+            ->assertSessionHas('error', __('admin.domains.lock_unavailable'));
+    }
+
+    // OVH can change it, so the control stays.
+    $ovh = adrDomain('ovh', ['domain' => 'ovh-lock.com']);
+    test()->actingAs(adrAdmin(), 'admin')->get(route('admin.domains.show', $ovh))->assertOk()
+        ->assertSee(route('admin.domains.lock', $ovh), false);
+});

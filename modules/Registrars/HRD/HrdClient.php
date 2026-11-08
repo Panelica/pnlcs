@@ -158,6 +158,16 @@ class HrdClient
         return $this->arrayResponse($this->send($dom), '/api/domain/info/*', '/api/domain/info/ns/');
     }
 
+    /** Turn WHOIS privacy protection on or off (domain/privacySet). */
+    public function domainPrivacySet(string $domain, bool $privacy): void
+    {
+        [$dom, $elem] = $this->document('domain', 'privacySet');
+        $elem->appendChild($dom->createElement('name', $this->idn($domain)));
+        $elem->appendChild($dom->createElement('privacy', $privacy ? 'true' : 'false'));
+
+        $this->send($dom);
+    }
+
     public function domainCreate(string $domain, int $user, array $ns, int $period, bool $privacyProtect = false): int
     {
         [$dom, $elem] = $this->document('domain', 'create');
