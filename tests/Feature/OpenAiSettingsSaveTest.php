@@ -25,7 +25,7 @@ test('the api key and model can actually be saved', function () {
     $this->actingAs(aiSettingsAdmin(), 'admin')
         ->post(route('admin.settings.general.update'), [
             'OpenAIApiKey' => 'sk-test-abc123',
-            'OpenAIModel'  => 'gpt-4o',
+            'OpenAIModel' => 'gpt-4o',
         ])
         ->assertRedirect();
 
@@ -41,7 +41,7 @@ test('a blank key field keeps the stored key', function () {
     $this->actingAs(aiSettingsAdmin(), 'admin')
         ->post(route('admin.settings.general.update'), [
             'OpenAIApiKey' => '',
-            'OpenAIModel'  => 'gpt-4o-mini',
+            'OpenAIModel' => 'gpt-4o-mini',
         ])
         ->assertRedirect();
 
@@ -84,13 +84,20 @@ test('a blank Anthropic key field keeps the stored key, and the OpenAI key is le
 
 test('the form no longer uses the field shape the handler cannot read', function () {
     $markup = file_get_contents(resource_path('views/admin/config/languages/index.blade.php'));
+    expect($markup)->not->toContain('settings[OpenAI');
 
-    expect($markup)->not->toContain('settings[OpenAI')
-        ->and($markup)->toContain('name="OpenAIApiKey"')
-        ->and($markup)->toContain('name="OpenAIModel"')
-        ->and($markup)->toContain('name="AiTranslationProvider"')
-        ->and($markup)->toContain('name="AnthropicApiKey"')
-        ->and($markup)->toContain('name="AnthropicModel"');
+    // The key and model fields are written once per provider, so their names
+    // are only visible on the rendered page.
+    $html = $this->actingAs(aiSettingsAdmin(), 'admin')
+        ->get(route('admin.config.languages.index'))
+        ->assertOk()
+        ->getContent();
+
+    expect($html)->toContain('name="OpenAIApiKey"')
+        ->and($html)->toContain('name="OpenAIModel"')
+        ->and($html)->toContain('name="AiTranslationProvider"')
+        ->and($html)->toContain('name="AnthropicApiKey"')
+        ->and($html)->toContain('name="AnthropicModel"');
 });
 
 test('the stored keys are not echoed back into the page', function () {
