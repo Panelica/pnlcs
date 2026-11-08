@@ -2,7 +2,28 @@
 
 All notable changes to PNLCS are documented here. Newest first.
 
-## Unreleased
+## 1.21.0 — 2026-11-09
+
+A stable release, offered to every installation. The headline is that **account
+credit is a payment, not a discount**: an invoice paid from the balance used to
+have its total written down to zero, so the document printed a gross of zero and
+the shop's figures lost the sale. Around it: Add Funds now follows the proforma
+scheme end to end, the admin domain screen gained the four things it was missing,
+two registrars can set WHOIS privacy, a missing registration date is filled from
+the registrar or RDAP, and PNLCS speaks Italian.
+
+Thank you [@hedon77](https://github.com/hedon77) (#398, #399, #400, #401, #402,
+#405), [@vvezzola](https://github.com/vvezzola) (#403),
+[@ertugrulkeyvan](https://github.com/ertugrulkeyvan) (#406, #407, #408) and
+[@5eBeKs](https://github.com/5eBeKs) (#409).
+
+**One thing to know after upgrading.** Every invoice that had credit spent on it
+gets its `total` put back to the gross value, and the credit is taken off when
+the balance is worked out instead. Nothing is re-charged and nothing is owed
+differently: what the customer still has to pay is identical before and after.
+What changes is what the document and the reports show — an invoice paid from a
+120 balance reads 120 with 120 credited, not 0. Issued invoices keep their
+numbers.
 
 ### Added
 
@@ -13,15 +34,43 @@ All notable changes to PNLCS are documented here. Newest first.
 - **A registrar can say it has no transfer lock.** A module implementing the new
   `App\Contracts\CannotManageTransferLock` marker (HRD, Manual) no longer shows
   a Lock/Unlock control that could only pretend to work.
+- **The admin domain screen does the whole job.** A domain can be deleted, its
+  billing edited, the add-domain form validates what it is given, and prices are
+  shown in the currency the shop sells in.
+- **A missing registration date is filled in.** The daily sync and the admin
+  sync button ask the registrar first and fall back to RDAP, so domains imported
+  without that date stop showing a blank. The RDAP pass is capped per run
+  (`DomainSyncRdapMaxPerRun`) so a large import does not turn into a flood of
+  lookups.
+- **Pay a covered order from the balance.** Checkout shows the account balance
+  and, when it covers the order, lets the customer pay with it instead of going
+  out to a gateway.
+- **Staff can email a customer the link to add a card**, with its own template
+  an operator can reword like every other customer email.
+- **Italian.** A complete translation (#403), joining the languages already
+  shipped.
 
 ### Changed
 
 - The domain screen — staff and client — hides the transfer-lock control for a
   registrar whose API has none (HRD, Manual), instead of reporting a change it
   did not make.
+- A customer reading a ticket sees the staff member's first name, not the name
+  they sign in with.
+- Cancel on the server edit dialog closes the dialog, not the form inside it.
 
 ### Fixed
 
+- **Account credit is a payment, not a discount.** Spending credit used to lower
+  `invoices.total`, so a balance-paid invoice printed a gross of zero, the
+  revenue reports lost the sale, and a partly-credited invoice showed a total
+  that matched no line on it. The gross stays the gross, the credit is recorded
+  and taken off when what is due is worked out, and checkout decides an order is
+  covered from what is actually due.
+- **A partial refund leaves a paid invoice paid.** Refunding part of a payment
+  moved the invoice back to partially paid, which then chased the customer for
+  money they had already handed over. Only a refund that clears the whole lot
+  reopens it.
 - **Add Funds invoices follow the proforma scheme.** A top-up is a payment on
   account, not a supply. It is now numbered and typed the same way — a PRO-
   proforma when that scheme is on, instead of a PRO- number carrying the `vat`
@@ -32,6 +81,24 @@ All notable changes to PNLCS are documented here. Newest first.
   paid proforma, assuming a VAT invoice replaced it. A top-up has no VAT
   invoice, so hiding it made the payment disappear from every list. Only a
   proforma whose VAT invoice exists is hidden now.
+- **An affiliate commission on tax-inclusive prices leaves the tax out**, so the
+  shop does not pay commission on money it collects for the tax office.
+- **The OVH sync no longer takes a transfer date for a registration date.** OVH
+  reports when a domain entered that account; for a domain transferred in, that
+  is the transfer, and writing it over a correct date from RDAP made the domain
+  look younger than it is.
+
+### Database changes
+
+- `2026_11_07_000001_credit_as_payment_restore_gross_totals` —
+  `invoices.total` is set back to the gross value with
+  `ROUND(total + credit, 2)`. It adds back exactly what the old code took off;
+  `down()` subtracts it again. Invoices with no credit are untouched.
+- `2026_11_07_000001_seed_card_setup_request_template` — adds the **Card Setup
+  Request** email template on installations that already exist (fresh installs
+  get it from the seeder), created through the model so every language gets its
+  copy. It does nothing if a template with that name is already there, so an
+  operator's own wording is never overwritten.
 
 ### For theme and module authors
 
@@ -39,6 +106,26 @@ All notable changes to PNLCS are documented here. Newest first.
   a registrar module that cannot change the registry lock; the panel then hides
   the Lock/Unlock control for its domains. Modules that do not implement it keep
   the control, so nothing changes for them.
+- `App\Contracts\SyncsDomainData::syncDomain()` may now also return
+  `registration_date`. It is optional: a module that does not return it behaves
+  exactly as before.
+- Anything reading `invoices.total` as "what is left to pay" must change to read
+  it as the gross and use `Invoice::amountDue()`. A module that charged the
+  total was charging zero on a balance-paid invoice before this release.
+- `dist/` is now ignored and export-ignored. If you build packages from a
+  checkout, the output directory is no longer picked up by a stray `git add`
+  and can never end up inside a package.
+
+### Views a theme may override that changed
+
+- `admin/clients/show.blade.php`, `admin/config/servers.blade.php`,
+  `admin/domains/index.blade.php`, `admin/domains/show.blade.php`,
+  `admin/invoices/show.blade.php`, `admin/settings/general.blade.php`
+- `client/cart/checkout.blade.php`, `client/invoices/show.blade.php`,
+  `client/invoices/partials/payment-notification-form.blade.php`,
+  `client/tickets/show.blade.php`
+- `emails/card-setup-request.blade.php` (new), `emails/invoice-overdue.blade.php`,
+  `emails/payment-reminder.blade.php`, `pdf/invoice.blade.php`
 
 ## 1.20.0 — 2026-11-05
 
