@@ -122,7 +122,13 @@ class TicketController extends Controller
         abort_if($ticket->client_id !== $this->getClientId(), 403);
         $ticket->load('department', 'replies', 'feedback');
 
-        return view('client.tickets.show', compact('ticket'));
+        // A reply stores the staff member's sign-in username (ticket_replies.admin).
+        // That is half of an admin login and is not for the customer: they see
+        // the staff member's first name, or just "Support Staff".
+        $staffNames = \App\Models\Admin::whereIn('username', $ticket->replies->pluck('admin')->filter()->unique())
+            ->pluck('first_name', 'username');
+
+        return view('client.tickets.show', compact('ticket', 'staffNames'));
     }
 
     /**
