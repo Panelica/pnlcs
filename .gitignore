@@ -27,6 +27,13 @@
 !/storage/debugbar/
 !/storage/framework/
 !/storage/logs/
+# Where tools/release/build-package.sh writes a release package by default.
+# These are build output - a 30 MB tarball per release - and two of them were
+# committed by accident on 2026-11-08, taking the repository's tracked content
+# from 28 MB to 88 MB and ending up inside the next release package, which has
+# no business carrying the previous ones. They are published as GitHub release
+# assets, never tracked here.
+/dist
 /vendor
 Homestead.json
 Homestead.yaml

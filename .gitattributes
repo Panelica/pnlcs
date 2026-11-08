@@ -22,3 +22,4 @@ CHANGELOG.md export-ignore
 /phpstan.neon export-ignore
 /pint.json export-ignore
 /install.sh export-ignore
+/dist export-ignore
