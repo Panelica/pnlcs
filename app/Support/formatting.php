@@ -297,44 +297,17 @@ if (! function_exists('csv_cell')) {
 
 if (! function_exists('domain_money_fmt')) {
     /**
-     * A domain price shown in US dollars.
+     * A domain price in the currency this page shows prices in.
      *
-     * Domains are bought from the registrar in USD, so the store lists them in
-     * USD even when the shop bills in its own currency. The stored amount is in
-     * the shop currency; this converts it back at the current rate. Nothing
-     * about what the customer is charged changes - only what is printed.
+     * Domains used to be printed in US dollars whatever the shop billed in,
+     * so the search page could show a different figure (and a different
+     * currency) from the one actually charged. They now follow the same rule
+     * as every other price: the shop currency, or the customer's chosen one
+     * (CustomerCurrency) when that is switched on.
      */
     function domain_money_fmt(float|int|string|null $amount): string
     {
-        // A visitor who picked a currency sees domains in it like everything
-        // else on the page (CustomerCurrency).
-        if (\App\Support\CustomerCurrency::converting()) {
-            return display_money_fmt($amount);
-        }
-
-        static $usdRate = null;
-
-        if ($usdRate === null) {
-            try {
-                $default = Currency::getDefault();
-                if ($default && strtoupper($default->code) === 'USD') {
-                    $usdRate = 1.0;
-                } else {
-                    $usd = Currency::where('code', 'USD')->first();
-                    $usdRate = $usd && (float) $usd->rate > 0 ? (float) $usd->rate : 0.0;
-                }
-            } catch (Throwable) {
-                $usdRate = 0.0;
-            }
-        }
-
-        // No USD currency configured: fall back to the shop currency rather
-        // than printing a dollar sign over an amount that is not dollars.
-        if ($usdRate <= 0) {
-            return money_fmt($amount);
-        }
-
-        return '$'.number_format((float) $amount * $usdRate, 2);
+        return display_money_fmt($amount);
     }
 }
 

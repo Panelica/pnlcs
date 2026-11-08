@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Admin;
 
 use App\Contracts\SyncsDomainData;
 use App\Http\Controllers\Controller;
+use App\Models\ActivityLog;
 use App\Models\Domain;
 use App\Models\RegistrarSettings;
 use App\Services\DomainRegistrarActions;
@@ -109,6 +110,49 @@ class DomainController extends Controller
         $canManageGlue = $actions->glueModule($domain) !== null;
 
         return view('admin.domains.show', compact('domain', 'locked', 'registrarOptions', 'canTogglePrivacy', 'canEditContacts', 'canManageGlue'));
+    }
+
+    /**
+     * Correct the two billing amounts an operator can change on a domain.
+     * next_due_date is billing-automation territory and is left to the
+     * renewal flow.
+     */
+    public function updateBilling(Request $request, Domain $domain)
+    {
+        $validated = $request->validate([
+            'first_payment_amount' => ['nullable', 'numeric', 'min:0', 'max:99999999'],
+            'recurring_amount' => ['nullable', 'numeric', 'min:0', 'max:99999999'],
+        ]);
+
+        $domain->update([
+            'first_payment_amount' => $validated['first_payment_amount'] ?? $domain->first_payment_amount,
+            'recurring_amount' => $validated['recurring_amount'] ?? $domain->recurring_amount,
+        ]);
+
+        return back()->with('success', __('admin.domains.billing_saved'));
+    }
+
+    /**
+     * Remove a domain record from the panel. The name stays registered at the
+     * registrar — this deletes only the billing record in PNLCS. The
+     * confirmation on the button says so; invoices keep their own history.
+     */
+    public function destroy(Domain $domain)
+    {
+        $name = $domain->domain;
+        $id = $domain->id;
+        $clientId = $domain->client_id;
+
+        $domain->delete();
+
+        ActivityLog::log(
+            "Domain {$name} (#{$id}) deleted from the panel",
+            auth('admin')->user()?->full_name ?: 'admin',
+            $clientId,
+        );
+
+        return redirect()->route('admin.domains.index')
+            ->with('success', __('admin.domains.deleted', ['domain' => $name]));
     }
 
     /**

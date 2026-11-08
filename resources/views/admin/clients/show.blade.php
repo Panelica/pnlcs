@@ -398,7 +398,7 @@ $tabs = ['summary'=>__('admin.clients.tab_summary'),'services'=>__('admin.client
     <button type="button" class="btn btn-primary btn-sm" onclick="var f=document.getElementById('add-domain-form');f.style.display=f.style.display==='none'?'block':'none';">{{ __('admin.clients.add_domain') }}</button>
 </div>
 
-<div class="card" id="add-domain-form" style="display:none;margin-bottom:16px;">
+<div class="card" id="add-domain-form" style="display:{{ $errors->any() ? 'block' : 'none' }};margin-bottom:16px;">
     <div class="card-header"><strong>{{ __('admin.clients.add_domain') }}</strong></div>
     <div class="card-body">
         <p class="text-muted" style="font-size:12px;margin-bottom:14px;">{{ __('admin.clients.add_domain_hint') }}</p>

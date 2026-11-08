@@ -400,7 +400,7 @@ return [
         'new_tlds' => 'Yeni Uzantılar',
         'no_results' => 'Aramanıza uyan uzantı yok.',
         'note' => 'Not',
-        'note_text' => 'Fiyatlar yıllık ve USD cinsindendir.',
+        'note_text' => 'Tüm fiyatlar yıllık olarak faturalandırılır.',
         'note_text_2' => 'belirli bir alan adının güncel fiyatını görmek için.',
         'popular' => 'Popüler',
         'search_availability' => 'Alan Adı Müsaitliği Sorgula',

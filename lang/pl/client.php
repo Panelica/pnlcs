@@ -401,7 +401,7 @@ return [
         'new_tlds' => 'Nowe TLD',
         'no_results' => 'Brak rozszerzeń zgodnych z wyszukiwaniem.',
         'note' => 'Uwaga',
-        'note_text' => 'Wszystkie ceny podane są w USD rocznie.',
+        'note_text' => 'Wszystkie ceny rozliczane są rocznie.',
         'note_text_2' => 'aby zobaczyć aktualne ceny dla konkretnej domeny.',
         'popular' => 'Popularne',
         'search_availability' => 'Sprawdź dostępność domeny',

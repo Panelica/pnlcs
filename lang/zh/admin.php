@@ -1241,6 +1241,8 @@ return [
     'domains.notes' => '备注',
     'domains.order' => '订单',
     'domains.payment_method' => '付款方式',
+    'domains.client_payment_method' => '客户的付款方式',
+    'domains.billing_saved' => '账单已更新。',
     'domains.period' => '期限',
     'domains.premium' => '溢价域名',
     'domains.recurring_amount' => '续费金额',
@@ -1251,6 +1253,9 @@ return [
     'domains.actions' => '操作',
     'domains.sync' => '同步',
     'domains.synced' => '域名已与注册商同步。',
+    'domains.delete' => '删除',
+    'domains.delete_confirm' => '从面板中删除此域名？域名仍会在注册商处注册，发票保留其历史记录。',
+    'domains.deleted' => '域名 :domain 已删除。',
     'domains.sync_unavailable' => '此注册商不支持同步。',
     'domains.sync_failed' => '同步失败。',
     'domains.last_sync' => '上次同步',
@@ -3429,6 +3434,8 @@ return [
     'clients.domain_first_payment' => '首次付款金额',
     'clients.add_domain_renewal_note' => '只要续费价格大于零，续费账单将根据下次到期日和续费价格自动生成。',
     'clients.domain_added' => '域名已添加到该客户。',
+    'clients.domain_invalid' => '域名必须是有效的域名。',
+    'clients.domain_exists' => '该域名已在面板中。',
 
     // 自动付款：对已保存银行卡扣款的运营开关。
     'settings.auto_charge' => '自动付款',

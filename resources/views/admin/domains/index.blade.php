@@ -96,8 +96,13 @@
                     @if($expired) <small style="font-size:11px;">{{ __('admin.domains.expiry_past') }}</small> @endif
                 </td>
                 <td><span class="badge {{ $badgeClass }}">{{ status_label($domain->status ?? "") }}</span></td>
-                <td>
+                <td style="display:flex;gap:6px;">
                     <a href="{{ route("admin.domains.show", $domain) }}" class="btn btn-default btn-xs">{{ __('common.actions.view') }}</a>
+                    <form method="POST" action="{{ route('admin.domains.destroy', $domain) }}" style="display:inline;" onsubmit="return pnConfirm(event, @js(__('admin.domains.delete_confirm', ['domain' => $domain->domain])))">
+                        @csrf
+                        @method('DELETE')
+                        <button type="submit" class="btn btn-danger btn-xs">{{ __('admin.domains.delete') }}</button>
+                    </form>
                 </td>
             </tr>
             @empty
