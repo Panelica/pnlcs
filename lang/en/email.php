@@ -39,6 +39,13 @@ return [
         'immediate' => 'Immediate',
         'terminated_shortly' => 'Your service will be terminated shortly.',
     ],
+    'card_request' => [
+        'body' => 'Please add a card to your account so your invoices can be paid with it. Only you can add the card: you enter it yourself, on our payment provider\'s secure form.',
+        'button' => 'Add a card',
+        'not_expected' => 'If you did not expect this, you can ignore this email; nothing changes on your account.',
+        'own_hands' => 'Your card details are never seen by our staff.',
+        'subject' => 'Add a card to your account',
+    ],
     'cc_expiry' => [
         'body' => 'Your credit card on file is expiring soon. Please update your payment method.',
         'card_expiring' => 'Your credit card ending in :last_four is expiring on :expiry_date.',

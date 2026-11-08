@@ -35,7 +35,7 @@ class PaymentMethodController extends Controller
         // payment with the customer absent. Collecting card details for a
         // gateway nothing will ever present them to is worse than not offering
         // it, and the customer cannot tell the difference from the outside.
-        $cardStorageOffered = $autoChargeOffered && $this->vaultingGateway() !== null;
+        $cardStorageOffered = AutoCharge::cardStorageOffered();
 
         // Staff signed in as the customer can see the cards but not add one or
         // answer for the customer about automatic payment.

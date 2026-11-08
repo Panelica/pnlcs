@@ -39,6 +39,13 @@ return [
         'immediate' => '立即',
         'terminated_shortly' => '您的服务将很快终止。',
     ],
+    'card_request' => [
+        'body' => '请为您的账户添加一张银行卡，以便用它支付账单。银行卡只能由您本人添加：您需在我们支付服务商的安全表单中自行填写。',
+        'button' => '添加银行卡',
+        'not_expected' => '如果您没有预期收到此邮件，可以忽略；您的账户不会有任何变化。',
+        'own_hands' => '我们的工作人员永远不会看到您的卡片信息。',
+        'subject' => '为您的账户添加银行卡',
+    ],
     'cc_expiry' => [
         'body' => '账户中保存的信用卡即将到期，请更新付款方式。',
         'card_expiring' => '尾号为 :last_four 的信用卡将于 :expiry_date 到期。',

@@ -202,6 +202,14 @@ class ClientController extends Controller
             ->with(['values' => fn ($q) => $q->where('rel_id', $client->id)])
             ->get();
 
+        // The info bar: the customer's stored cards, and whether staff can
+        // ask them to add one (only where the customer could). Cards only:
+        // Stripe stores them as 'cc', iyzico as 'card'; a PayPal account or a
+        // bank account the customer typed in is not a card.
+        $data['storedCardCount'] = \App\Models\PaymentMethod::where('client_id', $client->id)
+            ->whereIn('payment_type', ['cc', 'card'])->count();
+        $data['cardRequestOffered'] = \App\Support\AutoCharge::cardStorageOffered();
+
         // Stats always needed (shown in all tabs)
         $data['serviceCount'] = $client->services()->count();
         $data['domainCount'] = $client->domains()->count();
@@ -832,6 +840,36 @@ class ClientController extends Controller
         );
 
         return redirect()->route('client.home')->with('success', __('admin.messages.viewing_as', ['name' => $client->first_name.' '.$client->last_name]));
+    }
+
+    /**
+     * Email the customer the link to their own Add card page.
+     *
+     * Staff signed in as the customer cannot store a card for them: the card
+     * and the agreement to charge it are the cardholder's
+     * (App\Support\Impersonation). This is the way round it that keeps the
+     * consent where it belongs. Offered only where the customer's own page
+     * would offer a card, so the link never lands on a 404.
+     */
+    public function sendCardRequest(Client $client)
+    {
+        if (! \App\Support\AutoCharge::cardStorageOffered()) {
+            return back()->with('error', __('admin.clients.card_request_unavailable'));
+        }
+
+        if (blank($client->email)) {
+            return back()->with('error', __('admin.clients.card_request_no_email'));
+        }
+
+        \Illuminate\Support\Facades\Mail::to($client->email)->send(new \App\Mail\CardSetupRequestMail($client));
+
+        ActivityLog::log(
+            "Staff emailed client #{$client->id} a link to add a card",
+            auth('admin')->user()?->full_name ?: 'admin',
+            $client->id,
+        );
+
+        return back()->with('success', __('admin.clients.card_request_sent', ['email' => $client->email]));
     }
 
     /**

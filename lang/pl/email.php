@@ -39,6 +39,13 @@ return [
         'immediate' => 'Natychmiastowe',
         'terminated_shortly' => 'Twoja usługa zostanie wkrótce zakończona.',
     ],
+    'card_request' => [
+        'body' => 'Dodaj kartę do swojego konta, aby można było nią opłacać faktury. Kartę możesz dodać tylko Ty: wpisujesz ją samodzielnie w bezpiecznym formularzu naszego operatora płatności.',
+        'button' => 'Dodaj kartę',
+        'not_expected' => 'Jeśli nie spodziewałeś się tej wiadomości, możesz ją zignorować; na Twoim koncie nic się nie zmieni.',
+        'own_hands' => 'Nasi pracownicy nigdy nie widzą danych Twojej karty.',
+        'subject' => 'Dodaj kartę do swojego konta',
+    ],
     'cc_expiry' => [
         'body' => 'Twoja karta kredytowa w naszym systemie wkrótce straci ważność. Zaktualizuj swoją metodę płatności.',
         'card_expiring' => 'Twoja karta kredytowa o numerze kończącym się na :last_four straci ważność w dniu :expiry_date.',

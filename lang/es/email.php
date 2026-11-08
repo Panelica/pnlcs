@@ -39,6 +39,13 @@ return [
         'immediate' => 'Inmediata',
         'terminated_shortly' => 'Su servicio se cancelará en breve.',
     ],
+    'card_request' => [
+        'body' => 'Añada una tarjeta a su cuenta para que sus facturas puedan pagarse con ella. Solo usted puede añadir la tarjeta: la introduce usted mismo en el formulario seguro de nuestro proveedor de pagos.',
+        'button' => 'Añadir tarjeta',
+        'not_expected' => 'Si no esperaba este correo, puede ignorarlo; no cambiará nada en su cuenta.',
+        'own_hands' => 'Nuestro personal nunca ve los datos de su tarjeta.',
+        'subject' => 'Añada una tarjeta a su cuenta',
+    ],
     'cc_expiry' => [
         'body' => 'La tarjeta de crédito que tiene registrada caducará pronto. Actualice su método de pago.',
         'card_expiring' => 'La tarjeta de crédito terminada en :last_four caduca el :expiry_date.',
