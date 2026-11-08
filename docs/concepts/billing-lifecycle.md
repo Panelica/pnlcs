@@ -80,8 +80,10 @@ where a stored payment method exists, attempts payment automatically.
 ## Refunds
 
 You can **refund** a paid invoice — fully or partially — through the original
-gateway or offline for bank transfers. The invoice moves to *Refunded* (or back
-to *Partially Paid*) and the money is returned via the gateway.
+gateway or offline for bank transfers. Once everything paid on it has been
+refunded, the invoice moves to *Refunded*; after a partial refund a paid
+invoice stays *Paid* (and a *Partially Paid* one stays *Partially Paid*). The
+money is returned via the gateway.
 
 ## What runs when
 

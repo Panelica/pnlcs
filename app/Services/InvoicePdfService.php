@@ -2,6 +2,7 @@
 
 namespace App\Services;
 
+use App\Enums\InvoiceStatus;
 use App\Models\Invoice;
 use App\Models\InvoiceItem;
 use App\Models\Setting;
@@ -641,8 +642,11 @@ class InvoicePdfService
     public function paymentQr(Invoice $invoice): string
     {
         // A settled invoice owes nothing: a zero amount is "type it yourself"
-        // in ZBP and below the minimum in EPC.
-        if ((float) $invoice->amountDue() <= 0) {
+        // in ZBP and below the minimum in EPC. A paid invoice that was partly
+        // refunded still has a balance on paper - the refunded amount - so
+        // the status decides, not the figure.
+        if (in_array(strtolower((string) $invoice->status), InvoiceStatus::settled(), true)
+            || (float) $invoice->amountDue() <= 0) {
             return '';
         }
 
