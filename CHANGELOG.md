@@ -6,6 +6,13 @@ All notable changes to PNLCS are documented here. Newest first.
 
 ### Added
 
+- **A small Markdown editor for the product description.** A toolbar (bold,
+  italic, heading, lists, link, quote, code) over the existing textarea — no
+  editor library and no build step. The description is rendered as formatted
+  HTML on the configure page and the SSL service page, and as a bounded plain
+  excerpt in the store listing and the upgrade and homepage cards. Existing
+  plain descriptions keep working (#414).
+
 - **The setup fee is charged.** Every product has always had a one-time setup
   fee per billing cycle and the form saved it, but nothing read it: a plan
   priced at "100 a month plus 50 setup" was sold for 100. It now appears in the
@@ -43,8 +50,21 @@ All notable changes to PNLCS are documented here. Newest first.
   hosting plan an SSL certificate never had, and `down()` says so rather than
   pretending to restore them.
 
+### Security
+
+- **The product description cannot carry script.** It is now rendered through
+  Markdown with the input treated as text and unsafe link schemes dropped. The
+  conversion on its own escapes a bare `<script>` but passes
+  `<img src=x onerror=...>` through and leaves a `javascript:` link live, which
+  would have been stored cross-site scripting on the store, the configure page
+  and the SSL service page, reachable by anyone who may edit a product.
+
 ### For theme and module authors
 
+- `Product::descriptionHtml()` returns the description as HTML and
+  `Product::descriptionText()` as a plain excerpt. A theme that prints the
+  description itself should use one of them — and `descriptionHtml()` with
+  `{!! !!}`, never the raw column.
 - A new invoice item type, `Setup`, carries a product's one-time setup fee and
   the service id in `rel_id`, like a `Hosting` line. Anything that groups
   invoice lines by type — a report, an export, an accounting integration —
@@ -53,8 +73,12 @@ All notable changes to PNLCS are documented here. Newest first.
 
 ### Views a theme may override that changed
 
-- `admin/products/edit.blade.php`, `client/cart/index.blade.php`,
-  `client/cart/checkout.blade.php`
+- `admin/products/edit.blade.php`, `admin/products/create.blade.php`,
+  `admin/products/partials/markdown-editor.blade.php` (new),
+  `client/cart/index.blade.php`, `client/cart/checkout.blade.php`,
+  `client/cart/store.blade.php`, `client/cart/configure.blade.php`,
+  `client/services/upgrade.blade.php`, `client/ssl/show.blade.php`,
+  `sections/hosting-plans.blade.php`
 
 ## 1.21.0 — 2026-11-09
 
