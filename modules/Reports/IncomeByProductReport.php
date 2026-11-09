@@ -3,6 +3,7 @@
 namespace Modules\Reports;
 
 use App\Reports\AbstractReport;
+use App\Services\MassPaymentService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 
@@ -23,7 +24,13 @@ class IncomeByProductReport extends AbstractReport
             ->leftJoin("services", fn ($join) => $join->on("services.id", "=", "invoice_items.rel_id")
                 ->whereIn("invoice_items.type", ["Hosting", "Overage"]))
             ->leftJoin("products", "products.id", "=", "services.product_id")
-            ->selectRaw("COALESCE(products.name, invoice_items.description) as product, COUNT(DISTINCT invoices.id) as invoices, SUM(invoice_items.amount) as revenue")
+            // A line's value is its unit price times its quantity, as on the
+            // invoice itself.
+            ->selectRaw("COALESCE(products.name, invoice_items.description) as product, COUNT(DISTINCT invoices.id) as invoices, SUM(invoice_items.amount * invoice_items.qty) as revenue")
+            // A top-up and a payment for several invoices sell nothing: the
+            // money they bring in pays other invoices, and those invoices'
+            // lines are the revenue. Counting both reported it twice.
+            ->whereNotIn("invoice_items.type", ["AddFunds", MassPaymentService::ITEM_TYPE])
             ->where("invoices.status", "paid")
             ->where("invoices.type", "!=", "proforma")
             ->whereBetween("invoices.date_paid", [$from, $to.' 23:59:59'])
