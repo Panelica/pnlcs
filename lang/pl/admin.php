@@ -2159,6 +2159,7 @@ return [
         'confirm_delete' => 'Usunąć ten produkt?',
         'create' => 'Utwórz produkt',
         'create_group' => 'Utwórz grupę',
+        'pricing_shop_currency_hint' => 'Ceny są w walucie sklepu. Klient, który wybrał inną walutę, zobaczy je przeliczone po kursie z dnia.',
         'description_markdown_hint' => 'Markdown: obsługiwane są **pogrubienie**, *kursywa*, listy i linki.',
         'description_copy_default' => 'Skopiuj opis domyślny',
         'md_bold' => 'Pogrubienie (Ctrl+B)',

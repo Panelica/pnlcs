@@ -2159,6 +2159,7 @@ return [
         'confirm_delete' => 'Dieses Produkt löschen?',
         'create' => 'Produkt erstellen',
         'create_group' => 'Gruppe erstellen',
+        'pricing_shop_currency_hint' => 'Preise sind in der Shop-Währung. Ein Kunde, der eine andere Währung gewählt hat, sieht sie zum Tageskurs umgerechnet.',
         'description_markdown_hint' => 'Markdown: **fett**, *kursiv*, Listen und Links werden unterstützt.',
         'description_copy_default' => 'Standardbeschreibung kopieren',
         'md_bold' => 'Fett (Strg+B)',

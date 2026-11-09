@@ -2140,6 +2140,7 @@ return [
         'confirm_delete' => 'Bu ürün silinsin mi?',
         'create' => 'Ürün Oluştur',
         'create_group' => 'Ürün Grubu Oluştur',
+        'pricing_shop_currency_hint' => 'Fiyatlar mağaza para birimindedir. Başka bir para birimi seçen müşteri, fiyatları günlük kurla çevrilmiş olarak görür.',
         'description_markdown_hint' => 'Markdown: **kalın**, *italik*, listeler ve bağlantılar desteklenir.',
         'description_copy_default' => 'Varsayılan açıklamayı kopyala',
         'md_bold' => 'Kalın (Ctrl+B)',

@@ -2159,6 +2159,7 @@ return [
         'confirm_delete' => 'Delete this product?',
         'create' => 'Create Product',
         'create_group' => 'Create Group',
+        'pricing_shop_currency_hint' => 'Prices are in the shop currency. A customer who chose another currency sees them converted at the daily rate.',
         'description_markdown_hint' => 'Markdown: **bold**, *italic*, lists and links are supported.',
         'description_copy_default' => 'Copy the default description',
         'md_bold' => 'Bold (Ctrl+B)',

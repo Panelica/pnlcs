@@ -598,8 +598,14 @@ class ProductController extends Controller
             }
         }
 
-        // Update pricing
+        // Update pricing. Only a currency the form actually carried: the
+        // product form edits the shop currency, and saving it must not reset a
+        // legacy row in another currency to the form's defaults.
         foreach (Currency::all() as $currency) {
+            if (! $request->has("pricing.{$currency->id}")) {
+                continue;
+            }
+
             Pricing::updateOrCreate(
                 ['type' => 'product', 'currency_id' => $currency->id, 'rel_id' => $product->id],
                 [
