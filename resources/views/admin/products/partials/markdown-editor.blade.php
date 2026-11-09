@@ -1,20 +1,21 @@
 {{-- A small Markdown toolbar over the plain textarea. No editor library and no
      build step: the value is stored as Markdown and rendered with Str::markdown
-     (which escapes raw HTML), so a stray tag is shown as text, not run. --}}
+     told to treat its input as text (Product::descriptionHtml), so a stray tag
+     is shown as text, not run. --}}
 @php
     $editorName = $name ?? 'description';
     $editorId = $id ?? 'md-'.preg_replace('/[^a-z0-9_-]+/i', '-', $editorName);
 @endphp
 <div data-md-wrap>
     <div style="display:flex;gap:4px;flex-wrap:wrap;margin-bottom:6px;">
-        <button type="button" class="btn btn-default btn-sm" data-md="bold" title="Bold (Ctrl+B)"><b>B</b></button>
-        <button type="button" class="btn btn-default btn-sm" data-md="italic" title="Italic (Ctrl+I)"><i>I</i></button>
-        <button type="button" class="btn btn-default btn-sm" data-md="heading" title="Heading">H2</button>
-        <button type="button" class="btn btn-default btn-sm" data-md="ul" title="Bullet list">&bull;</button>
-        <button type="button" class="btn btn-default btn-sm" data-md="ol" title="Numbered list">1.</button>
-        <button type="button" class="btn btn-default btn-sm" data-md="link" title="Link">Link</button>
-        <button type="button" class="btn btn-default btn-sm" data-md="quote" title="Quote">&ldquo;</button>
-        <button type="button" class="btn btn-default btn-sm" data-md="code" title="Inline code"><code>&lt;/&gt;</code></button>
+        <button type="button" class="btn btn-default btn-sm" data-md="bold" title="{{ __('admin.products.md_bold') }}"><b>B</b></button>
+        <button type="button" class="btn btn-default btn-sm" data-md="italic" title="{{ __('admin.products.md_italic') }}"><i>I</i></button>
+        <button type="button" class="btn btn-default btn-sm" data-md="heading" title="{{ __('admin.products.md_heading') }}">H2</button>
+        <button type="button" class="btn btn-default btn-sm" data-md="ul" title="{{ __('admin.products.md_bullet_list') }}">&bull;</button>
+        <button type="button" class="btn btn-default btn-sm" data-md="ol" title="{{ __('admin.products.md_numbered_list') }}">1.</button>
+        <button type="button" class="btn btn-default btn-sm" data-md="link" title="{{ __('admin.products.md_link') }}">{{ __('admin.products.md_link') }}</button>
+        <button type="button" class="btn btn-default btn-sm" data-md="quote" title="{{ __('admin.products.md_quote') }}">&ldquo;</button>
+        <button type="button" class="btn btn-default btn-sm" data-md="code" title="{{ __('admin.products.md_inline_code') }}"><code>&lt;/&gt;</code></button>
     </div>
     <textarea id="{{ $editorId }}" name="{{ $editorName }}" rows="{{ $rows ?? 4 }}" class="form-control" data-md-textarea>{{ $value ?? '' }}</textarea>
     <small class="text-muted" style="display:block;margin-top:4px;">{{ __('admin.products.description_markdown_hint') }}</small>
