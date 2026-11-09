@@ -194,6 +194,13 @@ class Product extends Model
             return [];
         }
 
+        // res_* are the Panelica panel's own limits. Another module, or an SSL
+        // certificate, has none - even when an older save left those keys on
+        // the product and the store went on advertising "1 GB RAM, 1 vCPU".
+        if (strtolower((string) $this->server_type) !== 'panelica') {
+            return [];
+        }
+
         // 3072 GB of bandwidth reads as a mistake; say 3 TB.
         $mb = function ($v) {
             $v = (int) $v;

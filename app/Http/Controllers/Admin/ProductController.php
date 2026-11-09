@@ -442,6 +442,13 @@ class ProductController extends Controller
         ]);
         unset($validated['pricing'], $validated['upgrade_paths']);
 
+        // An SSL certificate is issued by its SSL module, not provisioned by a
+        // server module. The form hides the module select for it, so whatever
+        // value that hidden select still carries must not be kept.
+        if (($validated['type'] ?? '') === 'ssl') {
+            $validated['server_type'] = null;
+        }
+
         // The domain card: whether the order form offers a domain at all, and
         // a free first year for some extensions on some billing cycles.
         if ($request->boolean('domain_section')) {
@@ -506,11 +513,11 @@ class ProductController extends Controller
         }
 
         // Panelica managed resources -> merged into config_options (preserves
-        // feature text f1..f7 and any other existing keys). Not for a product
-        // of another panel: the form disables the card there, and a request
-        // that still carries it must not give a cPanel or Proxmox product
-        // Panelica limits.
-        if ($request->boolean('res_section') && in_array(strtolower((string) $product->server_type), ['', 'custom', 'panelica'], true)) {
+        // feature text f1..f7 and any other existing keys). res_* are the
+        // Panelica panel's limits, so only a Panelica product may set them: the
+        // form hides the card for every other module (and for SSL), and a
+        // request that still carries it must not give them Panelica limits.
+        if ($request->boolean('res_section') && strtolower((string) $product->server_type) === 'panelica') {
             $config = is_string($product->config_options)
                 ? (json_decode($product->config_options, true) ?: [])
                 : ($product->config_options ?? []);
@@ -560,6 +567,23 @@ class ProductController extends Controller
                 unset($config['panelica_plan_id']);
             }
             $product->update(['config_options' => $config]);
+        }
+
+        // A product that has just become an SSL certificate keeps none of the
+        // Panelica panel config it carried before: those keys describe a
+        // hosting plan and would reappear if it were switched back.
+        if (($validated['type'] ?? '') === 'ssl') {
+            $config = $this->productConfig($product->fresh());
+            $changed = false;
+            foreach (array_keys($config) as $key) {
+                if (str_starts_with($key, 'res_') || str_starts_with($key, 'panelica_')) {
+                    unset($config[$key]);
+                    $changed = true;
+                }
+            }
+            if ($changed) {
+                $product->update(['config_options' => $config]);
+            }
         }
 
         // Update pricing
