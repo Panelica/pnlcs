@@ -6,6 +6,17 @@ All notable changes to PNLCS are documented here. Newest first.
 
 ### Added
 
+- **The product description in every active language.** The admin description
+  is now a tab per active language, with the same Markdown toolbar and a button
+  that starts a translation from the default text. A visitor reads the
+  description in their own language and falls back to the default where there
+  is no translation. New `product_translations` table (#415).
+- **The National Bank of Poland as an official rate source.** A Polish shop can
+  name NBP next to TCMB: with NBP chosen and the shop currency PLN, its table A
+  drives every rate and the commercial providers only fill the codes NBP does
+  not publish. The invoice prints NBP, the reference kind, the date and the
+  table number. An unreachable NBP, or a shop that is not in PLN, leaves the
+  commercial rates in place (#417).
 - **A small Markdown editor for the product description.** A toolbar (bold,
   italic, heading, lists, link, quote, code) over the existing textarea — no
   editor library and no build step. The description is rendered as formatted
@@ -20,8 +31,28 @@ All notable changes to PNLCS are documented here. Newest first.
   taxed as its product is. It is not a hosting line, so renewals never repeat
   it. The two-year and three-year setup columns can be set at last (#411).
 
+### Changed
+
+- **The product form edits one price, in the shop currency.** It offered a
+  price block per currency, but the customer is always charged the shop
+  currency's price converted at the daily rate — the other rows were stored and
+  never read. One block now, with a hint saying so; saving touches only the
+  currency the form carried, so an old row in another currency is left exactly
+  as it was rather than reset to the form's defaults (#416).
+- The live demo links (README badge, the installation tip, the demo seeder) point
+  at `demo.pnlcs.com`, where the demo now runs (#418).
+
 ### Fixed
 
+- **A translation typed into the product form is not thrown away.** The
+  language tabs read their old input with a bracketed key, which `old()` never
+  matches, so a refused save came back with the default description intact and
+  the translation gone.
+- **The store listing asks for the descriptions once.** Each card asks the
+  product for the description in the visitor's language, which was two queries
+  per product: ten products took the page from 43 to 63 queries. The
+  translations are eager-loaded on the store, the homepage plans and the
+  upgrade screen.
 - **The front page no longer waits for the panel on every visit.** With the
   app showcase switched on, each visit asked Panelica for its app catalogue
   before the page could be drawn, so the most visited page was only as fast as
@@ -50,6 +81,10 @@ All notable changes to PNLCS are documented here. Newest first.
 
 ### Database changes
 
+- `2026_11_09_000002_create_product_translations_table` — adds
+  `product_translations` (product, language, description), unique per product
+  and language, removed with its product. It adds a table and touches nothing
+  else; a product's own `description` stays the default language's text.
 - `2026_11_09_000001_strip_panelica_resources_from_ssl_products` — removes
   `res_*` and `panelica_*` from the `config_options` of products of type `ssl`,
   and clears the server module a hidden form field used to keep on them. It
@@ -68,6 +103,13 @@ All notable changes to PNLCS are documented here. Newest first.
 
 ### For theme and module authors
 
+- `Product::localizedDescription()` and `Product::hasDescription()` read the
+  description for the current language. A theme that shows the description
+  should test `hasDescription()` rather than the `description` column, or a
+  product translated but left empty in the default language reads as having no
+  description. Eager-load `translations` where products are listed.
+- The official rate source may now be `nbp`; the key is reserved, so an
+  operator-added provider can no longer be called `nbp` (nor `tcmb`).
 - `Product::descriptionHtml()` returns the description as HTML and
   `Product::descriptionText()` as a plain excerpt. A theme that prints the
   description itself should use one of them — and `descriptionHtml()` with
@@ -80,6 +122,9 @@ All notable changes to PNLCS are documented here. Newest first.
 
 ### Views a theme may override that changed
 
+- `admin/products/partials/description-tabs.blade.php` (new),
+  `admin/settings/general.blade.php`, `legal/en/terms.blade.php`,
+  `legal/tr/terms.blade.php`,
 - `admin/products/edit.blade.php`, `admin/products/create.blade.php`,
   `admin/products/partials/markdown-editor.blade.php` (new),
   `client/cart/index.blade.php`, `client/cart/checkout.blade.php`,
