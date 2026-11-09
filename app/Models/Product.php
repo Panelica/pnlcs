@@ -271,12 +271,24 @@ class Product extends Model
      * The product description as safe HTML.
      *
      * The admin writes Markdown (a small toolbar over the textarea); this is
-     * the one place it becomes HTML. Str::markdown() escapes raw HTML, so a
-     * stray <script> in the description is shown as text, not run.
+     * the one place it becomes HTML, and it is read by customers on the public
+     * store, so the conversion is told to treat the input as text and nothing
+     * else.
+     *
+     * Str::markdown() on its own does NOT make raw HTML safe: measured, the
+     * GitHub-flavoured default escapes a bare <script> but passes
+     * `<img src=x onerror=alert(1)>` straight through and turns
+     * `[x](javascript:alert(1))` into a live javascript: link. That is stored
+     * cross-site scripting on every page the description appears on, reachable
+     * by anyone who may edit a product. html_input=escape makes every tag text
+     * and allow_unsafe_links=false drops the scheme.
      */
     public function descriptionHtml(): string
     {
-        return Str::markdown((string) $this->description);
+        return Str::markdown((string) $this->description, [
+            'html_input' => 'escape',
+            'allow_unsafe_links' => false,
+        ]);
     }
 
     /** The description as plain text, for the truncated excerpts. */

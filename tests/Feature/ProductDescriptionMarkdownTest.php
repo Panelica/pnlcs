@@ -23,7 +23,7 @@ test('raw HTML in the description is escaped, not run', function () {
     $product = Product::factory()->create(['description' => '<script>alert(1)</script>']);
 
     expect($product->descriptionHtml())->not->toContain('<script>')
-        ->and($product->descriptionHtml())->toContain('&lt;script>');
+        ->and($product->descriptionHtml())->toContain('&lt;script&gt;');
 });
 
 test('the excerpt is plain text without Markdown markers', function () {
@@ -33,7 +33,7 @@ test('the excerpt is plain text without Markdown markers', function () {
         ->and($product->descriptionText())->not->toContain('**');
 });
 
-test('the store and configure pages render the description as formatted HTML', function () {
+test('the configure page renders the description as formatted HTML, the listing an excerpt', function () {
     $currency = Currency::firstOrCreate(
         ['is_default' => true],
         ['code' => 'USD', 'prefix' => '$', 'suffix' => '', 'rate' => 1.0, 'is_default' => true],
@@ -50,10 +50,12 @@ test('the store and configure pages render the description as formatted HTML', f
         'annually' => -1, 'biennially' => -1, 'triennially' => -1,
     ]);
 
+    // The listing shows a bounded plain excerpt: one long description must not
+    // stretch every card in the grid.
     $this->get(route('client.store'))
         ->assertOk()
-        ->assertSee('<strong>Fast</strong>', false)
-        ->assertSee('<li>one</li>', false);
+        ->assertDontSee('<strong>Fast</strong>', false)
+        ->assertSee('Fast plan', false);
 
     $this->get(route('client.store.configure', $product))
         ->assertOk()
@@ -73,4 +75,46 @@ test('the product edit and create pages offer the Markdown toolbar', function ()
     $this->actingAs($admin, 'admin')->get(route('admin.products.create'))
         ->assertOk()
         ->assertSee('data-md="bold"', false);
+});
+
+test('a tag that is not a script tag is text too, and an unsafe link loses its scheme', function () {
+    // Measured on Str::markdown() without options: <script> had its opening
+    // bracket escaped, but <img src=x onerror=...> went through untouched and
+    // [x](javascript:...) became a live link - stored XSS on the public store.
+    $product = Product::factory()->create([
+        'description' => "<img src=x onerror=alert(1)>\n\n<iframe src=\"//evil.test\"></iframe>\n\n[click](javascript:alert(2))",
+    ]);
+
+    $html = $product->descriptionHtml();
+
+    // The words survive as text - that is the point; what must not survive is
+    // a tag the browser acts on, or a link it will follow.
+    expect($html)->not->toContain('<img')
+        ->and($html)->not->toContain('<iframe')
+        ->and($html)->not->toContain('javascript:')
+        ->and($html)->toContain('&lt;img')
+        ->and($html)->toContain('&lt;iframe');
+});
+
+test('a long description is cut in the listing rather than printed whole', function () {
+    $currency = Currency::firstOrCreate(
+        ['is_default' => true],
+        ['code' => 'USD', 'prefix' => '$', 'suffix' => '', 'rate' => 1.0, 'is_default' => true],
+    );
+    $product = Product::factory()->create([
+        'group_id' => ProductGroup::factory()->create()->id,
+        'hidden' => false, 'retired' => false,
+        'description' => '**Bold** '.str_repeat('long copy ', 40),
+    ]);
+    Pricing::factory()->create([
+        'type' => 'product', 'rel_id' => $product->id, 'currency_id' => $currency->id,
+        'monthly' => 9.99, 'quarterly' => -1, 'semiannually' => -1,
+        'annually' => -1, 'biennially' => -1, 'triennially' => -1,
+    ]);
+
+    $this->get(route('client.store'))
+        ->assertOk()
+        ->assertDontSee('<strong>Bold</strong>', false)
+        ->assertSee('Bold long copy', false)
+        ->assertDontSee(str_repeat('long copy ', 40), false);
 });
