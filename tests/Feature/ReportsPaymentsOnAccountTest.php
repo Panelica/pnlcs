@@ -125,3 +125,21 @@ it('still counts an ordinary paid invoice in both reports', function () {
     expect((float) collect(poaRows(new IncomeByProductReport)['rows'])->sum('revenue'))->toEqual(75.0)
         ->and((float) poaRows(new SalesTaxLiabilityReport)['totals'][4])->toEqual(75.0);
 });
+
+test('a line with no quantity is worth what the invoice charged for it, not nothing', function () {
+    // The invoice charges max(1, qty); a bare multiplication would have made
+    // this line worth 0 in the report while the customer paid 40.
+    $client = Client::factory()->create();
+    $invoice = Invoice::factory()->create([
+        'client_id' => $client->id, 'status' => 'paid', 'type' => 'vat',
+        'date_paid' => now()->subDay(), 'subtotal' => 40, 'tax' => 0, 'tax2' => 0, 'total' => 40,
+    ]);
+    InvoiceItem::create([
+        'invoice_id' => $invoice->id, 'client_id' => $client->id, 'type' => 'Hosting', 'rel_id' => 0,
+        'description' => 'A line written with no quantity', 'amount' => 40, 'qty' => 0, 'taxed' => false,
+    ]);
+
+    $rows = collect((new IncomeByProductReport)->generate(new Request(['from' => now()->subWeek()->toDateString(), 'to' => now()->toDateString()]))['rows']);
+
+    expect((float) $rows->firstWhere('product', 'A line written with no quantity')->revenue)->toBe(40.0);
+});

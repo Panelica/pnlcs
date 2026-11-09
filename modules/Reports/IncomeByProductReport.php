@@ -25,8 +25,13 @@ class IncomeByProductReport extends AbstractReport
                 ->whereIn("invoice_items.type", ["Hosting", "Overage"]))
             ->leftJoin("products", "products.id", "=", "services.product_id")
             // A line's value is its unit price times its quantity, as on the
-            // invoice itself.
-            ->selectRaw("COALESCE(products.name, invoice_items.description) as product, COUNT(DISTINCT invoices.id) as invoices, SUM(invoice_items.amount * invoice_items.qty) as revenue")
+            // invoice itself - which never charges for less than one, however
+            // the row was written: Invoice::lineTax() and
+            // ConfigOptionService::priceOf() both read max(1, qty). A qty of 0
+            // reaches invoice_items through a cart config option and through
+            // the WHMCS import, and multiplying by it would report as nothing
+            // a line the customer was charged for.
+            ->selectRaw("COALESCE(products.name, invoice_items.description) as product, COUNT(DISTINCT invoices.id) as invoices, SUM(invoice_items.amount * GREATEST(COALESCE(invoice_items.qty, 1), 1)) as revenue")
             // A top-up and a payment for several invoices sell nothing: the
             // money they bring in pays other invoices, and those invoices'
             // lines are the revenue. Counting both reported it twice.
