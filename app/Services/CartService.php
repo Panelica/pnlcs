@@ -187,6 +187,8 @@ class CartService
             // Answers to the product's own questions, keyed by field id.
             'custom_fields' => $customFields,
             'price' => round($price, 2),
+            // Charged once, on the first invoice; renewals bill the price alone.
+            'setup_fee' => $product->setupFeeFor($billingCycle),
             'notes' => $notes,
         ];
 
@@ -532,14 +534,16 @@ class CartService
 
         foreach ($items as $index => $item) {
             $price = (float) ($item['price'] ?? 0);
+            $setupFee = (float) ($item['setup_fee'] ?? 0);
             $addons = $item['addons'] ?? [];
 
             $addonTotal = array_sum(array_map(fn ($a) => (float) ($a['price'] ?? 0), $addons));
 
+            // The setup fee is taxed as its product is, as the invoice writes it.
             if ($taxFlags['items'][$index] ?? true) {
-                $taxable += $price;
+                $taxable += $price + $setupFee;
             } else {
-                $untaxed += $price;
+                $untaxed += $price + $setupFee;
             }
 
             foreach ($addons as $addonIndex => $addon) {
@@ -556,8 +560,9 @@ class CartService
 
             $enrichedItems[] = array_merge($item, [
                 'price' => $price,
+                'setup_fee' => round($setupFee, 2),
                 'addon_total' => round($addonTotal, 2),
-                'line_total' => round($price + $addonTotal, 2),
+                'line_total' => round($price + $setupFee + $addonTotal, 2),
                 // The hosting this domain line came with: it goes with that line.
                 'comes_with' => $hosting !== null ? ($items[$hosting]['product_name'] ?? '') : null,
             ]);
@@ -751,6 +756,7 @@ class CartService
                 'product_id' => $item['product_id'],
                 'domain' => $item['domain'] ?? '',
                 'amount' => (float) ($item['price'] ?? 0),
+                'setup_fee' => (float) ($item['setup_fee'] ?? 0),
                 'billing_cycle' => $item['billing_cycle'] ?? 'Monthly',
                 'notes' => $item['notes'] ?? null,
                 'config_options' => $item['config_options'] ?? [],

@@ -5,6 +5,7 @@ namespace App\Models;
 use App\Services\BillingCycleHelper;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Support\Str;
 
 class Product extends Model
 {
@@ -75,6 +76,25 @@ class Product extends Model
         $rows = $this->relationLoaded('pricing') ? $this->pricing : $this->pricing()->get();
 
         return $rows->firstWhere('currency_id', $currencyId) ?? $rows->first();
+    }
+
+    /**
+     * The one-time setup fee for ordering on a cycle, or zero when there is none.
+     *
+     * The product form has always saved a setup fee per cycle, and nothing read
+     * it: an operator who priced a plan at "100 a year plus 50 setup" was paid
+     * 100. A free product never carries one, and a negative value is no fee.
+     */
+    public function setupFeeFor(string $cycle, ?int $currencyId = null): float
+    {
+        $column = BillingCycleHelper::pricingColumn($cycle);
+        $row = $column ? $this->pricingFor($currencyId) : null;
+
+        if ($this->pay_type === 'free' || ! $row) {
+            return 0.0;
+        }
+
+        return max(0.0, round((float) ($row->{$column.'_setup'} ?? 0), 2));
     }
 
     /**
@@ -194,6 +214,21 @@ class Product extends Model
             return [];
         }
 
+        // res_* are the Panelica panel's own limits. A product provisioned by
+        // another panel has none, and neither has an SSL certificate - even
+        // when an older save left those keys on it and the store went on
+        // advertising "1 GB RAM, 1 vCPU".
+        //
+        // A product with no module at all is left alone: nothing provisions it,
+        // so the operator typed those numbers in deliberately and the store has
+        // shown them since 86dae844 ("a product without a module keeps no
+        // resources it was never given" - never given, not never shown). Taking
+        // the card away from them was collateral of the SSL fix.
+        if (strtolower((string) $this->type) === 'ssl'
+            || ! in_array(strtolower((string) $this->server_type), ['', 'custom', 'panelica'], true)) {
+            return [];
+        }
+
         // 3072 GB of bandwidth reads as a mistake; say 3 TB.
         $mb = function ($v) {
             $v = (int) $v;
@@ -230,5 +265,35 @@ class Product extends Model
         }
 
         return $out;
+    }
+
+    /**
+     * The product description as safe HTML.
+     *
+     * The admin writes Markdown (a small toolbar over the textarea); this is
+     * the one place it becomes HTML, and it is read by customers on the public
+     * store, so the conversion is told to treat the input as text and nothing
+     * else.
+     *
+     * Str::markdown() on its own does NOT make raw HTML safe: measured, the
+     * GitHub-flavoured default escapes a bare <script> but passes
+     * `<img src=x onerror=alert(1)>` straight through and turns
+     * `[x](javascript:alert(1))` into a live javascript: link. That is stored
+     * cross-site scripting on every page the description appears on, reachable
+     * by anyone who may edit a product. html_input=escape makes every tag text
+     * and allow_unsafe_links=false drops the scheme.
+     */
+    public function descriptionHtml(): string
+    {
+        return Str::markdown((string) $this->description, [
+            'html_input' => 'escape',
+            'allow_unsafe_links' => false,
+        ]);
+    }
+
+    /** The description as plain text, for the truncated excerpts. */
+    public function descriptionText(): string
+    {
+        return trim(html_entity_decode(strip_tags($this->descriptionHtml()), ENT_QUOTES | ENT_HTML5, 'UTF-8'));
     }
 }

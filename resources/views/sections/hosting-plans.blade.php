@@ -52,7 +52,7 @@
                 @endif
                 <div class="plan-card__icon"><i class="{{ $icons[$idx] ?? 'ri-server-line' }}"></i></div>
                 <div class="plan-card__name">{{ $product->name }}</div>
-                <div class="plan-card__subtitle">{{ $product->description }}</div>
+                <div class="plan-card__subtitle">{{ Str::limit($product->descriptionText(), 160) }}</div>
                 <div class="plan-card__pricing">
                     @if($monthlyPrice !== null)
                         <div class="plan-card__price">{{ display_money_fmt($monthlyPrice) }}<small>/{{ $priceCycle === 'monthly' ? 'mo' : $priceCycle }}</small></div>

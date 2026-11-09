@@ -63,7 +63,7 @@
                 </div>
                 <div class="form-group"><label class="form-label">{{ __('admin.products.stock_control') }}</label><div style="display:flex;gap:12px;align-items:center;"><label style="font-size:12px;"><input type="checkbox" name="stock_control" value="1" {{ $product->stock_control ? 'checked' : '' }}> {{ __('admin.products.stock_control_hint') }}</label><input type="number" min="0" name="stock_qty" value="{{ $product->stock_qty ?? 0 }}" class="form-control" style="max-width:120px;"></div></div>
                 <div class="form-group" x-show="type === 'ssl'" x-cloak><label class="form-label">{{ __('admin.products.ssl_module') }}</label><select name="ssl_module" class="form-control"><option value="">{{ __('admin.products.ssl_none') }}</option>@foreach($sslModules + array_filter([(string) $product->ssl_module => (string) $product->ssl_module]) as $sslKey => $sslLabel)<option value="{{ $sslKey }}" @selected($product->ssl_module === $sslKey)>{{ $sslLabel }}</option>@endforeach</select></div>
-                <div class="form-group" style="grid-column:span 2;"><label class="form-label">{{ __('common.form.description') }}</label><textarea name="description" rows="3" class="form-control">{{ $product->description }}</textarea></div>
+                <div class="form-group" style="grid-column:span 2;"><label class="form-label">{{ __('common.form.description') }}</label>@include('admin.products.partials.markdown-editor', ['value' => $product->description, 'rows' => 4])</div>
                 <div class="form-group" style="grid-column:span 2;display:flex;gap:20px;">
                     <label style="font-size:13px;display:flex;align-items:center;gap:6px;cursor:pointer;"><input type="checkbox" name="hidden" value="1" {{ $product->hidden?'checked':'' }}> {{ __('admin.products.hidden') }}</label>
                     <label style="font-size:13px;display:flex;align-items:center;gap:6px;cursor:pointer;"><input type="checkbox" name="retired" value="1" {{ $product->retired?'checked':'' }}> {{ __('admin.products.retired') }}</label>
@@ -96,8 +96,8 @@
                     </div>
                     @endforeach
                 </div>
-                <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:10px;">
-                    @foreach(['monthly_setup','quarterly_setup','semiannually_setup','annually_setup'] as $setup)
+                <div style="display:grid;grid-template-columns:repeat(6,1fr);gap:10px;">
+                    @foreach(['monthly_setup','quarterly_setup','semiannually_setup','annually_setup','biennially_setup','triennially_setup'] as $setup)
                     <div>
                         <label class="form-label" style="font-size:11px;">{{ str_replace('_', ' ', ucfirst($setup)) }}</label>
                         <input type="number" step="0.01" name="pricing[{{ $currency->id }}][{{ $setup }}]" value="{{ $p ? $p->$setup : 0 }}" class="form-control" style="font-size:12px;">
@@ -321,11 +321,15 @@
 // and mailbox counts it would never use.
 (function () {
     var moduleSelect = document.querySelector('select[name="server_type"]');
+    var typeSelect = document.querySelector('select[name="type"]');
     var panelica = document.querySelector('[data-module-card="panelica"]');
     function showCards() {
         var m = moduleSelect ? moduleSelect.value : '';
+        // The server module select is hidden for an SSL certificate, but it
+        // still carries its old value: the Panelica card must not appear there.
+        var isSsl = typeSelect ? typeSelect.value === 'ssl' : false;
         if (panelica) {
-            var on = m === '' || m === 'panelica';
+            var on = ! isSsl && (m === '' || m === 'custom' || m === 'panelica');
             panelica.style.display = on ? '' : 'none';
             panelica.querySelectorAll('input,select,textarea').forEach(function (f) { f.disabled = !on; });
         }
@@ -335,6 +339,7 @@
         if (pkg) { pkg.style.display = m === 'proxmox' ? 'none' : ''; }
     }
     if (moduleSelect) { moduleSelect.addEventListener('change', showCards); }
+    if (typeSelect) { typeSelect.addEventListener('change', showCards); }
     document.addEventListener('DOMContentLoaded', showCards);
 })();
 (function () {

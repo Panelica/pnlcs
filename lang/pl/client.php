@@ -204,6 +204,7 @@ return [
         'domain_taken' => ':domain jest już zarejestrowana. Wybierz inną nazwę albo Transfer, jeśli domena należy do Ciebie.',
         'domain_unchecked' => 'Nie udało się sprawdzić, czy :domain jest dostępna. Spróbuj ponownie za chwilę.',
         'comes_with' => 'W zestawie z :product',
+        'setup_fee' => 'Opłata instalacyjna (jednorazowa)',
         'domain_comes_with_hosting' => 'Domena :domain została zamówiona razem z :product i zostanie usunięta razem z nim. Usuń :product, aby wyjąć oba z koszyka.',
         'removed_with_domain' => 'Pakiet hostingowy i domena :domain zostały usunięte z koszyka.',
         'domain_not_registered' => ':domain nie jest jeszcze zarejestrowana, więc nie ma czego przenosić. Wybierz rejestrację nowej domeny.',

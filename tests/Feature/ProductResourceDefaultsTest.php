@@ -49,7 +49,8 @@ test('limits typed in on a product without a module are still kept', function ()
 
     saveProduct($product, ['server_type' => '', 'res_section' => 1, 'res_memory_mb' => 2048]);
 
-    expect(((array) $product->fresh()->config_options)['res_memory_mb'])->toBe(2048);
+    expect(((array) $product->fresh()->config_options)['res_memory_mb'])->toBe(2048)
+        ->and($product->fresh()->resourceSummary())->not->toBe([]);
 });
 
 test('a Panelica product still has the defaults filled in', function () {
@@ -66,4 +67,35 @@ test('a request for another module that still carries the card does not give it 
     saveProduct($product, ['server_type' => 'cpanel', 'res_section' => 1, 'res_memory_mb' => 1024, 'res_disk_mb' => 5120]);
 
     expect((array) $product->fresh()->config_options)->not->toHaveKey('res_memory_mb');
+});
+
+test('an SSL product shows no Panelica limits even when old saves left them', function () {
+    $product = Product::factory()->create([
+        'type' => 'ssl',
+        'server_type' => null,
+        'config_options' => json_encode([
+            'res_memory_mb' => 1024, 'res_cpu_percent' => 100, 'res_disk_mb' => 5120,
+        ]),
+    ]);
+
+    expect($product->resourceSummary())->toBe([]);
+});
+
+test('saving an SSL product clears its server module and Panelica limits', function () {
+    $product = Product::factory()->create([
+        'type' => 'hosting',
+        'server_type' => 'panelica',
+        'config_options' => json_encode([
+            'res_memory_mb' => 1024, 'panelica_plan_id' => 'plan-1', 'f1' => 'Keep me',
+        ]),
+    ]);
+
+    saveProduct($product, ['type' => 'ssl', 'server_type' => 'panelica', 'res_section' => 1, 'res_memory_mb' => 2048]);
+
+    $fresh = $product->fresh();
+    $cfg = (array) $fresh->config_options;
+    expect($fresh->server_type)->toBeNull()
+        ->and($cfg)->not->toHaveKey('res_memory_mb')
+        ->and($cfg)->not->toHaveKey('panelica_plan_id')
+        ->and($cfg['f1'] ?? null)->toBe('Keep me');
 });
