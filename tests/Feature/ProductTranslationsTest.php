@@ -21,6 +21,9 @@ function productTranslationLanguages(): void
     Language::updateOrCreate(['code' => 'en'], ['name' => 'English', 'native_name' => 'English', 'is_active' => true, 'is_default' => true]);
     Language::updateOrCreate(['code' => 'pl'], ['name' => 'Polish', 'native_name' => 'Polski', 'is_active' => true, 'is_default' => false]);
     Language::updateOrCreate(['code' => 'de'], ['name' => 'German', 'native_name' => 'Deutsch', 'is_active' => false, 'is_default' => false]);
+
+    \App\Models\Setting::set('DefaultLanguage', 'en');
+    \App\Support\LocaleUrl::forget();
 }
 
 function productWithDescription(): Product

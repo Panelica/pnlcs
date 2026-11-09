@@ -5,7 +5,6 @@ namespace App\Http\Controllers\Admin;
 use App\Http\Controllers\Controller;
 use App\Models\Currency;
 use App\Models\InvoiceProduct;
-use App\Models\Language;
 use App\Models\Pricing;
 use App\Models\Product;
 use App\Models\Service;
@@ -333,7 +332,6 @@ class ProductController extends Controller
             'serverGroups' => ServerGroup::orderBy('name')->get(),
             'packageList' => ['packages' => [], 'error' => null],
             'translationLanguages' => ContentTranslations::languages(),
-            'defaultLanguage' => Language::getDefault(),
         ]);
     }
 
@@ -413,7 +411,6 @@ class ProductController extends Controller
                 ?? $this->productConfig($product)['cpanel_package']
                 ?? ''),
             'translationLanguages' => ContentTranslations::languages(),
-            'defaultLanguage' => Language::getDefault(),
         ]);
     }
 

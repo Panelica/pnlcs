@@ -3,7 +3,10 @@
      translation row (App\Support\ContentTranslations), with a button that
      starts it from the default text. --}}
 @php
-    $defaultCode = $defaultLanguage?->code ?? \App\Support\LocaleUrl::defaultLocale();
+    // The same default the rest of the content translations use (the
+    // DefaultLanguage setting), not the Language row's is_default flag.
+    $defaultCode = \App\Support\LocaleUrl::defaultLocale();
+    $defaultLanguage = \App\Models\Language::where('code', $defaultCode)->first();
     $defaultLabel = $defaultLanguage?->native_name ?: ($defaultLanguage?->name ?: strtoupper($defaultCode));
     $languages = $translationLanguages ?? collect();
     $editorRows = $rows ?? 5;
