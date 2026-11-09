@@ -2,6 +2,60 @@
 
 All notable changes to PNLCS are documented here. Newest first.
 
+## Unreleased
+
+### Added
+
+- **The setup fee is charged.** Every product has always had a one-time setup
+  fee per billing cycle and the form saved it, but nothing read it: a plan
+  priced at "100 a month plus 50 setup" was sold for 100. It now appears in the
+  basket, in the checkout summary and as its own line on the first invoice,
+  taxed as its product is. It is not a hosting line, so renewals never repeat
+  it. The two-year and three-year setup columns can be set at last (#411).
+
+### Fixed
+
+- **A top-up or a payment for several invoices is counted once.** Income by
+  Product and Sales Tax Liability counted an Add Funds invoice and a mass-pay
+  invoice as revenue, although the money they take becomes account credit that
+  then pays other invoices — the invoices that carry the actual products. Both
+  reports now leave them out, as the affiliate commission base already did
+  (#412).
+- **Income by Product is worth what the invoice charged.** A line's value is
+  its price times its quantity, and where a line was written with no quantity —
+  a cart config option, or a WHMCS import — the report made it worth nothing
+  while the customer had paid for it. It now reads the quantity the way the
+  invoice does.
+- **Panelica resources are shown only where they mean something.** The panel's
+  own limits (`res_*`) appeared on a product with no Panelica module, so an
+  SSL certificate was advertised as "1 GB RAM, 1 vCPU, 5 GB". The card is now
+  hidden for another panel's module and for an SSL certificate, a product
+  switched to SSL loses those keys, and existing SSL products are cleaned up by
+  a migration. A product with no module at all keeps what the operator typed in
+  (#413).
+
+### Database changes
+
+- `2026_11_09_000001_strip_panelica_resources_from_ssl_products` — removes
+  `res_*` and `panelica_*` from the `config_options` of products of type `ssl`,
+  and clears the server module a hidden form field used to keep on them. It
+  touches no other product. It cannot be undone: the keys it removes describe a
+  hosting plan an SSL certificate never had, and `down()` says so rather than
+  pretending to restore them.
+
+### For theme and module authors
+
+- A new invoice item type, `Setup`, carries a product's one-time setup fee and
+  the service id in `rel_id`, like a `Hosting` line. Anything that groups
+  invoice lines by type — a report, an export, an accounting integration —
+  should expect it. `Product::setupFeeFor($cycle, $currencyId)` returns the fee,
+  or zero where there is none.
+
+### Views a theme may override that changed
+
+- `admin/products/edit.blade.php`, `client/cart/index.blade.php`,
+  `client/cart/checkout.blade.php`
+
 ## 1.21.0 — 2026-11-09
 
 A stable release, offered to every installation. The headline is that **account
