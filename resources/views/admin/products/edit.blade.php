@@ -311,11 +311,15 @@
 // and mailbox counts it would never use.
 (function () {
     var moduleSelect = document.querySelector('select[name="server_type"]');
+    var typeSelect = document.querySelector('select[name="type"]');
     var panelica = document.querySelector('[data-module-card="panelica"]');
     function showCards() {
         var m = moduleSelect ? moduleSelect.value : '';
+        // The server module select is hidden for an SSL certificate, but it
+        // still carries its old value: the Panelica card must not appear there.
+        var isSsl = typeSelect ? typeSelect.value === 'ssl' : false;
         if (panelica) {
-            var on = m === '' || m === 'panelica';
+            var on = ! isSsl && m === 'panelica';
             panelica.style.display = on ? '' : 'none';
             panelica.querySelectorAll('input,select,textarea').forEach(function (f) { f.disabled = !on; });
         }
@@ -325,6 +329,7 @@
         if (pkg) { pkg.style.display = m === 'proxmox' ? 'none' : ''; }
     }
     if (moduleSelect) { moduleSelect.addEventListener('change', showCards); }
+    if (typeSelect) { typeSelect.addEventListener('change', showCards); }
     document.addEventListener('DOMContentLoaded', showCards);
 })();
 (function () {

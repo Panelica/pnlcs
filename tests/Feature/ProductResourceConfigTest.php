@@ -10,7 +10,7 @@ use App\Models\Product;
 
 it('renders the panelica resources section on the product edit page', function () {
     $admin   = Admin::factory()->create();
-    $product = Product::factory()->create();
+    $product = Product::factory()->create(['server_type' => 'panelica']);
 
     $this->actingAs($admin, 'admin')
         ->get(route('admin.products.edit', $product))
@@ -23,6 +23,7 @@ it('renders the panelica resources section on the product edit page', function (
 it('saves managed resource limits into config_options and preserves feature text', function () {
     $admin   = Admin::factory()->create();
     $product = Product::factory()->create([
+        'server_type' => 'panelica',
         'config_options' => json_encode(['f1' => '2 GB Storage', 'panelica_plan_id' => 'old-plan']),
     ]);
 
