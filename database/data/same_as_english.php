@@ -66,6 +66,7 @@ return [
         'admin.orders.domains_count',
         'admin.orders.domains_header',
         'admin.orders.name',
+        'admin.products.md_link',
         'admin.products.ssl_gogetssl',
         'admin.projects.status',
         'admin.servers.hostname',
