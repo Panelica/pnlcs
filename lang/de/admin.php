@@ -2160,6 +2160,7 @@ return [
         'create' => 'Produkt erstellen',
         'create_group' => 'Gruppe erstellen',
         'description_markdown_hint' => 'Markdown: **fett**, *kursiv*, Listen und Links werden unterstützt.',
+        'description_copy_default' => 'Standardbeschreibung kopieren',
         'edit' => 'Produkt bearbeiten',
         'group_name' => 'Gruppenname',
         'module_placeholder' => 'Modulplatzhalter',

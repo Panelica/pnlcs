@@ -52,7 +52,7 @@
                 @else
                     <div class="pn-product-price">{{ __('client.store.contact_us') }}</div>
                 @endif
-                @if($product->description)
+                @if($product->hasDescription())
                     <div style="font-size:13px;color:var(--muted);line-height:1.65;margin:12px 0 10px">{!! $product->descriptionHtml() !!}</div>
                 @endif
                 {{-- What the plan actually gives, read from the product's own

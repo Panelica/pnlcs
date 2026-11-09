@@ -233,6 +233,35 @@ class Product extends Model
         return $out;
     }
 
+    public function translations()
+    {
+        return $this->hasMany(ProductTranslation::class);
+    }
+
+    /**
+     * The description for the current language. The product's own text is the
+     * default language's; a translation row holds another language's, and a
+     * missing one falls back to the product's text.
+     */
+    public function localizedDescription(): string
+    {
+        $locale = app()->getLocale();
+        $translation = $this->relationLoaded('translations')
+            ? $this->translations->firstWhere('language', $locale)
+            : $this->translations()->where('language', $locale)->first();
+
+        if ($translation && (string) $translation->description !== '') {
+            return (string) $translation->description;
+        }
+
+        return (string) $this->description;
+    }
+
+    public function hasDescription(): bool
+    {
+        return $this->localizedDescription() !== '';
+    }
+
     /**
      * The product description as safe HTML.
      *
@@ -242,7 +271,7 @@ class Product extends Model
      */
     public function descriptionHtml(): string
     {
-        return Str::markdown((string) $this->description);
+        return Str::markdown($this->localizedDescription());
     }
 
     /** The description as plain text, for the truncated excerpts. */

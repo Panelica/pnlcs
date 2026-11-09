@@ -2160,6 +2160,7 @@ return [
         'create' => 'Utwórz produkt',
         'create_group' => 'Utwórz grupę',
         'description_markdown_hint' => 'Markdown: obsługiwane są **pogrubienie**, *kursywa*, listy i linki.',
+        'description_copy_default' => 'Skopiuj opis domyślny',
         'edit' => 'Edytuj produkt',
         'group_name' => 'Nazwa grupy',
         'module_placeholder' => 'Miejsce na moduł',

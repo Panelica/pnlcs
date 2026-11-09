@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Admin;
 use App\Http\Controllers\Controller;
 use App\Models\Currency;
 use App\Models\InvoiceProduct;
+use App\Models\Language;
 use App\Models\Pricing;
 use App\Models\Product;
 use App\Models\Service;
@@ -14,6 +15,7 @@ use App\Models\ServerGroup;
 use App\Models\Setting;
 use App\Models\TaxRule;
 use App\Services\Module\ModuleRegistry;
+use App\Support\ContentTranslations;
 use App\Support\UniqueSlug;
 use Illuminate\Http\Request;
 use Illuminate\Validation\Rule;
@@ -330,6 +332,8 @@ class ProductController extends Controller
             'sslModules' => app(ModuleRegistry::class)->sslModuleNames(),
             'serverGroups' => ServerGroup::orderBy('name')->get(),
             'packageList' => ['packages' => [], 'error' => null],
+            'translationLanguages' => ContentTranslations::languages(),
+            'defaultLanguage' => Language::getDefault(),
         ]);
     }
 
@@ -343,11 +347,14 @@ class ProductController extends Controller
             $request->filled('package_name') ? (string) $request->input('package_name') : null,
         );
 
+        ContentTranslations::save($product->translations(), (array) $request->input('translations', []), ['description']);
+
         return redirect()->route('admin.products.edit', $product)->with('success', __('admin.messages.product_created'));
     }
 
     public function edit(Product $product)
     {
+        $product->loadMissing('translations');
         $groups = ProductGroup::orderBy('sort_order')->get();
         $currencies = Currency::all();
         $pricing = Pricing::where('type', 'product')->where('rel_id', $product->id)->get()->keyBy('currency_id');
@@ -405,6 +412,8 @@ class ProductController extends Controller
                 ?? $this->productConfig($product)['panelica_plan_id']
                 ?? $this->productConfig($product)['cpanel_package']
                 ?? ''),
+            'translationLanguages' => ContentTranslations::languages(),
+            'defaultLanguage' => Language::getDefault(),
         ]);
     }
 
@@ -439,8 +448,10 @@ class ProductController extends Controller
             'free_domain_tlds' => 'nullable|string|max:500',
             'free_domain_cycles' => 'nullable|array',
             'free_domain_cycles.*' => 'in:monthly,quarterly,semiannually,annually,biennially,triennially',
+            'translations' => 'nullable|array',
+            'translations.*.description' => 'nullable|string',
         ]);
-        unset($validated['pricing'], $validated['upgrade_paths']);
+        unset($validated['pricing'], $validated['upgrade_paths'], $validated['translations']);
 
         // The domain card: whether the order form offers a domain at all, and
         // a free first year for some extensions on some billing cycles.
@@ -466,6 +477,8 @@ class ProductController extends Controller
         $validated['retired'] = $request->boolean('retired');
         $validated['is_featured'] = $request->boolean('is_featured');
         $product->update($validated);
+
+        ContentTranslations::save($product->translations(), (array) $request->input('translations', []), ['description']);
 
         // Upgrade packages, when the form carried the field. Only products of
         // the product's (possibly just changed) module are kept: a path to

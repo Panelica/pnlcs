@@ -36,6 +36,8 @@ class ProductCreator
             'pricing' => 'nullable|array',
             'pricing.*' => 'nullable|array',
             'pricing.*.*' => 'nullable|numeric|min:-1',
+            'translations' => 'nullable|array',
+            'translations.*.description' => 'nullable|string',
         ];
     }
 
@@ -45,7 +47,7 @@ class ProductCreator
      */
     public function create(array $validated, array $pricing = [], ?string $packageName = null): Product
     {
-        unset($validated['pricing']);
+        unset($validated['pricing'], $validated['translations']);
         // Left empty, the column's own default applies; null is not a setup mode.
         if (array_key_exists('auto_setup', $validated) && $validated['auto_setup'] === null) {
             unset($validated['auto_setup']);
