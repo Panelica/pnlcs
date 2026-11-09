@@ -48,7 +48,15 @@ All notable changes to PNLCS are documented here. Newest first.
   staff list and the container cards cut the first byte of a name, so
   Chinese, Japanese, Turkish or accented names showed a broken character or
   an empty circle. A new `initial()` helper takes the first character (a whole
-  emoji when intl is installed) and upper-cases it for its script (#420).
+  emoji when intl is installed) and upper-cases it for its script (#420). The
+  project message list, a fourth place doing the same, uses it too.
+- **A language whose flag is not a country's is drawn, not left blank.**
+  flagcdn serves ISO 3166-1 alpha-2 codes only, so a regional code such as
+  `es-ct` (Catalan — one we ship) answered 404 on both its png and its svg: the
+  admin language list showed an empty cell and the customer's language selector
+  a broken image. Flags now go through one component that draws the Senyera
+  itself and, for a code nobody serves, stands the code in rather than a
+  picture that cannot load (#420).
 
 - **A translation typed into the product form is not thrown away.** The
   language tabs read their old input with a bracketed key, which `old()` never
@@ -109,6 +117,10 @@ All notable changes to PNLCS are documented here. Newest first.
 
 ### For theme and module authors
 
+- New component `<x-language-flag :code="..." size="24x18" :alt="..." />`, and
+  `fallback="badge"` where a missing flag should still fill a table cell. A
+  theme that renders a language flag should use it rather than building a
+  flagcdn URL, or a regional code draws a broken image.
 - `Product::localizedDescription()` and `Product::hasDescription()` read the
   description for the current language. A theme that shows the description
   should test `hasDescription()` rather than the `description` column, or a

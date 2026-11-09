@@ -79,11 +79,7 @@
             @foreach($languages as $lang)
             <tr>
                 <td>
-                    @if($lang->flag_code)
-                    <img src="https://flagcdn.com/24x18/{{ $lang->flag_code }}.png" alt="{{ $lang->code }}" style="border-radius:2px;">
-                    @else
-                    <span style="color:#999;">-</span>
-                    @endif
+                    <x-language-flag :code="$lang->flag_code" size="24x18" :alt="$lang->code" fallback="badge" />
                 </td>
                 <td><code>{{ $lang->code }}</code></td>
                 <td style="font-weight:600;">{{ $lang->name }}</td>

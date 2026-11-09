@@ -76,7 +76,7 @@
                 @forelse($project->messages->sortByDesc('created_at') as $msg)
                 <div style="display:flex;gap:10px;margin-bottom:12px;">
                     <div style="width:30px;height:30px;background:#e8eef7;border-radius:50%;display:flex;align-items:center;justify-content:center;flex-shrink:0;">
-                        <span style="font-size:11px;font-weight:700;color:#337ab7;">{{ strtoupper(substr($msg->admin??'A',0,1)) }}</span>
+                        <span style="font-size:11px;font-weight:700;color:#337ab7;">{{ initial($msg->admin, 'A') }}</span>
                     </div>
                     <div style="flex:1;background:#f9f9f9;border:1px solid #eee;border-radius:4px;padding:8px 10px;">
                         <div style="display:flex;justify-content:space-between;margin-bottom:4px;">
