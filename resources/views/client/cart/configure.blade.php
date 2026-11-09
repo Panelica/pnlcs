@@ -27,7 +27,10 @@
 @if((string) $product->description !== '')
 <div class="pn-card" style="margin-bottom:16px;">
     <div class="pn-card-header">{{ __('client.cart.product') }}</div>
-    <div class="pn-card-body">{!! $product->descriptionHtml() !!}</div>
+    <div class="pn-card-body">
+        <div style="font-weight:700;margin-bottom:6px;">{{ $product->name }}</div>
+        {!! $product->descriptionHtml() !!}
+    </div>
 </div>
 @endif
 
