@@ -47,7 +47,10 @@ class CartController extends Controller
     {
         $groups = ProductGroup::where('hidden', false)
             ->with(['products' => function ($q) {
-                $q->active()->with('pricing')->orderBy('sort_order');
+                // translations: the card asks each product for the description
+                // in the visitor's language; without this the listing ran two
+                // extra queries per product (measured: 43 -> 63 on ten products).
+                $q->active()->with('pricing', 'translations')->orderBy('sort_order');
             }])
             ->orderBy('sort_order')
             ->get();

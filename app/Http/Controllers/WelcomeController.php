@@ -15,7 +15,7 @@ class WelcomeController extends Controller
 {
     public function index()
     {
-        $products = Product::with('pricing', 'group')
+        $products = Product::with('pricing', 'group', 'translations')
             ->where('hidden', false)
             ->where('retired', false)
             ->orderBy('sort_order')

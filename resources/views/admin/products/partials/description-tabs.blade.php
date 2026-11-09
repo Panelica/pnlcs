@@ -38,7 +38,10 @@
         @include('admin.products.partials.markdown-editor', [
             'name' => "translations[{$lang->code}][description]",
             'id' => 'md-desc-'.$lang->code,
-            'value' => old("translations[{$lang->code}][description]", $row?->description),
+            // Dot notation: old() reads the flashed input with Arr::get, so a
+            // bracketed key never matches and a validation error silently threw
+            // away what the operator had typed in this tab (measured).
+            'value' => old("translations.{$lang->code}.description", $row?->description),
             'rows' => $editorRows,
         ])
         <div style="margin-top:6px;display:flex;align-items:center;gap:10px;flex-wrap:wrap;">

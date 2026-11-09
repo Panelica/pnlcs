@@ -55,7 +55,6 @@ class ProductCreator
             $validated['server_type'] = null;
         }
 
-
         // Left empty, the column's own default applies; null is not a setup mode.
         if (array_key_exists('auto_setup', $validated) && $validated['auto_setup'] === null) {
             unset($validated['auto_setup']);

@@ -331,7 +331,7 @@ class ServiceController extends Controller
 
         $availableProducts = Product::active()
             ->where('id', '!=', $service->product_id)
-            ->with('pricing')
+            ->with('pricing', 'translations')
             ->get()
             ->filter(function (Product $product) use ($cycle, &$prices, $service, $upgrades) {
                 // Only packages the service's own module can move it onto.
