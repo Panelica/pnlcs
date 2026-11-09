@@ -95,3 +95,64 @@ it('shows the operator selling line instead of the panel description', function 
         ->assertSee('Automate anything, no code')
         ->assertDontSee('Workflow automation tool');
 });
+
+it('asks the panel once and serves later visits from the cache', function () {
+    showcaseServer();
+    enableShowcase();
+    fakeShowcaseCatalogue([
+        ['slug' => 'wordpress', 'name' => 'WordPress', 'description' => '', 'logo_url' => '', 'categories' => []],
+    ]);
+
+    $this->get('/')->assertOk()->assertSee('WordPress');
+    $this->get('/')->assertOk()->assertSee('WordPress');
+    $this->get('/')->assertOk()->assertSee('WordPress');
+
+    // The front page is the most-hit page there is; every visit waiting on the
+    // panel made it as slow as the panel.
+    Http::assertSentCount(1);
+});
+
+it('applies a change in the admin catalogue at once, without waiting for the cache', function () {
+    showcaseServer();
+    enableShowcase();
+    fakeShowcaseCatalogue([
+        ['slug' => 'ghostblog', 'name' => 'GhostBlogApp', 'description' => '', 'logo_url' => '', 'categories' => []],
+    ]);
+
+    $this->get('/')->assertOk()->assertSee('GhostBlogApp');
+
+    DockerApp::create(['slug' => 'ghostblog', 'is_sellable' => false]);
+
+    $this->get('/')->assertOk()->assertDontSee('GhostBlogApp');
+    Http::assertSentCount(1);
+});
+
+it('tries the panel again a minute after it failed', function () {
+    showcaseServer();
+    enableShowcase();
+    fakeShowcaseCatalogue([], 500);
+
+    $this->get('/')->assertOk()->assertDontSee('oca__grid', false);
+    $this->get('/')->assertOk();
+    Http::assertSentCount(1);
+
+    $this->travel(61)->seconds();
+    $this->get('/')->assertOk();
+    Http::assertSentCount(2);
+});
+
+it('reads the catalogue afresh when the server is edited', function () {
+    $server = showcaseServer();
+    enableShowcase();
+    fakeShowcaseCatalogue([
+        ['slug' => 'wordpress', 'name' => 'WordPress', 'description' => '', 'logo_url' => '', 'categories' => []],
+    ]);
+
+    $this->get('/')->assertOk();
+
+    $this->travel(5)->seconds();
+    $server->update(['hostname' => 'panel2.showcase.test']);
+
+    $this->get('/')->assertOk();
+    Http::assertSentCount(2);
+});
