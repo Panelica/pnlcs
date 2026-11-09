@@ -52,7 +52,7 @@
                 @else
                     <div class="pn-product-price">{{ __('client.store.contact_us') }}</div>
                 @endif
-                @if($product->description)
+                @if($product->hasDescription())
                     {{-- A bounded plain excerpt, as the listing has always shown: one product with a long description must not stretch every card in the grid. The formatted description is on the configure page. --}}
                     <div style="font-size:13px;color:var(--muted);line-height:1.65;margin:12px 0 10px">{{ Str::limit($product->descriptionText(), 120) }}</div>
                 @endif

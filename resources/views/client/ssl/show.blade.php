@@ -106,7 +106,7 @@
             <div class="card-header"><h5 class="mb-0">{{ __('client.cart.product') }}</h5></div>
             <div class="card-body">
                 <p class="mb-1 fw-bold">{{ $order->service->product->name }}</p>
-                @if((string) $order->service->product->description !== '')
+                @if($order->service->product->hasDescription())
                 <div class="mb-0 text-muted small">{!! $order->service->product->descriptionHtml() !!}</div>
                 @endif
             </div>

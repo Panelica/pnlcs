@@ -2160,6 +2160,7 @@ return [
         'create' => 'Create Product',
         'create_group' => 'Create Group',
         'description_markdown_hint' => 'Markdown: **bold**, *italic*, lists and links are supported.',
+        'description_copy_default' => 'Copy the default description',
         'md_bold' => 'Bold (Ctrl+B)',
         'md_italic' => 'Italic (Ctrl+I)',
         'md_heading' => 'Heading',

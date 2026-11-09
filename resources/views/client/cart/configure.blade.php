@@ -24,7 +24,7 @@
     <a href="{{ route('client.store') }}" class="btn btn-outline btn-sm">&larr; {{ __('client.actions.back') }}</a>
 </div>
 
-@if((string) $product->description !== '')
+@if($product->hasDescription())
 <div class="pn-card" style="margin-bottom:16px;">
     <div class="pn-card-header">{{ __('client.cart.product') }}: <strong>{{ $product->name }}</strong></div>
     <div class="pn-card-body" style="font-size:13px;color:var(--muted);line-height:1.65;">{!! $product->descriptionHtml() !!}</div>

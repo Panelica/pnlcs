@@ -36,6 +36,8 @@ class ProductCreator
             'pricing' => 'nullable|array',
             'pricing.*' => 'nullable|array',
             'pricing.*.*' => 'nullable|numeric|min:-1',
+            'translations' => 'nullable|array',
+            'translations.*.description' => 'nullable|string',
         ];
     }
 
@@ -45,13 +47,14 @@ class ProductCreator
      */
     public function create(array $validated, array $pricing = [], ?string $packageName = null): Product
     {
-        unset($validated['pricing']);
+        unset($validated['pricing'], $validated['translations']);
 
         // An SSL certificate is issued by its SSL module, not provisioned by a
         // server module; the create form hides the module select for it.
         if (($validated['type'] ?? '') === 'ssl') {
             $validated['server_type'] = null;
         }
+
 
         // Left empty, the column's own default applies; null is not a setup mode.
         if (array_key_exists('auto_setup', $validated) && $validated['auto_setup'] === null) {

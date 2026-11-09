@@ -2160,6 +2160,7 @@ return [
         'create' => '创建产品',
         'create_group' => '创建产品组',
         'description_markdown_hint' => 'Markdown：支持**粗体**、*斜体*、列表和链接。',
+        'description_copy_default' => '复制默认描述',
         'md_bold' => '粗体 (Ctrl+B)',
         'md_italic' => '斜体 (Ctrl+I)',
         'md_heading' => '标题',

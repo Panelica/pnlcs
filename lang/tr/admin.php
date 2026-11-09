@@ -2141,6 +2141,7 @@ return [
         'create' => 'Ürün Oluştur',
         'create_group' => 'Ürün Grubu Oluştur',
         'description_markdown_hint' => 'Markdown: **kalın**, *italik*, listeler ve bağlantılar desteklenir.',
+        'description_copy_default' => 'Varsayılan açıklamayı kopyala',
         'md_bold' => 'Kalın (Ctrl+B)',
         'md_italic' => 'İtalik (Ctrl+I)',
         'md_heading' => 'Başlık',

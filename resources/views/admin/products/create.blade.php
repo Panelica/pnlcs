@@ -71,7 +71,7 @@
                     <label class="form-label">{{ __('proxmox.product.title') }}</label>
                     <div style="font-size:12px;color:#555;background:#f1f5fb;border:1px solid #dbe5f3;border-radius:6px;padding:8px 10px;">{{ __('proxmox.product.create_hint') }}</div>
                 </div>
-                <div class="form-group" style="grid-column:span 2;"><label class="form-label">{{ __('common.form.description') }}</label>@include('admin.products.partials.markdown-editor', ['value' => old('description'), 'rows' => 4])</div>
+                <div class="form-group" style="grid-column:span 2;">@include('admin.products.partials.description-tabs', ['product' => null, 'value' => old('description'), 'translationLanguages' => $translationLanguages ?? collect(), 'rows' => 5])</div>
             </div>
         </div>
     </div>

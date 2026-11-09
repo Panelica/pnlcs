@@ -49,7 +49,7 @@
                     <input type="radio" name="new_product_id" value="{{ $product->id }}" required style="margin:0;" @disabled($blocked)>
                     <div style="flex:1; min-width:0;">
                         <div style="font-weight:500; font-size:13px; color:#1a4d80;">{{ $product->name }}</div>
-                        @if($product->description)
+                        @if($product->hasDescription())
                         <div style="font-size:12px; color:var(--muted); margin-top:3px;">{{ Str::limit($product->descriptionText(), 100) }}</div>
                         @endif
                     </div>

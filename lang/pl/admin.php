@@ -2160,6 +2160,7 @@ return [
         'create' => 'Utwórz produkt',
         'create_group' => 'Utwórz grupę',
         'description_markdown_hint' => 'Markdown: obsługiwane są **pogrubienie**, *kursywa*, listy i linki.',
+        'description_copy_default' => 'Skopiuj opis domyślny',
         'md_bold' => 'Pogrubienie (Ctrl+B)',
         'md_italic' => 'Kursywa (Ctrl+I)',
         'md_heading' => 'Nagłówek',
