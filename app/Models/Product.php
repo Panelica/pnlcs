@@ -5,6 +5,7 @@ namespace App\Models;
 use App\Services\BillingCycleHelper;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Support\Str;
 
 class Product extends Model
 {
@@ -264,5 +265,23 @@ class Product extends Model
         }
 
         return $out;
+    }
+
+    /**
+     * The product description as safe HTML.
+     *
+     * The admin writes Markdown (a small toolbar over the textarea); this is
+     * the one place it becomes HTML. Str::markdown() escapes raw HTML, so a
+     * stray <script> in the description is shown as text, not run.
+     */
+    public function descriptionHtml(): string
+    {
+        return Str::markdown((string) $this->description);
+    }
+
+    /** The description as plain text, for the truncated excerpts. */
+    public function descriptionText(): string
+    {
+        return trim(html_entity_decode(strip_tags($this->descriptionHtml()), ENT_QUOTES | ENT_HTML5, 'UTF-8'));
     }
 }

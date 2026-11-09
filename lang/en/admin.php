@@ -2159,6 +2159,7 @@ return [
         'confirm_delete' => 'Delete this product?',
         'create' => 'Create Product',
         'create_group' => 'Create Group',
+        'description_markdown_hint' => 'Markdown: **bold**, *italic*, lists and links are supported.',
         'edit' => 'Edit Product',
         'group_name' => 'Group Name',
         'module_placeholder' => 'Module placeholder',

@@ -2159,6 +2159,7 @@ return [
         'confirm_delete' => 'Usunąć ten produkt?',
         'create' => 'Utwórz produkt',
         'create_group' => 'Utwórz grupę',
+        'description_markdown_hint' => 'Markdown: obsługiwane są **pogrubienie**, *kursywa*, listy i linki.',
         'edit' => 'Edytuj produkt',
         'group_name' => 'Nazwa grupy',
         'module_placeholder' => 'Miejsce na moduł',

@@ -2140,6 +2140,7 @@ return [
         'confirm_delete' => 'Bu ürün silinsin mi?',
         'create' => 'Ürün Oluştur',
         'create_group' => 'Ürün Grubu Oluştur',
+        'description_markdown_hint' => 'Markdown: **kalın**, *italik*, listeler ve bağlantılar desteklenir.',
         'edit' => 'Ürünü Düzenle',
         'group_name' => 'Grup Adı',
         'module_placeholder' => 'Modül yer tutucu',
