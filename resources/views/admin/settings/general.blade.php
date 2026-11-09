@@ -417,16 +417,19 @@
                     <select name="OfficialRateProvider" class="form-control">
                         <option value="">{{ __('admin.settings.official_rate_none') }}</option>
                         <option value="tcmb" {{ ($settings['OfficialRateProvider'] ?? '') === 'tcmb' ? 'selected' : '' }}>{{ __('admin.settings.official_rate_tcmb') }}</option>
+                        <option value="nbp" {{ ($settings['OfficialRateProvider'] ?? '') === 'nbp' ? 'selected' : '' }}>{{ __('admin.settings.official_rate_nbp') }}</option>
                         @foreach(\App\Services\OfficialRateProviders::all() as $provider)
                             <option value="{{ $provider['key'] }}" {{ ($settings['OfficialRateProvider'] ?? '') === $provider['key'] ? 'selected' : '' }}>{{ $provider['name'] }} ({{ $provider['base'] }} → {{ $provider['currency'] }})</option>
                         @endforeach
                     </select>
+                    <div style="font-size:12px;color:#777;margin-top:4px;">{{ __('admin.settings.official_rate_nbp_hint') }}</div>
                 </div>
                 <div class="form-group"><label class="form-label">{{ __('admin.settings.tcmb_rate_kind') }}</label>
                     <select name="TcmbRateKind" class="form-control">
                         <option value="ForexSelling" {{ ($settings['TcmbRateKind'] ?? 'ForexSelling') === 'ForexSelling' ? 'selected' : '' }}>{{ __('pdf.rate_kind_selling') }}</option>
                         <option value="ForexBuying" {{ ($settings['TcmbRateKind'] ?? '') === 'ForexBuying' ? 'selected' : '' }}>{{ __('pdf.rate_kind_buying') }}</option>
                     </select>
+                    <div style="font-size:12px;color:#777;margin-top:4px;">{{ __('admin.settings.tcmb_rate_kind_hint') }}</div>
                 </div>
                 <div class="form-group"><label class="form-label">{{ __('admin.settings.payment_reference_prefix') }}</label><input type="text" name="PaymentReferencePrefix" value="{{ $settings['PaymentReferencePrefix'] ?? 'INV' }}" maxlength="8" class="form-control"><div style="font-size:12px;color:#777;margin-top:4px;">{{ __('admin.settings.payment_reference_prefix_hint') }}</div></div>
                 <div class="form-group" style="grid-column:span 2;"><label class="form-label">{{ __('admin.settings.auto_approve_emails') }}</label><input type="text" name="AutoApproveOrderEmails" value="{{ $settings['AutoApproveOrderEmails'] ?? '' }}" class="form-control" placeholder="tester@example.com, qa@example.com"><div style="font-size:12px;color:#777;margin-top:4px;">{{ __('admin.settings.auto_approve_emails_hint') }}</div></div>

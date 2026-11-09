@@ -71,3 +71,13 @@ it('says an account in another currency is invoiced in it, when customers may ch
     Setting::set(CustomerCurrency::SETTING, '0', 'general');
     expect(lcPage('terms', 'en'))->not->toContain('If your account is set to one of them');
 });
+
+it('names the National Bank of Poland for a shop billing in a currency it publishes', function () {
+    lcShop('PLN');
+    Currency::updateOrCreate(['code' => 'EUR'], ['prefix' => '€', 'suffix' => '', 'format' => 1, 'rate' => 4.3, 'is_default' => false]);
+    Setting::set('BillingCurrency', 'EUR', 'general');
+    Setting::set('OfficialRateProvider', 'nbp', 'general');
+
+    expect(lcPage('terms', 'en'))->toContain('National Bank of Poland')->toContain('euros (EUR)')
+        ->and(lcPage('terms', 'tr'))->toContain('Polonya Ulusal Bankası')->toContain('euro (EUR)');
+});

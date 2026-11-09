@@ -13,6 +13,8 @@
 <p>Hizmet bedelleri sitemizde <strong>{{ $money['shown'] }}</strong> olarak gösterilir.
 @if($money['tcmb'])
 Fatura, siparişin verildiği gün Türkiye Cumhuriyet Merkez Bankası tarafından yayımlanan döviz satış kuru esas alınarak <strong>{{ $money['billed'] }}</strong> olarak düzenlenir. Uygulanan kur, kurun tarihi ve bülten numarası faturanızın üzerinde açıkça yazar; dilediğiniz zaman Merkez Bankası'nın kendi yayınından doğrulayabilirsiniz.
+@elseif($money['nbp'])
+Fatura, siparişin verildiği gün Polonya Ulusal Bankası (NBP) tarafından yayımlanan ortalama kur esas alınarak <strong>{{ $money['billed'] }}</strong> olarak düzenlenir. Uygulanan kur, kurun tarihi ve tablo numarası faturanızın üzerinde yazar; NBP'nin kendi yayınından doğrulayabilirsiniz.
 @elseif($money['billed'])
 Fatura, siparişin verildiği günün kuru esas alınarak <strong>{{ $money['billed'] }}</strong> olarak düzenlenir; uygulanan kur faturanızın üzerinde yazar.
 @else

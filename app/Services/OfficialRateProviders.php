@@ -88,8 +88,8 @@ class OfficialRateProviders
             }
 
             $key = (string) ($entry['key'] ?? '');
-            if (! preg_match('/^[a-z0-9][a-z0-9_-]{0,31}$/', $key) || $key === 'tcmb') {
-                $errors[] = "$at: key must be 1-32 lowercase letters, digits, - or _, and not \"tcmb\".";
+            if (! preg_match('/^[a-z0-9][a-z0-9_-]{0,31}$/', $key) || in_array($key, ['tcmb', 'nbp'], true)) {
+                $errors[] = "$at: key must be 1-32 lowercase letters, digits, - or _, and not \"tcmb\" or \"nbp\".";
             } elseif (in_array($key, $keys, true)) {
                 $errors[] = "$at: key \"$key\" is used twice.";
             }
