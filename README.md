@@ -18,7 +18,7 @@
 
 <p align="center">
   <a href="https://pnlcs.com/"><img src="https://img.shields.io/badge/Website-pnlcs.com-4051A9?style=for-the-badge" alt="Website — pnlcs.com"></a>
-  <a href="https://hosting.panelica.com/"><img src="https://img.shields.io/badge/Live%20Demo-hosting.panelica.com-22C55E?style=for-the-badge" alt="Live Demo — hosting.panelica.com"></a>
+  <a href="https://demo.pnlcs.com/"><img src="https://img.shields.io/badge/Live%20Demo-demo.pnlcs.com-22C55E?style=for-the-badge" alt="Live Demo — demo.pnlcs.com"></a>
   <a href="https://docs.pnlcs.com/"><img src="https://img.shields.io/badge/Documentation-docs.pnlcs.com-0EA5E9?style=for-the-badge" alt="Documentation — docs.pnlcs.com"></a>
   <a href="https://community.pnlcs.com/"><img src="https://img.shields.io/badge/Community-community.pnlcs.com-F59E0B?style=for-the-badge" alt="Community — community.pnlcs.com"></a>
 </p>
