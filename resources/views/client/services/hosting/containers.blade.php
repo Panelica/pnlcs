@@ -374,7 +374,7 @@
                 @if($logo)
                 <img class="ct-it-logo" src="{{ $logo }}" alt="">
                 @else
-                <span class="ct-it-mark">{{ strtoupper(substr($c['template'] ?: $c['name'], 0, 1)) }}</span>
+                <span class="ct-it-mark">{{ initial($c['template'] ?: $c['name']) }}</span>
                 @endif
                 <div class="ct-it-id">
                     <div class="ct-name">{{ $c['name'] }}</div>
