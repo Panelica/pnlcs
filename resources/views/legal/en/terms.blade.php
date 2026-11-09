@@ -13,6 +13,8 @@
 <p>Prices are displayed on our site in <strong>{{ $money['shown'] }}</strong>.
 @if($money['tcmb'])
 Invoices are issued in <strong>{{ $money['billed'] }}</strong>, converted at the foreign exchange selling rate published by the Central Bank of the Republic of Türkiye (TCMB) on the day the order is placed. The rate applied, its date and the bulletin number are printed on your invoice so you can verify them against the Central Bank's own publication.
+@elseif($money['nbp'])
+Invoices are issued in <strong>{{ $money['billed'] }}</strong>, converted at the mid rate published by the National Bank of Poland (NBP) on the day the order is placed. The rate applied, its date and the table number are printed on your invoice so you can verify them against the NBP's own publication.
 @elseif($money['billed'])
 Invoices are issued in <strong>{{ $money['billed'] }}</strong>, converted at the rate of the day the order is placed; the rate applied is printed on your invoice.
 @else

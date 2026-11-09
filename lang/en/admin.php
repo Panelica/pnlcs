@@ -3353,6 +3353,8 @@ return [
     'settings.official_rate_provider' => 'Official rate source',
     'settings.official_rate_none' => 'None (commercial rate)',
     'settings.official_rate_tcmb' => 'TCMB (Central Bank of Turkey)',
+    'settings.official_rate_nbp' => 'NBP (National Bank of Poland)',
+    'settings.official_rate_nbp_hint' => 'NBP is used when the shop currency is PLN: the rates of the currencies in its table A come from its mid rate, and invoices in the billing currency print its date and table number. Other codes keep the commercial rate.',
     'settings.tcmb_rate_kind' => 'TCMB rate',
     'settings.official_rate_unknown' => 'That official rate source is not in the provider list.',
     'settings.official_rate_providers' => 'Official rate providers (JSON)',

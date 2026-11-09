@@ -3327,6 +3327,8 @@ return [
     'settings.official_rate_provider' => 'Resmi kur kaynağı',
     'settings.official_rate_none' => 'Yok (ticari kur)',
     'settings.official_rate_tcmb' => 'TCMB (Türkiye Cumhuriyet Merkez Bankası)',
+    'settings.official_rate_nbp' => 'NBP (Polonya Ulusal Bankası)',
+    'settings.official_rate_nbp_hint' => 'NBP, mağaza para birimi PLN olduğunda kullanılır: A tablosundaki para birimlerinin kurları ortalama kurdan gelir ve fatura para birimindeki faturalar tarih ile tablo numarasını yazar. Diğer kodlar ticari kuru korur.',
     'settings.tcmb_rate_kind' => 'TCMB kuru',
     'settings.official_rate_unknown' => 'Bu resmi kur kaynağı sağlayıcı listesinde yok.',
     'settings.official_rate_providers' => 'Resmi kur sağlayıcıları (JSON)',

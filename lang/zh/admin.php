@@ -3353,6 +3353,8 @@ return [
     'settings.official_rate_provider' => '官方汇率来源',
     'settings.official_rate_none' => '无（商业汇率）',
     'settings.official_rate_tcmb' => 'TCMB（土耳其中央银行）',
+    'settings.official_rate_nbp' => 'NBP（波兰国家银行）',
+    'settings.official_rate_nbp_hint' => '当商店货币为 PLN 时使用 NBP：A 表中的货币汇率取自其中间汇率，以结算货币开具的发票会注明日期和表号。其他代码保留商业汇率。',
     'settings.tcmb_rate_kind' => 'TCMB 汇率',
     'settings.official_rate_unknown' => '该官方汇率来源不在提供方列表中。',
     'settings.official_rate_providers' => '官方汇率提供方（JSON）',

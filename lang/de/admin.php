@@ -3352,6 +3352,8 @@ return [
     'settings.official_rate_provider' => 'Offizielle Preisquelle',
     'settings.official_rate_none' => 'Keine (kommerzieller Tarif)',
     'settings.official_rate_tcmb' => 'TCMB (Zentralbank der Türkei)',
+    'settings.official_rate_nbp' => 'NBP (Polnische Nationalbank)',
+    'settings.official_rate_nbp_hint' => 'NBP wird verwendet, wenn die Shop-Währung PLN ist: Die Kurse der Währungen aus Tabelle A stammen aus dem Mittelkurs, und Rechnungen in der Abrechnungswährung nennen Datum und Tabellennummer. Andere Codes behalten den kommerziellen Kurs.',
     'settings.tcmb_rate_kind' => 'TCMB-Rate',
     'settings.official_rate_unknown' => 'Diese offizielle Kursquelle steht nicht in der Anbieterliste.',
     'settings.official_rate_providers' => 'Offizielle Kursanbieter (JSON)',

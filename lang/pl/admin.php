@@ -3353,6 +3353,8 @@ return [
     'settings.official_rate_provider' => 'Oficjalne źródło kursu',
     'settings.official_rate_none' => 'Brak (kurs komercyjny)',
     'settings.official_rate_tcmb' => 'TCMB (Bank Centralny Turcji)',
+    'settings.official_rate_nbp' => 'NBP (Narodowy Bank Polski)',
+    'settings.official_rate_nbp_hint' => 'NBP jest używane, gdy waluta sklepu to PLN: kursy walut z tabeli A pochodzą z kursu średniego, a faktury w walucie rozliczeniowej podają datę i numer tabeli NBP. Pozostałe kody zachowują kurs komercyjny.',
     'settings.tcmb_rate_kind' => 'Kurs TCMB',
     'settings.official_rate_unknown' => 'Tego oficjalnego źródła kursu nie ma na liście dostawców.',
     'settings.official_rate_providers' => 'Dostawcy oficjalnych kursów (JSON)',

@@ -417,10 +417,12 @@
                     <select name="OfficialRateProvider" class="form-control">
                         <option value="">{{ __('admin.settings.official_rate_none') }}</option>
                         <option value="tcmb" {{ ($settings['OfficialRateProvider'] ?? '') === 'tcmb' ? 'selected' : '' }}>{{ __('admin.settings.official_rate_tcmb') }}</option>
+                        <option value="nbp" {{ ($settings['OfficialRateProvider'] ?? '') === 'nbp' ? 'selected' : '' }}>{{ __('admin.settings.official_rate_nbp') }}</option>
                         @foreach(\App\Services\OfficialRateProviders::all() as $provider)
                             <option value="{{ $provider['key'] }}" {{ ($settings['OfficialRateProvider'] ?? '') === $provider['key'] ? 'selected' : '' }}>{{ $provider['name'] }} ({{ $provider['base'] }} → {{ $provider['currency'] }})</option>
                         @endforeach
                     </select>
+                    <div style="font-size:12px;color:#777;margin-top:4px;">{{ __('admin.settings.official_rate_nbp_hint') }}</div>
                 </div>
                 <div class="form-group"><label class="form-label">{{ __('admin.settings.tcmb_rate_kind') }}</label>
                     <select name="TcmbRateKind" class="form-control">

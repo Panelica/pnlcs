@@ -238,8 +238,8 @@ class SettingController extends Controller
             $data['OfficialRateProviders'] = $providers === [] ? '' : json_encode($providers, JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE);
         }
 
-        // The official source is TCMB, nothing, or a provider in the list.
-        if (array_key_exists('OfficialRateProvider', $data) && ! in_array((string) $data['OfficialRateProvider'], ['', 'tcmb'], true)) {
+        // The official source is TCMB, NBP, nothing, or a provider in the list.
+        if (array_key_exists('OfficialRateProvider', $data) && ! in_array((string) $data['OfficialRateProvider'], ['', 'tcmb', 'nbp'], true)) {
             $listed = array_key_exists('OfficialRateProviders', $data)
                 ? array_column((array) json_decode((string) $data['OfficialRateProviders'], true), 'key')
                 : array_column(\App\Services\OfficialRateProviders::all(), 'key');

@@ -5,6 +5,7 @@ namespace App\Console\Commands;
 use App\Models\Currency;
 use App\Models\Setting;
 use App\Services\ExchangeRateService;
+use App\Services\NbpRateService;
 use App\Services\OfficialRateProviders;
 use App\Services\TcmbRateService;
 use Illuminate\Console\Command;
@@ -35,8 +36,24 @@ class CurrencyUpdateCommand extends Command
             return self::SUCCESS;
         }
 
+        $provider = (string) Setting::get('OfficialRateProvider', '');
+
+        // NBP quotes against the złoty: when it is the chosen source and the
+        // shop keeps its books in PLN, its table A drives every currency. The
+        // commercial providers only fill the codes NBP does not publish.
+        $nbp = $provider === 'nbp' && strtoupper($base->code) === 'PLN'
+            ? app(NbpRateService::class)->table()
+            : null;
+
+        if ($provider === 'nbp' && $nbp === null) {
+            $this->warn(strtoupper($base->code) === 'PLN'
+                ? 'NBP is unreachable - rates left at the commercial provider values.'
+                : sprintf('NBP quotes against PLN, the shop currency is %s - rates left at the commercial provider values.', strtoupper($base->code)));
+        }
+
         $rates = app(ExchangeRateService::class)->rates($base->code);
-        if ($rates === null) {
+
+        if ($rates === null && $nbp === null) {
             Log::error('Currency update: all rate providers failed', ['base' => $base->code]);
             $this->error('All exchange rate providers failed.');
             return self::FAILURE;
@@ -46,7 +63,14 @@ class CurrencyUpdateCommand extends Command
         $missing = [];
         foreach ($others as $currency) {
             $code = strtoupper($currency->code);
-            if (!isset($rates[$code]) || !is_numeric($rates[$code]) || $rates[$code] <= 0) {
+
+            if ($nbp !== null && isset($nbp['rates'][$code])) {
+                $currency->update(['rate' => round(1 / $nbp['rates'][$code], 5)]);
+                $updated[] = $code;
+                continue;
+            }
+
+            if ($rates === null || !isset($rates[$code]) || !is_numeric($rates[$code]) || $rates[$code] <= 0) {
                 $missing[] = $code;
                 continue;
             }
@@ -58,8 +82,8 @@ class CurrencyUpdateCommand extends Command
         // when the operator named one: invoices print the rate they were
         // struck at, and a customer can check a central bank bulletin number
         // but not a commercial API's.
-        $provider = (string) Setting::get('OfficialRateProvider', '');
         $official = match (true) {
+            $provider === 'nbp' => $nbp !== null && $this->applyNbpProvenance($nbp),
             $provider === 'tcmb' => $this->applyOfficialLiraRate($base, $updated, $missing),
             $provider !== '' => $this->applyOperatorProviderRate($provider, $base, $updated, $missing),
             default => false,
@@ -141,6 +165,41 @@ class CurrencyUpdateCommand extends Command
             $official['date'],
             $official['bulletin'] ?? '-',
             number_format($official['rate'], 4)
+        ));
+
+        return true;
+    }
+
+    /**
+     * Record the NBP provenance for the billing currency, when it is one NBP
+     * publishes. The rates themselves are already NBP's (the loop above used
+     * its table); a shop that bills in its own złoty has no foreign invoice to
+     * stamp, so there is nothing to record and the caller clears the old
+     * provenance.
+     *
+     * @param  array{date: string, no: string, rates: array<string, float>}  $table
+     */
+    private function applyNbpProvenance(array $table): bool
+    {
+        $billing = strtoupper(trim((string) Setting::get('BillingCurrency', '')));
+
+        if ($billing === '' || $billing === 'PLN' || ! isset($table['rates'][$billing])) {
+            return false;
+        }
+
+        Setting::set('ExchangeRateSource', 'NBP');
+        Setting::set('ExchangeRateKind', 'reference');
+        Setting::set('ExchangeRateDate', $table['date']);
+        Setting::set('ExchangeRateBulletin', (string) $table['no']);
+        Setting::set('ExchangeRateCurrency', $billing);
+
+        $this->info(sprintf(
+            '%s set from NBP (%s, table %s): 1 PLN = %s %s',
+            $billing,
+            $table['date'],
+            $table['no'] !== '' ? $table['no'] : '-',
+            number_format(1 / $table['rates'][$billing], 4),
+            $billing
         ));
 
         return true;

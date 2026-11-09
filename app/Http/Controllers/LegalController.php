@@ -198,7 +198,8 @@ class LegalController extends Controller
      * What the documents say about currency: the one prices are shown in (the
      * shop currency), and the one invoices are issued in - the billing
      * currency when the operator set one (BillingCurrency), stamped at the
-     * day's rate, and whether that rate is the Turkish Central Bank's.
+     * day's rate, and whether that rate is the Turkish Central Bank's or the
+     * Polish National Bank's.
      *
      * The documents used to say "shown in US dollars, invoiced in Turkish
      * lira at the TCMB rate" on every installation, whatever it sold in.
@@ -207,16 +208,16 @@ class LegalController extends Controller
      * an account set to another currency is invoiced in that one instead, at
      * the day's rate (Invoice::booted) - the documents say so, as "choice".
      *
-     * @return array{shown: string, billed: ?string, tcmb: bool, choice: bool}
+     * @return array{shown: string, billed: ?string, tcmb: bool, nbp: bool, choice: bool}
      */
     public static function money(string $locale): array
     {
         try {
             $shop = strtoupper((string) (\App\Models\Currency::getDefault()?->code ?? 'USD'));
             $billing = strtoupper(trim((string) \App\Models\Setting::get('BillingCurrency', '')));
-            $tcmb = (string) \App\Models\Setting::get('OfficialRateProvider', '') === 'tcmb';
+            $provider = (string) \App\Models\Setting::get('OfficialRateProvider', '');
         } catch (\Throwable) {
-            return ['shown' => self::currencyName('USD', $locale), 'billed' => null, 'tcmb' => false, 'choice' => false];
+            return ['shown' => self::currencyName('USD', $locale), 'billed' => null, 'tcmb' => false, 'nbp' => false, 'choice' => false];
         }
 
         $billed = $billing !== '' && $billing !== $shop ? $billing : null;
@@ -224,7 +225,8 @@ class LegalController extends Controller
         return [
             'shown' => self::currencyName($shop, $locale),
             'billed' => $billed ? self::currencyName($billed, $locale) : null,
-            'tcmb' => $billed === 'TRY' && $tcmb,
+            'tcmb' => $billed === 'TRY' && $provider === 'tcmb',
+            'nbp' => $billed !== null && $provider === 'nbp' && \App\Services\NbpRateService::supports($billed),
             'choice' => \App\Support\CustomerCurrency::enabled(),
         ];
     }
