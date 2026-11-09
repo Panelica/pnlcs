@@ -571,6 +571,8 @@ class ProductController extends Controller
                     'quarterly_setup' => $request->input("pricing.{$currency->id}.quarterly_setup", 0),
                     'semiannually_setup' => $request->input("pricing.{$currency->id}.semiannually_setup", 0),
                     'annually_setup' => $request->input("pricing.{$currency->id}.annually_setup", 0),
+                    'biennially_setup' => $request->input("pricing.{$currency->id}.biennially_setup", 0),
+                    'triennially_setup' => $request->input("pricing.{$currency->id}.triennially_setup", 0),
                     'monthly' => $request->input("pricing.{$currency->id}.monthly", -1),
                     'quarterly' => $request->input("pricing.{$currency->id}.quarterly", -1),
                     'semiannually' => $request->input("pricing.{$currency->id}.semiannually", -1),

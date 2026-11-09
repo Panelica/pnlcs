@@ -88,8 +88,8 @@
                     </div>
                     @endforeach
                 </div>
-                <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:10px;">
-                    @foreach(['monthly_setup','quarterly_setup','semiannually_setup','annually_setup'] as $setup)
+                <div style="display:grid;grid-template-columns:repeat(6,1fr);gap:10px;">
+                    @foreach(['monthly_setup','quarterly_setup','semiannually_setup','annually_setup','biennially_setup','triennially_setup'] as $setup)
                     <div>
                         <label class="form-label" style="font-size:11px;">{{ str_replace('_', ' ', ucfirst($setup)) }}</label>
                         <input type="number" step="0.01" name="pricing[{{ $currency->id }}][{{ $setup }}]" value="{{ $p ? $p->$setup : 0 }}" class="form-control" style="font-size:12px;">
