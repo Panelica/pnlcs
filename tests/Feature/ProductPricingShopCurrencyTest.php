@@ -12,7 +12,10 @@ use App\Models\Product;
  * offers those boxes and a save leaves their rows alone.
  */
 
-function shopCurrency(): Currency
+// Named for this file: the plain name shopCurrency() already belongs to
+// BillingCurrencyAndIdentityTest, and declaring it twice is a fatal error that
+// stops the whole suite from loading - not just these tests.
+function pricingShopCurrency(): Currency
 {
     $pln = Currency::firstOrCreate(
         ['code' => 'PLN'],
@@ -27,7 +30,7 @@ function shopCurrency(): Currency
     return $pln;
 }
 
-function otherCurrency(): Currency
+function pricingOtherCurrency(): Currency
 {
     return Currency::firstOrCreate(
         ['code' => 'EUR'],
@@ -36,8 +39,8 @@ function otherCurrency(): Currency
 }
 
 test('the product form offers only the shop currency price', function () {
-    $default = shopCurrency();
-    $other = otherCurrency();
+    $default = pricingShopCurrency();
+    $other = pricingOtherCurrency();
     $product = Product::factory()->create();
     $admin = Admin::factory()->create();
 
@@ -49,8 +52,8 @@ test('the product form offers only the shop currency price', function () {
 });
 
 test('saving the price updates the shop row and leaves another currency row alone', function () {
-    $default = shopCurrency();
-    $other = otherCurrency();
+    $default = pricingShopCurrency();
+    $other = pricingOtherCurrency();
     $product = Product::factory()->create(['type' => 'hosting']);
     Pricing::create(['type' => 'product', 'currency_id' => $default->id, 'rel_id' => $product->id, 'monthly' => 10]);
     Pricing::create(['type' => 'product', 'currency_id' => $other->id, 'rel_id' => $product->id, 'monthly' => 2.5]);
