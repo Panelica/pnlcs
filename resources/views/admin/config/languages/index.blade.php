@@ -79,7 +79,9 @@
             @foreach($languages as $lang)
             <tr>
                 <td>
-                    <x-language-flag :code="$lang->flag_code" size="24x18" :alt="$lang->code" fallback="badge" />
+                    @php($flagCode = $lang->flag_code)
+                    @php($flagAlt = $lang->code)
+                    <x-language-flag :code="$flagCode" size="24x18" :alt="$flagAlt" fallback="badge" />
                 </td>
                 <td><code>{{ $lang->code }}</code></td>
                 <td style="font-weight:600;">{{ $lang->name }}</td>
