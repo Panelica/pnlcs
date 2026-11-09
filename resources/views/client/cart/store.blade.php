@@ -53,7 +53,7 @@
                     <div class="pn-product-price">{{ __('client.store.contact_us') }}</div>
                 @endif
                 @if($product->description)
-                    <div style="font-size:13px;color:var(--muted);line-height:1.65;margin:12px 0 10px">{{ Str::limit(strip_tags($product->description), 120) }}</div>
+                    <div style="font-size:13px;color:var(--muted);line-height:1.65;margin:12px 0 10px">{{ Str::limit($product->descriptionText(), 120) }}</div>
                 @endif
                 {{-- What the plan actually gives, read from the product's own
                      limits rather than typed in by hand, so the card cannot

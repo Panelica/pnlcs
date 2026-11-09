@@ -24,6 +24,13 @@
     <a href="{{ route('client.store') }}" class="btn btn-outline btn-sm">&larr; {{ __('client.actions.back') }}</a>
 </div>
 
+@if((string) $product->description !== '')
+<div class="pn-card" style="margin-bottom:16px;">
+    <div class="pn-card-header">{{ __('client.cart.product') }}</div>
+    <div class="pn-card-body">{!! $product->descriptionHtml() !!}</div>
+</div>
+@endif
+
 <form method="POST" action="{{ route('client.cart.add') }}" id="configForm">
     @csrf
     <input type="hidden" name="product_id" value="{{ $product->id }}">

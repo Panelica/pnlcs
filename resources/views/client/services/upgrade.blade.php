@@ -50,7 +50,7 @@
                     <div style="flex:1; min-width:0;">
                         <div style="font-weight:500; font-size:13px; color:#1a4d80;">{{ $product->name }}</div>
                         @if($product->description)
-                        <div style="font-size:12px; color:var(--muted); margin-top:3px;">{{ Str::limit(strip_tags($product->description), 100) }}</div>
+                        <div style="font-size:12px; color:var(--muted); margin-top:3px;">{{ Str::limit($product->descriptionText(), 100) }}</div>
                         @endif
                     </div>
                     @if($price)
