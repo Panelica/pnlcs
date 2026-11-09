@@ -429,6 +429,7 @@
                         <option value="ForexSelling" {{ ($settings['TcmbRateKind'] ?? 'ForexSelling') === 'ForexSelling' ? 'selected' : '' }}>{{ __('pdf.rate_kind_selling') }}</option>
                         <option value="ForexBuying" {{ ($settings['TcmbRateKind'] ?? '') === 'ForexBuying' ? 'selected' : '' }}>{{ __('pdf.rate_kind_buying') }}</option>
                     </select>
+                    <div style="font-size:12px;color:#777;margin-top:4px;">{{ __('admin.settings.tcmb_rate_kind_hint') }}</div>
                 </div>
                 <div class="form-group"><label class="form-label">{{ __('admin.settings.payment_reference_prefix') }}</label><input type="text" name="PaymentReferencePrefix" value="{{ $settings['PaymentReferencePrefix'] ?? 'INV' }}" maxlength="8" class="form-control"><div style="font-size:12px;color:#777;margin-top:4px;">{{ __('admin.settings.payment_reference_prefix_hint') }}</div></div>
                 <div class="form-group" style="grid-column:span 2;"><label class="form-label">{{ __('admin.settings.auto_approve_emails') }}</label><input type="text" name="AutoApproveOrderEmails" value="{{ $settings['AutoApproveOrderEmails'] ?? '' }}" class="form-control" placeholder="tester@example.com, qa@example.com"><div style="font-size:12px;color:#777;margin-top:4px;">{{ __('admin.settings.auto_approve_emails_hint') }}</div></div>
