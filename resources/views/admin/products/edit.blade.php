@@ -88,8 +88,8 @@
                     </div>
                     @endforeach
                 </div>
-                <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:10px;">
-                    @foreach(['monthly_setup','quarterly_setup','semiannually_setup','annually_setup'] as $setup)
+                <div style="display:grid;grid-template-columns:repeat(6,1fr);gap:10px;">
+                    @foreach(['monthly_setup','quarterly_setup','semiannually_setup','annually_setup','biennially_setup','triennially_setup'] as $setup)
                     <div>
                         <label class="form-label" style="font-size:11px;">{{ str_replace('_', ' ', ucfirst($setup)) }}</label>
                         <input type="number" step="0.01" name="pricing[{{ $currency->id }}][{{ $setup }}]" value="{{ $p ? $p->$setup : 0 }}" class="form-control" style="font-size:12px;">
@@ -311,11 +311,15 @@
 // and mailbox counts it would never use.
 (function () {
     var moduleSelect = document.querySelector('select[name="server_type"]');
+    var typeSelect = document.querySelector('select[name="type"]');
     var panelica = document.querySelector('[data-module-card="panelica"]');
     function showCards() {
         var m = moduleSelect ? moduleSelect.value : '';
+        // The server module select is hidden for an SSL certificate, but it
+        // still carries its old value: the Panelica card must not appear there.
+        var isSsl = typeSelect ? typeSelect.value === 'ssl' : false;
         if (panelica) {
-            var on = m === '' || m === 'panelica';
+            var on = ! isSsl && (m === '' || m === 'custom' || m === 'panelica');
             panelica.style.display = on ? '' : 'none';
             panelica.querySelectorAll('input,select,textarea').forEach(function (f) { f.disabled = !on; });
         }
@@ -325,6 +329,7 @@
         if (pkg) { pkg.style.display = m === 'proxmox' ? 'none' : ''; }
     }
     if (moduleSelect) { moduleSelect.addEventListener('change', showCards); }
+    if (typeSelect) { typeSelect.addEventListener('change', showCards); }
     document.addEventListener('DOMContentLoaded', showCards);
 })();
 (function () {

@@ -155,6 +155,12 @@
                         <span class="key" style="font-size:13px">{{ $item["product_name"] ?? __('client.cart.product_fallback') }}</span>
                         <span style="font-weight:600">{{ display_money_fmt($item["price"] ?? 0) }}</span>
                     </div>
+                    @if((float) ($item["setup_fee"] ?? 0) > 0)
+                    <div class="pn-order-row">
+                        <span class="key text-muted" style="font-size:12px">{{ __('client.cart.setup_fee') }}</span>
+                        <span>{{ display_money_fmt($item["setup_fee"]) }}</span>
+                    </div>
+                    @endif
                     @endforeach
                     @if(($totals["discount"] ?? 0) > 0)
                     <div class="pn-order-row" style="color:var(--success)">

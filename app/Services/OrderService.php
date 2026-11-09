@@ -82,7 +82,7 @@ class OrderService
     {
         $order = DB::transaction(function () use ($client, $items, $paymentMethod, $promoCode) {
             $orderNum = $this->generateOrderNumber();
-            $totalAmount = array_sum(array_column($items, 'amount'));
+            $totalAmount = array_sum(array_column($items, 'amount')) + array_sum(array_column($items, 'setup_fee'));
 
             $order = Order::create([
                 'order_num' => $orderNum,
@@ -208,6 +208,21 @@ class OrderService
                         // addon line have always read the product's own flag.
                         'taxed' => (bool) ($product->tax ?? true),
                     ];
+
+                    // The one-time setup fee: a line of its own on the first
+                    // invoice, taxed as the product is. It is not a Hosting
+                    // line, so paying it renews nothing and renewals never
+                    // repeat it.
+                    $setupFee = round((float) ($item['setup_fee'] ?? 0), 2);
+                    if ($setupFee > 0) {
+                        $invoiceItems[] = [
+                            'type' => 'Setup',
+                            'rel_id' => $service->id,
+                            'description' => 'Setup fee: '.($product?->name ?? $service->domain ?? ''),
+                            'amount' => $setupFee,
+                            'taxed' => (bool) ($product->tax ?? true),
+                        ];
+                    }
                 }
             }
 
@@ -862,7 +877,7 @@ class OrderService
             'domain' => Domain::normalise($item['domain'] ?? null) ?: null,
             'payment_method' => $order->payment_method,
             'qty' => $item['qty'] ?? 1,
-            'first_payment_amount' => $item['first_payment_amount'] ?? $item['amount'] ?? 0,
+            'first_payment_amount' => $item['first_payment_amount'] ?? (($item['amount'] ?? 0) + ($item['setup_fee'] ?? 0)),
             'amount' => $item['amount'] ?? 0,
             'billing_cycle' => $billingCycle,
             'next_due_date' => $this->calculateNextDueDate($billingCycle),
