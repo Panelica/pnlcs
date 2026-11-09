@@ -2159,6 +2159,7 @@ return [
         'confirm_delete' => '删除此产品？',
         'create' => '创建产品',
         'create_group' => '创建产品组',
+        'pricing_shop_currency_hint' => '价格以商店货币计。选择其他货币的客户将看到按当日汇率换算的价格。',
         'edit' => '编辑产品',
         'group_name' => '组名称',
         'module_placeholder' => '选择模块…',

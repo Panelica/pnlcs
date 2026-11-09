@@ -2140,6 +2140,7 @@ return [
         'confirm_delete' => 'Bu ürün silinsin mi?',
         'create' => 'Ürün Oluştur',
         'create_group' => 'Ürün Grubu Oluştur',
+        'pricing_shop_currency_hint' => 'Fiyatlar mağaza para birimindedir. Başka bir para birimi seçen müşteri, fiyatları günlük kurla çevrilmiş olarak görür.',
         'edit' => 'Ürünü Düzenle',
         'group_name' => 'Grup Adı',
         'module_placeholder' => 'Modül yer tutucu',

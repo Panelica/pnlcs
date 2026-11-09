@@ -2159,6 +2159,7 @@ return [
         'confirm_delete' => 'Dieses Produkt löschen?',
         'create' => 'Produkt erstellen',
         'create_group' => 'Gruppe erstellen',
+        'pricing_shop_currency_hint' => 'Preise sind in der Shop-Währung. Ein Kunde, der eine andere Währung gewählt hat, sieht sie zum Tageskurs umgerechnet.',
         'edit' => 'Produkt bearbeiten',
         'group_name' => 'Gruppenname',
         'module_placeholder' => 'Modulplatzhalter',

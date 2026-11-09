@@ -2159,6 +2159,7 @@ return [
         'confirm_delete' => 'Delete this product?',
         'create' => 'Create Product',
         'create_group' => 'Create Group',
+        'pricing_shop_currency_hint' => 'Prices are in the shop currency. A customer who chose another currency sees them converted at the daily rate.',
         'edit' => 'Edit Product',
         'group_name' => 'Group Name',
         'module_placeholder' => 'Module placeholder',

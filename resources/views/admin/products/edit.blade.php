@@ -76,8 +76,16 @@
     <div class="card" style="margin-bottom:15px;">
         <div class="card-header"><strong>{{ __('admin.products.pricing') }}</strong></div>
         <div class="card-body">
-            @foreach($currencies as $currency)
-            @php $p = $pricing[$currency->id] ?? null; @endphp
+            {{-- One price, in the shop currency. A customer who chose another
+                 currency sees it converted at the daily rate; a price typed
+                 against each currency would not be the one charged. --}}
+            @php
+                $currency = $currencies->firstWhere('is_default', true) ?? $currencies->first();
+            @endphp
+            @if($currency)
+            @php
+                $p = $pricing[$currency->id] ?? null;
+            @endphp
             <div style="background:#f9f9f9;border:1px solid #eee;border-radius:4px;padding:15px;margin-bottom:12px;">
                 <p style="font-weight:600;font-size:13px;margin:0 0 10px;">{{ $currency->code }} ({{ $currency->prefix }})</p>
                 <div style="display:grid;grid-template-columns:repeat(6,1fr);gap:10px;margin-bottom:8px;">
@@ -96,8 +104,10 @@
                     </div>
                     @endforeach
                 </div>
+                <p style="font-size:11px;color:#999;margin:6px 0 0;">{{ __('admin.products.disable_cycle_hint') }}</p>
+                <p style="font-size:11px;color:#999;margin:4px 0 0;">{{ __('admin.products.pricing_shop_currency_hint') }}</p>
             </div>
-            @endforeach
+            @endif
         </div>
     </div>
 

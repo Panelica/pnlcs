@@ -2159,6 +2159,7 @@ return [
         'confirm_delete' => 'Usunąć ten produkt?',
         'create' => 'Utwórz produkt',
         'create_group' => 'Utwórz grupę',
+        'pricing_shop_currency_hint' => 'Ceny są w walucie sklepu. Klient, który wybrał inną walutę, zobaczy je przeliczone po kursie z dnia.',
         'edit' => 'Edytuj produkt',
         'group_name' => 'Nazwa grupy',
         'module_placeholder' => 'Miejsce na moduł',
