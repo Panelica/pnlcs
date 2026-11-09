@@ -3,6 +3,8 @@
 use App\Models\Client;
 use App\Models\Invoice;
 use App\Models\InvoiceItem;
+use App\Models\Product;
+use App\Models\Service;
 use App\Models\User;
 use App\Services\InvoiceService;
 use App\Services\MassPaymentService;
@@ -142,4 +144,28 @@ test('a line with no quantity is worth what the invoice charged for it, not noth
     $rows = collect((new IncomeByProductReport)->generate(new Request(['from' => now()->subWeek()->toDateString(), 'to' => now()->toDateString()]))['rows']);
 
     expect((float) $rows->firstWhere('product', 'A line written with no quantity')->revenue)->toBe(40.0);
+});
+
+test('a setup fee is income for the product it set up, not a product of its own', function () {
+    // The Setup line (#411) carries the service id like a Hosting line does;
+    // without it in the join the fee showed up as its own row named after the
+    // description, splitting one product's income in two.
+    $client = Client::factory()->create();
+    $product = Product::factory()->create(['name' => 'Starter Hosting']);
+    $service = Service::factory()->create(['client_id' => $client->id, 'product_id' => $product->id]);
+    $invoice = Invoice::factory()->create([
+        'client_id' => $client->id, 'status' => 'paid', 'type' => 'vat',
+        'date_paid' => now()->subDay(), 'subtotal' => 150, 'tax' => 0, 'tax2' => 0, 'total' => 150,
+    ]);
+    foreach ([['Hosting', 'Starter Hosting', 100], ['Setup', 'Setup fee: Starter Hosting', 50]] as [$type, $desc, $amount]) {
+        InvoiceItem::create([
+            'invoice_id' => $invoice->id, 'client_id' => $client->id, 'type' => $type,
+            'rel_id' => $service->id, 'description' => $desc, 'amount' => $amount, 'qty' => 1, 'taxed' => false,
+        ]);
+    }
+
+    $rows = collect((new IncomeByProductReport)->generate(new Request(['from' => now()->subWeek()->toDateString(), 'to' => now()->toDateString()]))['rows']);
+
+    expect((float) $rows->firstWhere('product', 'Starter Hosting')->revenue)->toBe(150.0)
+        ->and($rows->firstWhere('product', 'Setup fee: Starter Hosting'))->toBeNull();
 });

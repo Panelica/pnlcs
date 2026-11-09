@@ -22,7 +22,7 @@ class IncomeByProductReport extends AbstractReport
             // addon and upgrade lines carry their own row's id, which matched
             // an unrelated service and credited its product.
             ->leftJoin("services", fn ($join) => $join->on("services.id", "=", "invoice_items.rel_id")
-                ->whereIn("invoice_items.type", ["Hosting", "Overage"]))
+                ->whereIn("invoice_items.type", ["Hosting", "Overage", "Setup"]))
             ->leftJoin("products", "products.id", "=", "services.product_id")
             // A line's value is its unit price times its quantity, as on the
             // invoice itself - which never charges for less than one, however
