@@ -22,6 +22,13 @@ All notable changes to PNLCS are documented here. Newest first.
 
 ### Fixed
 
+- **The front page no longer waits for the panel on every visit.** With the
+  app showcase switched on, each visit asked Panelica for its app catalogue
+  before the page could be drawn, so the most visited page was only as fast as
+  the panel (and, with the panel down, as slow as its timeout). The catalogue
+  is now kept for five minutes, a failed read for one. Featured apps, order,
+  selling lines and apps not for sale still change at once.
+
 - **A top-up or a payment for several invoices is counted once.** Income by
   Product and Sales Tax Liability counted an Add Funds invoice and a mass-pay
   invoice as revenue, although the money they take becomes account credit that

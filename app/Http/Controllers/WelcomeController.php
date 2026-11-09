@@ -10,9 +10,14 @@ use App\Models\HomepageSection;
 use App\Models\Product;
 use App\Models\Server;
 use App\Services\Module\ModuleRegistry;
+use Illuminate\Support\Facades\Cache;
 
 class WelcomeController extends Controller
 {
+    private const SHOWCASE_CACHE_SECONDS = 300;
+
+    private const SHOWCASE_RETRY_SECONDS = 60;
+
     public function index()
     {
         $products = Product::with('pricing', 'group', 'translations')
@@ -53,6 +58,14 @@ class WelcomeController extends Controller
      * from. Anything that goes wrong answers with an empty list and the
      * section simply does not draw.
      *
+     * The panel's catalogue is held for a few minutes. The front page is the
+     * most visited page there is, and asking the panel on every visit made each
+     * one wait for that round trip (and, with the panel down, for its timeout).
+     * A failed read is remembered for a minute only, so a panel that comes back
+     * is shown again soon. The operator's own choices - featured, order,
+     * selling line, not sold - are applied after the cache, so a change in the
+     * admin screen shows at once.
+     *
      * @return array<int, array<string, mixed>>
      */
     private function showcaseApps(): array
@@ -61,13 +74,33 @@ class WelcomeController extends Controller
         if (! $server) {
             return [];
         }
+
+        // Editing the server (address, keys) changes updated_at, so the next
+        // visit reads the catalogue afresh instead of serving the old panel's.
+        $key = 'showcase-apps:'.$server->id.':'.optional($server->updated_at)->timestamp;
+        $templates = Cache::get($key);
+        if (! is_array($templates)) {
+            $templates = $this->panelCatalogue($server);
+            Cache::put($key, $templates, $templates === [] ? self::SHOWCASE_RETRY_SECONDS : self::SHOWCASE_CACHE_SECONDS);
+        }
+
+        try {
+            return DockerApp::decorate($templates, sellableOnly: true);
+        } catch (\Throwable $e) {
+            return [];
+        }
+    }
+
+    /** @return array<int, array<string, mixed>> */
+    private function panelCatalogue(Server $server): array
+    {
         try {
             $module = app(ModuleRegistry::class)->getServerModule('panelica');
             if (! $module || ! method_exists($module, 'appTemplates')) {
                 return [];
             }
 
-            return DockerApp::decorate($module->appTemplates($server), sellableOnly: true);
+            return $module->appTemplates($server);
         } catch (\Throwable $e) {
             return [];
         }
