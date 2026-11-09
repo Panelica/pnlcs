@@ -1,7 +1,10 @@
 <?php
 
 use App\Models\Admin;
+use App\Models\Currency;
+use App\Models\Pricing;
 use App\Models\Product;
+use App\Models\ProductGroup;
 
 test('the product description renders Markdown as HTML', function () {
     $product = Product::factory()->create([
@@ -28,6 +31,34 @@ test('the excerpt is plain text without Markdown markers', function () {
 
     expect($product->descriptionText())->toContain('Bold start & more')
         ->and($product->descriptionText())->not->toContain('**');
+});
+
+test('the store and configure pages render the description as formatted HTML', function () {
+    $currency = Currency::firstOrCreate(
+        ['is_default' => true],
+        ['code' => 'USD', 'prefix' => '$', 'suffix' => '', 'rate' => 1.0, 'is_default' => true],
+    );
+    $product = Product::factory()->create([
+        'group_id' => ProductGroup::factory()->create()->id,
+        'hidden' => false,
+        'retired' => false,
+        'description' => "**Fast** plan\n\n- one\n- two",
+    ]);
+    Pricing::factory()->create([
+        'type' => 'product', 'rel_id' => $product->id, 'currency_id' => $currency->id,
+        'monthly' => 9.99, 'quarterly' => -1, 'semiannually' => -1,
+        'annually' => -1, 'biennially' => -1, 'triennially' => -1,
+    ]);
+
+    $this->get(route('client.store'))
+        ->assertOk()
+        ->assertSee('<strong>Fast</strong>', false)
+        ->assertSee('<li>one</li>', false);
+
+    $this->get(route('client.store.configure', $product))
+        ->assertOk()
+        ->assertSee('<strong>Fast</strong>', false)
+        ->assertSee('<li>one</li>', false);
 });
 
 test('the product edit and create pages offer the Markdown toolbar', function () {
