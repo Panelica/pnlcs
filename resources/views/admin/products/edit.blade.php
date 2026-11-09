@@ -319,7 +319,7 @@
         // still carries its old value: the Panelica card must not appear there.
         var isSsl = typeSelect ? typeSelect.value === 'ssl' : false;
         if (panelica) {
-            var on = ! isSsl && m === 'panelica';
+            var on = ! isSsl && (m === '' || m === 'custom' || m === 'panelica');
             panelica.style.display = on ? '' : 'none';
             panelica.querySelectorAll('input,select,textarea').forEach(function (f) { f.disabled = !on; });
         }

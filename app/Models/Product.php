@@ -213,10 +213,18 @@ class Product extends Model
             return [];
         }
 
-        // res_* are the Panelica panel's own limits. Another module, or an SSL
-        // certificate, has none - even when an older save left those keys on
-        // the product and the store went on advertising "1 GB RAM, 1 vCPU".
-        if (strtolower((string) $this->server_type) !== 'panelica') {
+        // res_* are the Panelica panel's own limits. A product provisioned by
+        // another panel has none, and neither has an SSL certificate - even
+        // when an older save left those keys on it and the store went on
+        // advertising "1 GB RAM, 1 vCPU".
+        //
+        // A product with no module at all is left alone: nothing provisions it,
+        // so the operator typed those numbers in deliberately and the store has
+        // shown them since 86dae844 ("a product without a module keeps no
+        // resources it was never given" - never given, not never shown). Taking
+        // the card away from them was collateral of the SSL fix.
+        if (strtolower((string) $this->type) === 'ssl'
+            || ! in_array(strtolower((string) $this->server_type), ['', 'custom', 'panelica'], true)) {
             return [];
         }
 

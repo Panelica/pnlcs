@@ -517,7 +517,9 @@ class ProductController extends Controller
         // Panelica panel's limits, so only a Panelica product may set them: the
         // form hides the card for every other module (and for SSL), and a
         // request that still carries it must not give them Panelica limits.
-        if ($request->boolean('res_section') && strtolower((string) $product->server_type) === 'panelica') {
+        if ($request->boolean('res_section')
+            && strtolower((string) ($validated['type'] ?? $product->type)) !== 'ssl'
+            && in_array(strtolower((string) $product->server_type), ['', 'custom', 'panelica'], true)) {
             $config = is_string($product->config_options)
                 ? (json_decode($product->config_options, true) ?: [])
                 : ($product->config_options ?? []);

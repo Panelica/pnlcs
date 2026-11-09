@@ -44,13 +44,13 @@ test('saving a product without a module as its form shows it leaves its resource
         ->and($product->fresh()->resourceSummary())->toBe([]);
 });
 
-test('limits typed in on a product without a module are not kept either', function () {
+test('limits typed in on a product without a module are still kept', function () {
     $product = Product::factory()->create(['server_type' => null, 'config_options' => null]);
 
     saveProduct($product, ['server_type' => '', 'res_section' => 1, 'res_memory_mb' => 2048]);
 
-    expect((array) $product->fresh()->config_options)->not->toHaveKey('res_memory_mb')
-        ->and($product->fresh()->resourceSummary())->toBe([]);
+    expect(((array) $product->fresh()->config_options)['res_memory_mb'])->toBe(2048)
+        ->and($product->fresh()->resourceSummary())->not->toBe([]);
 });
 
 test('a Panelica product still has the defaults filled in', function () {
