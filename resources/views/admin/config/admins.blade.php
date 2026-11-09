@@ -21,7 +21,7 @@
                 <td>
                     <div style="display:flex;align-items:center;gap:8px;">
                         <div style="width:32px;height:32px;border-radius:50%;background:#e8eef7;display:flex;align-items:center;justify-content:center;color:#337ab7;font-weight:700;font-size:11px;flex-shrink:0;">
-                            {{ strtoupper(substr($admin->first_name,0,1)) }}{{ strtoupper(substr($admin->last_name,0,1)) }}
+                            {{ initial($admin->first_name) }}{{ initial($admin->last_name) }}
                         </div>
                         <span style="font-weight:600;">{{ $admin->full_name }}</span>
                     </div>

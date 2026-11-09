@@ -30,6 +30,30 @@ if (! function_exists('money_fmt')) {
             : '$'.number_format((float) $amount, 2);
     }
 }
+if (! function_exists('initial')) {
+    /**
+     * The first character of a name, for an avatar or a mark.
+     *
+     * Byte functions cut a UTF-8 name in the middle: "张伟" or "Şule" gave a
+     * broken byte, and strtoupper() is ASCII-only. One user-perceived
+     * character is taken (a whole emoji when intl is there, a code point
+     * otherwise) and upper-cased for the script it is in. Empty input gives
+     * the fallback.
+     */
+    function initial(?string $text, string $fallback = ''): string
+    {
+        $text = trim((string) $text);
+        if ($text === '') {
+            return $fallback;
+        }
+        $first = function_exists('grapheme_substr') ? grapheme_substr($text, 0, 1) : false;
+        if ($first === false || $first === '') {
+            $first = mb_substr($text, 0, 1);
+        }
+
+        return mb_strtoupper($first);
+    }
+}
 if (! function_exists('payment_method_label')) {
     /**
      * A payment method key as the customer-facing label.

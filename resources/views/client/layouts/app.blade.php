@@ -532,7 +532,7 @@
             @auth
             <div class="pn-nav-item">
                 <a class="pn-user-btn pn-nav-link">
-                    <div class="pn-avatar">{{ strtoupper(substr(auth()->user()->first_name ?? "U", 0, 1)) }}</div>
+                    <div class="pn-avatar">{{ initial(auth()->user()->first_name, "U") }}</div>
                     <span class="pn-user-name">{{ auth()->user()->first_name }}</span>
                     <svg class="pn-chevron" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M19 9l-7 7-7-7"/></svg>
                 </a>

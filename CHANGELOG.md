@@ -44,6 +44,12 @@ All notable changes to PNLCS are documented here. Newest first.
 
 ### Fixed
 
+- **Avatar initials work for names in any script.** The client top bar, the
+  staff list and the container cards cut the first byte of a name, so
+  Chinese, Japanese, Turkish or accented names showed a broken character or
+  an empty circle. A new `initial()` helper takes the first character (a whole
+  emoji when intl is installed) and upper-cases it for its script (#420).
+
 - **A translation typed into the product form is not thrown away.** The
   language tabs read their old input with a bracketed key, which `old()` never
   matches, so a refused save came back with the default description intact and
