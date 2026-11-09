@@ -91,7 +91,7 @@ class DemoSeeder extends Seeder
         // 4. Settings
         $settings = [
             ['setting' => 'CompanyName', 'value' => 'PNLCS Hosting', 'group' => 'general'],
-            ['setting' => 'Domain', 'value' => 'hosting.panelica.com', 'group' => 'general'],
+            ['setting' => 'Domain', 'value' => 'demo.pnlcs.com', 'group' => 'general'],
             ['setting' => 'Logo', 'value' => '', 'group' => 'general'],
             ['setting' => 'DefaultLanguage', 'value' => 'en', 'group' => 'general'],
             ['setting' => 'DateFormat', 'value' => 'd/m/Y', 'group' => 'general'],
@@ -398,7 +398,7 @@ class DemoSeeder extends Seeder
 
         KbArticle::firstOrCreate(['title' => 'How to Get Started with Your Hosting Account'], [
             'category_id' => $kbGeneral->id,
-            'article' => '<p>Welcome to PNLCS Hosting! This guide will walk you through the first steps after signing up.</p><h3>Step 1: Access Your Control Panel</h3><p>Log in to your account at <strong>hosting.panelica.com</strong> using your email and password.</p><h3>Step 2: Upload Your Website</h3><p>Use the File Manager or FTP to upload your website files to the <code>public_html</code> directory.</p><h3>Step 3: Point Your Domain</h3><p>Update your domain DNS to point to our nameservers: ns1.pnlcs.com and ns2.pnlcs.com.</p>',
+            'article' => '<p>Welcome to PNLCS Hosting! This guide will walk you through the first steps after signing up.</p><h3>Step 1: Access Your Control Panel</h3><p>Log in to your account at <strong>demo.pnlcs.com</strong> using your email and password.</p><h3>Step 2: Upload Your Website</h3><p>Use the File Manager or FTP to upload your website files to the <code>public_html</code> directory.</p><h3>Step 3: Point Your Domain</h3><p>Update your domain DNS to point to our nameservers: ns1.pnlcs.com and ns2.pnlcs.com.</p>',
             'views' => 248, 'useful' => 45, 'votes' => 50, 'private' => false, 'sort_order' => 1,
         ]);
         KbArticle::firstOrCreate(['title' => 'How to Create an Email Account'], [
