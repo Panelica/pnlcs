@@ -3,6 +3,7 @@
 use Illuminate\Support\Facades\Route;
 use Modules\Servers\PanelicaLicense\Http\Admin\LicensesPageController;
 use Modules\Servers\PanelicaLicense\Http\AttachLicenseController;
+use Modules\Servers\PanelicaLicense\Http\LicenseServerController;
 use Modules\Servers\PanelicaLicense\Http\SetupController;
 
 // The customer's install command (curl -sSL <url> | bash). No session, no
@@ -49,4 +50,11 @@ Route::middleware(['web', 'admin.auth', 'admin.2fa'])
         Route::post('services/{service}/panelica-license/attach', AttachLicenseController::class)
             ->middleware('admin.permission:manage_services')
             ->name('services.panelica-license.attach');
+
+        Route::middleware('admin.permission:manage_services')->group(function () {
+            Route::post('services/{service}/panelica-license/unbind', [LicenseServerController::class, 'unbind'])
+                ->name('services.panelica-license.unbind');
+            Route::post('services/{service}/panelica-license/cancel', [LicenseServerController::class, 'cancel'])
+                ->name('services.panelica-license.cancel');
+        });
     });

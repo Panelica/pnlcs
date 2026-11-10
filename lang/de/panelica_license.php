@@ -37,6 +37,8 @@ return [
     ],
 
     'action' => [
+        'unbind' => 'Gebundenen Server freigeben',
+        'cancel' => 'Schlüssel endgültig beenden',
         'check_now' => 'Jetzt prüfen',
         'new_link' => 'Neuen Installationslink anfordern',
         'attach' => 'Lizenz zuordnen',
@@ -65,6 +67,8 @@ return [
     ],
 
     'admin' => [
+        'unbind_confirm' => 'Den Server freigeben, an den dieser Schlüssel gebunden ist? Der Kunde kann ihn dann auf einer anderen Maschine aktivieren.',
+        'cancel_confirm' => 'Diesen Schlüssel bei Panelica endgültig beenden? Das kann nicht rückgängig gemacht werden.',
         'title' => 'Panelica-Lizenz',
         'license' => 'Lizenz',
         'central_id' => 'Lizenz-ID in Central',
@@ -182,6 +186,8 @@ return [
     ],
 
     'result' => [
+        'unbound' => 'Der Schlüssel ist an keinen Server mehr gebunden; der Kunde kann ihn erneut aktivieren.',
+        'cancelled' => 'Der Schlüssel ist bei Panelica endgültig beendet.',
         'already_licensed' => 'Die Lizenz ist bereits gekauft; es wurde nichts berechnet.',
         'waiting' => 'Installationslink bereit. Die Lizenz wird gekauft, sobald der Server des Kunden erscheint.',
         'nothing_bought' => 'Es wurde noch keine Lizenz gekauft; bei Panelica ist nichts zu ändern.',

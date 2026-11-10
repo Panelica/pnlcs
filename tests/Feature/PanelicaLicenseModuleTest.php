@@ -61,6 +61,8 @@ function plCentral(array $over = []): array
         ]],
         'convert' => 200,
         'renew' => 200,
+        'unbind' => 200,
+        'cancel' => 200,
         // A Central that sells a term of months on convert publishes it in its
         // schema; false is an older one that takes only monthly or yearly.
         'terms' => false,
@@ -114,6 +116,12 @@ function plFake(array &$central): void
 
                 return $ok(['id' => PL_LICENSE, 'status' => 'suspended']);
             })(),
+            $path === $api.'licenses/'.PL_LICENSE.'/unbind' => ($central['unbind'] ?? 200) === 200
+                ? $ok(['id' => PL_LICENSE, 'server_ip' => null, 'server_hostname' => null])
+                : $no($central['unbind'], 'This license is not bound to a server.'),
+            $path === $api.'licenses/'.PL_LICENSE.'/cancel' => ($central['cancel'] ?? 200) === 200
+                ? $ok(['id' => PL_LICENSE, 'status' => 'cancelled'])
+                : $no($central['cancel'], 'This license is already cancelled.'),
             $path === $api.'licenses/'.PL_LICENSE.'/activate' => (function () use (&$central, $ok) {
                 $central['license']['status'] = 'active';
 
@@ -1182,4 +1190,129 @@ test('a monthly or annual renewal leaves the period to Central, as before', func
         expect(plModule()->renew($service)['success'])->toBeTrue();
         expect(plCalls($central, 'POST', '/renew')[0][3])->toBe([]);
     }
+});
+
+// ------------------------------------------------------- unbind and cancel
+
+/*
+ * Freeing the server a key is bound to, and ending a key for good.
+ *
+ * A Panelica key remembers the machine it was activated on. When that machine
+ * is gone - a rebuilt server, a move to another host - the key cannot be used
+ * again until it is freed, which used to mean asking Panelica support.
+ * Central has POST licenses/{id}/unbind for exactly that, and
+ * POST licenses/{id}/cancel to end a key for good; neither was reachable from
+ * PNLCS.
+ */
+
+test('staff can free the server a key is bound to', function () {
+    $central = plCentral();
+    $service = plSold($central, 'Annually');
+
+    expect($service->module_data['license_server_hostname'])->toBe('srv1.customer.test');
+
+    $this->actingAs(plStaff(), 'admin')
+        ->post(route('admin.services.panelica-license.unbind', $service))
+        ->assertRedirect()->assertSessionHas('success', __('panelica_license.result.unbound'));
+
+    $unbind = plCalls($central, 'POST', '/unbind');
+    $data = $service->fresh()->module_data;
+
+    expect($unbind)->toHaveCount(1)
+        ->and($unbind[0][1])->toEndWith('licenses/'.PL_LICENSE.'/unbind')
+        // The key is no longer tied to that machine, so the panel must not go
+        // on showing it as the server this service runs on.
+        ->and($data['license_server_ip'] ?? null)->toBeNull()
+        ->and($data['license_server_hostname'] ?? null)->toBeNull();
+});
+
+test('freeing a server Central refuses tells staff why, and changes nothing here', function () {
+    $central = plCentral(['unbind' => 409]);
+    $service = plSold($central, 'Annually');
+
+    $this->actingAs(plStaff(), 'admin')
+        ->post(route('admin.services.panelica-license.unbind', $service))
+        ->assertRedirect()->assertSessionHas('error');
+
+    expect($service->fresh()->module_data['license_server_hostname'])->toBe('srv1.customer.test');
+});
+
+test('a service with no license has nothing to free', function () {
+    $central = plCentral();
+    $service = plWaiting($central);
+
+    $this->actingAs(plStaff(), 'admin')
+        ->post(route('admin.services.panelica-license.unbind', $service))
+        ->assertRedirect()->assertSessionHas('error');
+
+    expect(plCalls($central, 'POST', '/unbind'))->toBeEmpty();
+});
+
+test('freeing a server is for staff who may manage services', function () {
+    $central = plCentral();
+    $service = plSold($central, 'Annually');
+
+    $this->actingAs(plStaff(['view_services']), 'admin')
+        ->post(route('admin.services.panelica-license.unbind', $service))
+        ->assertForbidden();
+
+    expect(plCalls($central, 'POST', '/unbind'))->toBeEmpty();
+});
+
+test('staff can end a key for good, and the service stops counting it as live', function () {
+    $central = plCentral();
+    $service = plSold($central, 'Annually');
+
+    $this->actingAs(plStaff(), 'admin')
+        ->post(route('admin.services.panelica-license.cancel', $service))
+        ->assertRedirect()->assertSessionHas('success', __('panelica_license.result.cancelled'));
+
+    $cancel = plCalls($central, 'POST', '/cancel');
+    $data = $service->fresh()->module_data;
+
+    expect($cancel)->toHaveCount(1)
+        ->and($cancel[0][3])->toHaveKey('reason')
+        ->and($data['license_status'])->toBe('cancelled')
+        ->and($data['ended'])->toBeTrue();
+});
+
+test('ending a key for good is not what terminating a service does by itself', function () {
+    // Terminating suspends: the customer paid for the period and it lapses at
+    // the end of it, and a termination by mistake can be undone. Ending for
+    // good is an operator saying so on purpose.
+    $central = plCentral();
+    $service = plSold($central, 'Annually');
+
+    plModule()->terminate($service);
+
+    expect(plCalls($central, 'POST', '/cancel'))->toBeEmpty()
+        ->and(plCalls($central, 'PATCH', '/suspend'))->toHaveCount(1);
+});
+
+test('the service panel offers both actions, and the browser dialog is never used', function () {
+    $central = plCentral();
+    $service = plSold($central, 'Annually');
+
+    $page = $this->actingAs(plStaff(), 'admin')->get(route('admin.services.show', $service))->assertOk()->getContent();
+
+    expect($page)->toContain(__('panelica_license.action.unbind'))
+        ->and($page)->toContain(__('panelica_license.action.cancel'))
+        ->and($page)->toContain(route('admin.services.panelica-license.unbind', $service))
+        ->and($page)->toContain(route('admin.services.panelica-license.cancel', $service))
+        // The panel's own dialog, like the rest of the admin area.
+        ->and($page)->toContain('pnDialog.confirm')
+        ->and($page)->not->toContain('return confirm(');
+});
+
+test('a key with no server bound offers nothing to free', function () {
+    $central = plCentral();
+    $central['license']['server_ip'] = null;
+    $central['license']['server_hostname'] = null;
+    $service = plSold($central, 'Annually');
+    plModule()->unbindServer($service);
+
+    $page = $this->actingAs(plStaff(), 'admin')->get(route('admin.services.show', $service->fresh()))->assertOk()->getContent();
+
+    expect($page)->not->toContain(route('admin.services.panelica-license.unbind', $service))
+        ->and($page)->toContain(route('admin.services.panelica-license.cancel', $service));
 });

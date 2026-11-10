@@ -37,6 +37,8 @@ return [
     ],
 
     'action' => [
+        'unbind' => '释放已绑定的服务器',
+        'cancel' => '永久结束此密钥',
         'check_now' => '立即检查',
         'new_link' => '获取新的安装链接',
         'attach' => '关联许可证',
@@ -65,6 +67,8 @@ return [
     ],
 
     'admin' => [
+        'unbind_confirm' => '释放此密钥绑定的服务器？客户随后可以在另一台机器上激活。',
+        'cancel_confirm' => '在 Panelica 永久结束此密钥？此操作无法撤销。',
         'title' => 'Panelica 许可证',
         'license' => '许可证',
         'central_id' => 'Central 许可证 ID',
@@ -182,6 +186,8 @@ return [
     ],
 
     'result' => [
+        'unbound' => '密钥已不再绑定服务器；客户可以重新激活。',
+        'cancelled' => '密钥已在 Panelica 永久结束。',
         'already_licensed' => '许可证已购买；未产生任何费用。',
         'waiting' => '安装链接已就绪。客户的服务器出现后将购买许可证。',
         'nothing_bought' => '尚未购买许可证；Panelica 端无需更改。',

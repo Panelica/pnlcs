@@ -538,6 +538,90 @@ class PanelicaLicenseModule extends AbstractServerModule
      * license must belong to this partner account. From then on the service
      * renews, suspends and ends it like one it bought itself.
      */
+    /**
+     * Free the machine the key is bound to.
+     *
+     * A key remembers the server it was activated on; a rebuilt or replaced
+     * machine leaves it bound to something that no longer exists and the
+     * customer cannot activate it again. Central frees it with
+     * POST licenses/{id}/unbind. The server this module remembers is cleared
+     * with it, so the panel does not go on naming a machine the key is no
+     * longer tied to.
+     */
+    public function unbindServer(Service $service): array
+    {
+        $data = $this->getModuleData($service);
+
+        if (empty($data['license_id'])) {
+            return $this->buildResult(false, __('panelica_license.error.nothing_bought'));
+        }
+
+        $client = CentralClient::partner();
+        if (! $client) {
+            return $this->buildResult(false, __('panelica_license.error.no_account'));
+        }
+
+        $response = $client->post('licenses/'.$data['license_id'].'/unbind');
+
+        if (! $response->ok) {
+            return $this->failed($service, __('panelica_license.error.central', ['error' => $response->error]));
+        }
+
+        $this->setModuleData($service, [
+            'license_server_ip' => null,
+            'license_server_hostname' => null,
+            'license_last_heartbeat_at' => null,
+            'last_error' => null,
+        ]);
+
+        $result = $this->buildResult(true, __('panelica_license.result.unbound'));
+        $this->logAction($service, 'unbindServer', $result);
+
+        return $result;
+    }
+
+    /**
+     * End the key for good.
+     *
+     * Deliberately not what terminating a service does: that suspends, so the
+     * period the customer paid for is not thrown away and a termination by
+     * mistake can be undone. This is an operator saying "this key is finished"
+     * on purpose, and Central cannot undo it either.
+     */
+    public function cancelLicense(Service $service): array
+    {
+        $data = $this->getModuleData($service);
+
+        if (empty($data['license_id'])) {
+            return $this->buildResult(false, __('panelica_license.error.nothing_bought'));
+        }
+
+        $client = CentralClient::partner();
+        if (! $client) {
+            return $this->buildResult(false, __('panelica_license.error.no_account'));
+        }
+
+        $response = $client->post('licenses/'.$data['license_id'].'/cancel', [
+            'reason' => 'Ended by the operator in billing',
+        ]);
+
+        if (! $response->ok) {
+            return $this->failed($service, __('panelica_license.error.central', ['error' => $response->error]));
+        }
+
+        $this->setModuleData($service, [
+            'license_status' => 'cancelled',
+            'ended' => true,
+            'suspended_here' => false,
+            'last_error' => null,
+        ]);
+
+        $result = $this->buildResult(true, __('panelica_license.result.cancelled'));
+        $this->logAction($service, 'cancelLicense', $result);
+
+        return $result;
+    }
+
     public function attachLicense(Service $service, string $id): array
     {
         $id = trim($id);

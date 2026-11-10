@@ -22,6 +22,23 @@
             <div style="{{ $row }}"><span style="color:#777;">{{ __('panelica_license.field.server') }}</span><span>{{ $server($data['license_server_hostname'] ?? null, $data['license_server_ip'] ?? null) }}</span></div>
             <div style="{{ $row }}"><span style="color:#777;">{{ __('panelica_license.field.last_seen') }}</span><span>{{ $fmt($data['license_heartbeat_at'] ?? null) }}</span></div>
             <div style="{{ $row }}border-bottom:none;"><span style="color:#777;">{{ __('panelica_license.admin.licensed_at') }}</span><span>{{ $fmt($data['licensed_at'] ?? null) }}</span></div>
+            {{-- Freeing the bound server and ending the key for good: both go
+                 to Central and neither is what terminating a service does, so
+                 they are the operator's own decision and say what they do. --}}
+            @if(empty($data['ended']))
+            <div style="display:flex;gap:6px;flex-wrap:wrap;margin-top:10px;">
+                @if(! empty($data['license_server_hostname']) || ! empty($data['license_server_ip']))
+                <form method="POST" action="{{ route('admin.services.panelica-license.unbind', $service) }}" data-pl-confirm="{{ __('panelica_license.admin.unbind_confirm') }}">
+                    @csrf
+                    <button type="submit" class="btn btn-default btn-sm">{{ __('panelica_license.action.unbind') }}</button>
+                </form>
+                @endif
+                <form method="POST" action="{{ route('admin.services.panelica-license.cancel', $service) }}" data-pl-confirm="{{ __('panelica_license.admin.cancel_confirm') }}" data-pl-danger="1">
+                    @csrf
+                    <button type="submit" class="btn btn-danger btn-sm">{{ __('panelica_license.action.cancel') }}</button>
+                </form>
+            </div>
+            @endif
             @else
             <p style="font-size:13px;color:#777;margin:0 0 10px;">{{ __('panelica_license.admin.not_bought') }}</p>
             @if($state === 'waiting' || $state === 'none')
@@ -64,3 +81,24 @@
         </div>
     </div>
 </div>
+
+<script>
+// The panel's own dialog, like every other confirmation in the admin area -
+// never the browser's confirm(). Both actions reach Central and neither can be
+// undone from here, so each asks first and says what it will do.
+(function () {
+    document.querySelectorAll('form[data-pl-confirm]').forEach(function (form) {
+        if (form.dataset.plWired === '1') { return; }
+        form.dataset.plWired = '1';
+        form.addEventListener('submit', function (event) {
+            if (form.dataset.plConfirmed === '1') { return; }
+            event.preventDefault();
+            pnDialog.confirm(form.dataset.plConfirm, { danger: form.dataset.plDanger === '1' }).then(function (yes) {
+                if (!yes) { return; }
+                form.dataset.plConfirmed = '1';
+                form.submit();
+            });
+        });
+    });
+})();
+</script>

@@ -37,6 +37,8 @@ return [
     ],
 
     'action' => [
+        'unbind' => 'Free the bound server',
+        'cancel' => 'End the key for good',
         'check_now' => 'Check now',
         'new_link' => 'Get a new install link',
         'attach' => 'Attach license',
@@ -65,6 +67,8 @@ return [
     ],
 
     'admin' => [
+        'unbind_confirm' => 'Free the server this key is bound to? The customer can then activate it on another machine.',
+        'cancel_confirm' => 'End this key for good at Panelica? This cannot be undone.',
         'title' => 'Panelica license',
         'license' => 'License',
         'central_id' => 'Central license ID',
@@ -182,6 +186,8 @@ return [
     ],
 
     'result' => [
+        'unbound' => 'The key is no longer tied to a server; the customer can activate it again.',
+        'cancelled' => 'The key is ended for good at Panelica.',
         'already_licensed' => 'The license is already bought; nothing was charged.',
         'waiting' => 'Install link ready. The license is bought when the customer\'s server shows up.',
         'nothing_bought' => 'No license has been bought yet; nothing to change at Panelica.',
