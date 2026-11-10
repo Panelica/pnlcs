@@ -155,6 +155,7 @@ return [
         'monthly' => 'Monthly',
         'annually' => 'Annually',
         'create_product' => 'Create product',
+        'edit_prices' => 'Prices',
         'no_plans' => 'Panelica Central lists no plans for this account.',
         'no_usd_rate' => 'Panelica prices are in US dollars. Add a USD currency with its rate (Setup, Currencies) to see suggested prices and your margin in your own currency.',
         'market_usd_rate' => 'Suggested prices and margins use today\'s market rate, 1 USD = :rate :code, checked once a day. Add a USD currency (Setup, Currencies) to use your own rate.',

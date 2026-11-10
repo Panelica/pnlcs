@@ -155,6 +155,7 @@ return [
         'monthly' => 'Monatlich',
         'annually' => 'Jährlich',
         'create_product' => 'Produkt erstellen',
+        'edit_prices' => 'Preise',
         'no_plans' => 'Panelica Central listet für dieses Konto keine Tarife.',
         'no_usd_rate' => 'Panelica-Preise sind in US-Dollar. Fügen Sie eine USD-Währung mit Kurs hinzu (Einrichtung, Währungen), um Preisvorschläge und Ihre Marge in Ihrer eigenen Währung zu sehen.',
         'market_usd_rate' => 'Preisvorschläge und Margen nutzen den heutigen Marktkurs, 1 USD = :rate :code, einmal täglich geprüft. Fügen Sie eine USD-Währung hinzu (Einrichtung, Währungen), um Ihren eigenen Kurs zu verwenden.',
