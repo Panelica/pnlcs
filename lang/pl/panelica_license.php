@@ -103,6 +103,9 @@ return [
     ],
 
     'page' => [
+        'save_prices' => 'Zapisz',
+        'prices_saved' => 'Ceny pakietu :name zostały zapisane.',
+        'add_package' => 'Dodaj kolejny pakiet',
         'quarterly' => '3 miesiące',
         'semiannually' => '6 miesięcy',
         'per_quarter' => ':price / 3 mies.',

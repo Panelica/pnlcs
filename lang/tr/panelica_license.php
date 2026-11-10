@@ -103,6 +103,9 @@ return [
     ],
 
     'page' => [
+        'save_prices' => 'Kaydet',
+        'prices_saved' => ':name paketinin fiyatları kaydedildi.',
+        'add_package' => 'Başka paket ekle',
         'quarterly' => '3 aylık',
         'semiannually' => '6 aylık',
         'per_quarter' => ':price / 3 ay',

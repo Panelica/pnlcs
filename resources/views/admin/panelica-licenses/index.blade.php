@@ -185,18 +185,23 @@
             <td style="{{ $td }}white-space:nowrap;">{{ __('panelica_license.page.per_month', ['price' => $money($costM)]) }}<br>{{ __('panelica_license.page.per_quarter', ['price' => $money($costQ)]) }}<br>{{ __('panelica_license.page.per_half_year', ['price' => $money($costH)]) }}<br>{{ __('panelica_license.page.per_year', ['price' => $money($costY)]) }}</td>
             <td style="{{ $td }}white-space:nowrap;{{ $muted }}">{{ __('panelica_license.page.per_month', ['price' => $money($plan['price_monthly'] ?? 0)]) }}<br>{{ __('panelica_license.page.per_year', ['price' => $money($plan['price_yearly'] ?? 0)]) }}</td>
             <td style="{{ $td }}">
+                {{-- Each package of this plan, with its prices ready to change:
+                     the page is where the packages are managed, not only where
+                     the first one is made. An empty box means the term is not
+                     sold. --}}
                 @foreach($products as $product)
-                <div style="margin-bottom:4px;">
-                    <a href="{{ route('admin.products.edit', $product) }}" style="font-weight:600;">{{ $product->name }}</a>
-                    <span style="{{ $muted }}font-size:12px;">
-                        @if(($m = $product->priceFor('monthly')) !== null) · {{ __('panelica_license.page.per_month', ['price' => $local($m)]) }}@endif
-                        @if(($q = $product->priceFor('quarterly')) !== null) · {{ __('panelica_license.page.per_quarter', ['price' => $local($q)]) }}@endif
-                        @if(($h = $product->priceFor('semiannually')) !== null) · {{ __('panelica_license.page.per_half_year', ['price' => $local($h)]) }}@endif
-                        @if(($y = $product->priceFor('annually')) !== null) · {{ __('panelica_license.page.per_year', ['price' => $local($y)]) }}@endif
-                    </span>
-                </div>
+                <form method="POST" action="{{ route('admin.panelica-licenses.products.prices', $product) }}" style="display:flex;gap:6px;flex-wrap:wrap;align-items:center;margin-bottom:6px;">
+                    @csrf
+                    <a href="{{ route('admin.products.edit', $product) }}" style="font-weight:600;width:170px;font-size:12.5px;">{{ $product->name }}</a>
+                    @foreach(\Modules\Servers\PanelicaLicense\Http\Admin\LicensesPageController::SELLABLE_CYCLES as $cycle)
+                    <input type="number" name="{{ $cycle }}" step="0.01" min="0.01" class="form-control pl-price" value="{{ $product->priceFor($cycle, $currency?->id) ?? '' }}" placeholder="{{ __('panelica_license.page.'.$cycle) }}" aria-label="{{ __('panelica_license.page.'.$cycle) }}" title="{{ __('panelica_license.page.'.$cycle) }}">
+                    @endforeach
+                    <span style="font-size:12px;{{ $muted }}">{{ $currency?->code }}</span>
+                    <button type="submit" class="btn btn-default btn-sm">{{ __('panelica_license.page.save_prices') }}</button>
+                </form>
                 @endforeach
-                @if($products->isEmpty())
+                {{-- Always offered: a plan can sell more than one package, for
+                     instance a monthly one beside a three-month one. --}}
                 <form method="POST" action="{{ route('admin.panelica-licenses.products.store') }}" style="display:flex;gap:6px;flex-wrap:wrap;align-items:center;">
                     @csrf
                     <input type="hidden" name="plan_id" value="{{ $plan['id'] }}">
@@ -208,7 +213,6 @@
                     <span style="font-size:12px;{{ $muted }}">{{ $currency?->code }}</span>
                     <button type="submit" class="btn btn-primary btn-sm"><i class="fas fa-plus"></i> {{ __('panelica_license.page.create_product') }}</button>
                 </form>
-                @endif
             </td>
             <td style="{{ $td }}white-space:nowrap;">
                 @if($first && $usdRate && collect(\Modules\Servers\PanelicaLicense\Http\Admin\LicensesPageController::SELLABLE_CYCLES)->contains(fn ($c) => $first->priceFor($c) !== null))

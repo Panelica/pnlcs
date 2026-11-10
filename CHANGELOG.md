@@ -6,6 +6,16 @@ All notable changes to PNLCS are documented here. Newest first.
 
 ### Added
 
+- **The Panelica Licences page manages the packages, not just the first one.**
+  The "create package" form was drawn only while a plan had no package at all,
+  and a package's name was a link to the ordinary product screen — so a second
+  package for the same plan (a three-month one beside the monthly one) could
+  not be made here, and no price could be changed here. Every package of a plan
+  now carries its four price boxes with what it sells for today, saved from the
+  page; the create form is always offered, so a plan can sell as many packages
+  as the operator wants. Clearing a box withdraws that term, the same "not
+  sold" the product screen writes, and a package cannot be left with no price
+  at all.
 - **The Panelica Licences page sells three and six months too.** It offered a
   monthly and an annual price box, so a partner who wanted to sell a quarter or
   a half year had to leave the page and build the product by hand — although

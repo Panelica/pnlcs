@@ -103,6 +103,9 @@ return [
     ],
 
     'page' => [
+        'save_prices' => '保存',
+        'prices_saved' => '已保存 :name 的价格。',
+        'add_package' => '添加另一个套餐',
         'quarterly' => '3 个月',
         'semiannually' => '6 个月',
         'per_quarter' => ':price / 3 个月',

@@ -103,6 +103,9 @@ return [
     ],
 
     'page' => [
+        'save_prices' => 'Save',
+        'prices_saved' => 'The prices of :name are saved.',
+        'add_package' => 'Add another package',
         'quarterly' => '3 months',
         'semiannually' => '6 months',
         'per_quarter' => ':price / 3 mo',
