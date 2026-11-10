@@ -6,6 +6,31 @@ All notable changes to PNLCS are documented here. Newest first.
 
 ### Added
 
+- **Panelica licences: sell a term of 1 to 12 months.** Central sells a key
+  either on one of its own cycles or for a term of months paid up front, and
+  PNLCS refused every cycle but monthly and annual at order time — a
+  three- or six-month plan could not be sold at all. Quarterly and
+  semi-annual products are sold as a term now, and a renewal buys exactly the
+  months the customer paid for instead of one period. A longer cycle than a
+  year is still refused, because Central cannot sell it.
+  **Only where Central can do it:** whether the connected Central sells a term
+  is read from its own published schema, remembered for a few hours and asked
+  again on every sync. Where it cannot, the period is refused at order time as
+  before — converting it as monthly would charge one month for three.
+- **Panelica licences: free the server a key is bound to.** A key remembers
+  the machine it was activated on, so a rebuilt or replaced server left the
+  customer unable to activate it again and the partner asking Panelica
+  support. There is a button on the service now, and the panel stops naming a
+  machine the key is no longer tied to.
+- **Panelica licences: end a key for good.** An operator decision of its own,
+  deliberately not what terminating a service does — that suspends, so the
+  period the customer paid for is not thrown away and a termination by mistake
+  can be undone.
+- **Panelica licences: what the balance has been doing.** The page showed the
+  figure and nothing else, so a renewal refused for want of balance meant
+  opening Central to find out where the money went. The month's movement and
+  the last ten entries — what each was, what it moved and what it left behind
+  — are on the page.
 - **The product description in every active language.** The admin description
   is now a tab per active language, with the same Markdown toolbar and a button
   that starts a translation from the default text. A visitor reads the
