@@ -112,7 +112,6 @@
                 </div>
                 <div style="margin:18px 0 6px;padding-top:14px;border-top:1px solid #e5e5e5;">
                     <div style="font-size:13px;font-weight:600;">{{ __('common.form.billing_address') }}</div>
-                    <div style="font-size:12px;color:var(--muted);margin-top:2px;">{{ __('common.form.billing_address_hint') }}</div>
                 </div>
                 @include('client.partials.billing-address-fields', ['gridClass' => 'form-row', 'showPhone' => false, 'showCountry' => false])
                 <div style="margin-bottom:16px;">
