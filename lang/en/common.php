@@ -74,6 +74,7 @@ return [
         'annually' => 'Annually',
         'biennially' => 'Biennially',
         'free' => 'Free',
+        'months' => '1 month|:count months',
         'monthly' => 'Monthly',
         'one_time' => 'One Time',
         'quarterly' => 'Quarterly',

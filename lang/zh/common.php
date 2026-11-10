@@ -74,6 +74,7 @@ return [
         'annually' => '年付',
         'biennially' => '两年付',
         'free' => '免费',
+        'months' => '1 个月|:count 个月',
         'monthly' => '月付',
         'one_time' => '一次性',
         'quarterly' => '季付',

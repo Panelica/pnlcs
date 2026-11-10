@@ -10,7 +10,12 @@ A **product** is an entry on your price list. It defines:
 - A **name** and **group** (category)
 - Which **server + module** it provisions on (or *Custom* / *None*)
 - **Auto-setup** — when the account is created (on order / on payment / manual)
-- **Pricing** per billing cycle (monthly, quarterly, annually, biennially…)
+- **Pricing** per billing cycle (monthly, quarterly, annually, biennially…),
+  and per **term of months** for a length no cycle is named after - seven
+  months, say. A named cycle's price lives in its own column on `pricing`; a
+  term's lives in `product_terms`. Either way the shop offers it, dates the
+  service by its length and renews it for the same length. The Panelica
+  Licences page sells all twelve terms Central sells this way.
 - Optional **configurable options**, **add-ons**, welcome email, and stock limits
 
 A product is a *template*. Nothing is billed or provisioned until a customer

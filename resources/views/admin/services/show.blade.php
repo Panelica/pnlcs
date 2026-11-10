@@ -113,7 +113,7 @@
         <div class="panel-heading panel-primary">{{ __('admin.services.billing') }}</div>
         <div class="panel-body">
             <table style="width:100%;font-size:13px;border-collapse:collapse;">
-                <tr><td style="padding:5px 0;color:#777;width:45%;">{{ __('admin.services.amount') }}</td><td style="padding:5px 0;font-weight:700;font-size:15px;">{{ money_fmt($service->amount) }}<span style="font-size:11px;font-weight:400;color:#999;">/{{ $service->billing_cycle }}</span></td></tr>
+                <tr><td style="padding:5px 0;color:#777;width:45%;">{{ __('admin.services.amount') }}</td><td style="padding:5px 0;font-weight:700;font-size:15px;">{{ money_fmt($service->amount) }}<span style="font-size:11px;font-weight:400;color:#999;">/{{ cycle_label($service->billing_cycle) }}</span></td></tr>
                 <tr><td style="padding:5px 0;color:#777;">{{ __('admin.services.first_payment') }}</td><td style="padding:5px 0;">{{ money_fmt($service->first_payment_amount) }}</td></tr>
                 <tr><td style="padding:5px 0;color:#777;">{{ __('admin.services.registered') }}</td><td style="padding:5px 0;">{{ $service->registration_date?->format(date_fmt()) ?? '-' }}</td></tr>
                 <tr><td style="padding:5px 0;color:#777;">{{ __('admin.services.next_due') }}</td><td style="padding:5px 0;">
@@ -355,7 +355,7 @@
             <tr>
                 <td>{{ $addon->label() }}</td>
                 <td>{{ number_format((float) $addon->amount, 2) }}</td>
-                <td style="text-transform:capitalize;">{{ $addon->billing_cycle }}</td>
+                <td>{{ cycle_label($addon->billing_cycle) }}</td>
                 <td>{{ $addon->next_due_date?->format(date_fmt()) ?? '-' }}</td>
                 <td><span class="badge badge-{{ strtolower($addon->status) }}">{{ status_label($addon->status) }}</span></td>
                 <td style="text-align:right;">

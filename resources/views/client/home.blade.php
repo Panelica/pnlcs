@@ -147,7 +147,7 @@
                         @include('client.services.partials.tool-links', ['svc' => $service])
                     </td>
                     <td class="text-muted">{{ $service->domain ?? "-" }}</td>
-                    <td style="font-weight:600">{{ display_money_fmt($service->amount) }}<span class="text-muted text-sm">/{{ $service->billing_cycle }}</span></td>
+                    <td style="font-weight:600">{{ display_money_fmt($service->amount) }}<span class="text-muted text-sm">/{{ cycle_label($service->billing_cycle) }}</span></td>
                     <td class="text-muted text-sm">{{ $service->next_due_date?->format(date_fmt()) ?? "N/A" }}</td>
                     <td><span class="badge badge-active">{{ __('client.status.active') }}</span></td>
                 </tr>

@@ -46,7 +46,7 @@
                         {{ $svc->domain ?? '&mdash;' }}
                         @endif
                     </td>
-                    <td>{{ $svc->billing_cycle }}</td>
+                    <td>{{ cycle_label($svc->billing_cycle) }}</td>
                     <td style="text-align:right;font-family:monospace;">{{ money_fmt($svc->amount) }}</td>
                     <td><span class="badge-{{ strtolower($svc->status) }}">{{ status_label($svc->status) }}</span></td>
                 </tr>

@@ -391,7 +391,7 @@ $tabs = ['summary'=>__('admin.clients.tab_summary'),'services'=>__('admin.client
         <tr>
             <td><a href="{{ route('admin.services.show', $service) }}" style="color:#337ab7;">{{ $service->product?->name ?? 'N/A' }}</a></td>
             <td>{{ $service->domain ?? '-' }}</td>
-            <td>{{ $service->billing_cycle }}</td>
+            <td>{{ cycle_label($service->billing_cycle) }}</td>
             <td>{{ money_fmt($service->amount) }}</td>
             <td>{{ $service->next_due_date?->format(date_fmt()) ?? '-' }}</td>
             <td><span class="badge-{{ strtolower($service->status) }}">{{ status_label($service->status) }}</span></td>

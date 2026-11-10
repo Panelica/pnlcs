@@ -856,7 +856,7 @@ test('connected: the account, the plans with cost and list price, and a product 
         ->and($page)->toContain(e(__('panelica_license.page.create_product')));
 
     $this->actingAs($staff, 'admin')->post(route('admin.panelica-licenses.products.store'), [
-        'plan_id' => PL_PLAN, 'name' => 'Panelica Business', 'monthly' => '12.00', 'annually' => '120.00',
+        'plan_id' => PL_PLAN, 'name' => 'Panelica Business', 'term' => [1 => '12.00', 12 => '120.00'],
     ])->assertSessionHas('success');
 
     $product = Product::where('name', 'Panelica Business')->firstOrFail();
@@ -870,7 +870,8 @@ test('connected: the account, the plans with cost and list price, and a product 
 
     $page = $this->actingAs($staff, 'admin')->get(route('admin.panelica-licenses.index'))->getContent();
     expect($page)->toContain(route('admin.products.edit', $product))
-        ->and($page)->toContain(e(__('panelica_license.page.per_month', ['price' => $usd->formatAmount(4.0)])));
+        // The margin badge: the shortest term sold, and what it earns.
+        ->and($page)->toContain('<span>'.e(trans_choice('panelica_license.page.months', 1, ['count' => 1])).'</span> <span>'.e($usd->formatAmount(4.0)).'</span>');
 });
 
 /** A euro site with no dollar currency; $rates is what the rate provider answers for 1 USD. */
@@ -901,12 +902,12 @@ test('with no dollar currency the margin is shown at today\'s market rate, looke
     $eur = Currency::where('code', 'EUR')->first();
 
     $this->actingAs($staff, 'admin')->post(route('admin.panelica-licenses.products.store'), [
-        'plan_id' => PL_PLAN, 'name' => 'Panelica Business', 'monthly' => '6.00', 'annually' => '60.00',
+        'plan_id' => PL_PLAN, 'name' => 'Panelica Business', 'term' => [1 => '6.00', 12 => '60.00'],
     ])->assertSessionHas('success');
 
     $page = $this->actingAs($staff, 'admin')->get(route('admin.panelica-licenses.index'))->assertOk()->getContent();
     // Cost $8 a month = €4 at 0.5; sold at €6.
-    expect($page)->toContain(e(__('panelica_license.page.per_month', ['price' => $eur->formatAmount(2.0)])))
+    expect($page)->toContain('<span>'.e(trans_choice('panelica_license.page.months', 1, ['count' => 1])).'</span> <span>'.e($eur->formatAmount(2.0)).'</span>')
         ->and($page)->toContain(e(__('panelica_license.page.market_usd_rate', ['rate' => '0.5000', 'code' => 'EUR'])))
         ->and($page)->not->toContain(e(__('panelica_license.page.no_usd_rate')));
 
@@ -959,7 +960,7 @@ test('a product needs a price and a plan Central lists', function () {
 
     $this->actingAs($staff, 'admin')->post(route('admin.panelica-licenses.products.store'), ['plan_id' => PL_PLAN, 'name' => 'X'])
         ->assertSessionHas('error', __('panelica_license.page.price_needed'));
-    $this->actingAs($staff, 'admin')->post(route('admin.panelica-licenses.products.store'), ['plan_id' => 'no-such-plan', 'name' => 'X', 'monthly' => 5])
+    $this->actingAs($staff, 'admin')->post(route('admin.panelica-licenses.products.store'), ['plan_id' => 'no-such-plan', 'name' => 'X', 'term' => [1 => 5]])
         ->assertSessionHas('error', __('panelica_license.page.plan_unknown'));
 
     expect(Product::where('server_type', 'panelicalicense')->where('name', 'X')->exists())->toBeFalse();
@@ -1164,6 +1165,27 @@ test('a six-month order asks for six months', function () {
     plSold($central, 'Semi-Annually');
 
     expect(plCalls($central, 'POST', '/convert')[0][3])->toBe(['plan_id' => PL_PLAN, 'term_months' => 6]);
+});
+
+test('a seven-month order buys the trial for seven months, and renews by seven', function () {
+    $central = plCentral(['terms' => true]);
+    $service = plSold($central, '7months');
+
+    expect(plCalls($central, 'POST', '/convert')[0][3])->toBe(['plan_id' => PL_PLAN, 'term_months' => 7]);
+
+    // And the renewal asks for the same seven months the customer paid for.
+    $service->update(['status' => 'active']);
+    plModule()->renew($service->fresh());
+    expect(plCalls($central, 'POST', '/renew')[0][3])->toBe(['months' => 7]);
+});
+
+test('a term longer than Central sells is still refused when the order is placed', function () {
+    $central = plCentral(['terms' => true]);
+    plFake($central);
+    $result = plModule()->create(plService(['billing_cycle' => 'Biennially']));
+
+    expect($result['success'])->toBeFalse()
+        ->and($result['message'])->toContain('Biennially');
 });
 
 test('monthly asks for the cycle, not a term', function () {
@@ -1394,7 +1416,7 @@ test('the movements are the partner account own, read once per page', function (
  * like 7 months is not offered because PNLCS has no cycle to renew it on.
  */
 
-test('the page offers a price box for every term it can bill', function () {
+test('the page offers a price box for every term Central sells', function () {
     $central = plCentral();
     plFake($central);
     plConnect();
@@ -1402,11 +1424,13 @@ test('the page offers a price box for every term it can bill', function () {
     $page = $this->actingAs(plStaff(['manage_products', 'manage_servers']), 'admin')
         ->get(route('admin.panelica-licenses.index'))->assertOk()->getContent();
 
-    foreach (['monthly', 'quarterly', 'semiannually', 'annually'] as $cycle) {
-        expect($page)->toContain('name="'.$cycle.'"');
+    // All twelve, by their length in months: the four with a cycle of their
+    // own and the eight stored as product terms.
+    foreach (range(1, 12) as $months) {
+        expect($page)->toContain('name="term['.$months.']"');
     }
-    // Months Central can sell but PNLCS cannot bill are not offered.
-    expect($page)->not->toContain('name="term_months"');
+    // And no thirteenth, because Central sells no longer term.
+    expect($page)->not->toContain('name="term[13]"');
 });
 
 test('a three-month price is stored on the quarterly cycle, and six on the half-year', function () {
@@ -1419,7 +1443,7 @@ test('a three-month price is stored on the quarterly cycle, and six on the half-
 
     $this->actingAs(plStaff(['manage_products', 'manage_servers']), 'admin')
         ->post(route('admin.panelica-licenses.products.store'), [
-            'plan_id' => PL_PLAN, 'name' => 'Business', 'quarterly' => 27, 'semiannually' => 50,
+            'plan_id' => PL_PLAN, 'name' => 'Business', 'term' => [3 => 27, 6 => 50],
         ])->assertRedirect()->assertSessionHas('success');
 
     $product = Product::where('server_type', 'panelicalicense')->latest('id')->firstOrFail();
@@ -1446,14 +1470,8 @@ test('the page says what every term of 1 to 12 months costs the partner', functi
         expect($page)->toContain(trans_choice('panelica_license.page.months', $months, ['count' => $months]))
             ->and($page)->toContain($price);
     }
-    // Only the four PNLCS can recur on carry a price box; the other eight show
-    // what they cost and say they cannot be billed.
     expect($page)->toContain('$80.00')
-        ->and(substr_count($page, 'name="monthly"'))->toBe(1)
-        ->and(substr_count($page, 'name="quarterly"'))->toBe(1)
-        ->and(substr_count($page, 'name="semiannually"'))->toBe(1)
-        ->and(substr_count($page, 'name="annually"'))->toBe(1)
-        ->and(substr_count($page, e(__('panelica_license.page.term_not_billable'))))->toBe(8)
+        ->and(substr_count($page, 'name="term[7]"'))->toBe(1)
         ->and($page)->toContain(e(__('panelica_license.page.autofill_hint')));
 });
 
@@ -1494,8 +1512,8 @@ test('another package can be added to a plan that already sells one', function (
     plConnect();
     plPageCurrency();
 
-    plPagePost(['plan_id' => PL_PLAN, 'name' => 'Business monthly', 'monthly' => 12])->assertSessionHas('success');
-    plPagePost(['plan_id' => PL_PLAN, 'name' => 'Business 3 months', 'quarterly' => 30])->assertSessionHas('success');
+    plPagePost(['plan_id' => PL_PLAN, 'name' => 'Business monthly', 'term' => [1 => 12]])->assertSessionHas('success');
+    plPagePost(['plan_id' => PL_PLAN, 'name' => 'Business 3 months', 'term' => [3 => 30]])->assertSessionHas('success');
 
     $page = plPageHtml();
     expect(Product::where('server_type', 'panelicalicense')->count())->toBe(2)
@@ -1512,7 +1530,7 @@ test('a package price can be changed on the page itself', function () {
     $usd = plPageCurrency();
     $eur = Currency::updateOrCreate(['code' => 'EUR'], ['prefix' => '€', 'suffix' => '', 'format' => 1, 'rate' => 0.5, 'is_default' => false]);
 
-    plPagePost(['plan_id' => PL_PLAN, 'name' => 'Business', 'monthly' => 12, 'annually' => 120])->assertSessionHas('success');
+    plPagePost(['plan_id' => PL_PLAN, 'name' => 'Business', 'term' => [1 => 12, 12 => 120]])->assertSessionHas('success');
     $product = Product::where('name', 'Business')->firstOrFail();
 
     // the page offers the prices it already has, ready to change
@@ -1522,7 +1540,7 @@ test('a package price can be changed on the page itself', function () {
 
     test()->actingAs(plStaff(['manage_products', 'manage_servers']), 'admin')
         ->post(route('admin.panelica-licenses.products.prices', $product), [
-            'monthly' => 15, 'quarterly' => 40, 'semiannually' => 75, 'annually' => 140,
+            'term' => [1 => 15, 3 => 40, 6 => 75, 12 => 140],
         ])->assertRedirect()->assertSessionHas('success');
 
     $fresh = $product->fresh();
@@ -1540,11 +1558,11 @@ test('clearing a price stops that term being sold', function () {
     plConnect();
     $usd = plPageCurrency();
 
-    plPagePost(['plan_id' => PL_PLAN, 'name' => 'Business', 'monthly' => 12, 'annually' => 120])->assertSessionHas('success');
+    plPagePost(['plan_id' => PL_PLAN, 'name' => 'Business', 'term' => [1 => 12, 12 => 120]])->assertSessionHas('success');
     $product = Product::where('name', 'Business')->firstOrFail();
 
     test()->actingAs(plStaff(['manage_products', 'manage_servers']), 'admin')
-        ->post(route('admin.panelica-licenses.products.prices', $product), ['monthly' => 12])
+        ->post(route('admin.panelica-licenses.products.prices', $product), ['term' => [1 => 12]])
         ->assertRedirect()->assertSessionHas('success');
 
     expect($product->fresh()->priceFor('monthly', $usd->id))->toBe(12.0)
@@ -1557,11 +1575,11 @@ test('a package cannot be left with no price at all', function () {
     plConnect();
     $usd = plPageCurrency();
 
-    plPagePost(['plan_id' => PL_PLAN, 'name' => 'Business', 'monthly' => 12])->assertSessionHas('success');
+    plPagePost(['plan_id' => PL_PLAN, 'name' => 'Business', 'term' => [1 => 12]])->assertSessionHas('success');
     $product = Product::where('name', 'Business')->firstOrFail();
 
     test()->actingAs(plStaff(['manage_products', 'manage_servers']), 'admin')
-        ->post(route('admin.panelica-licenses.products.prices', $product), [])
+        ->post(route('admin.panelica-licenses.products.prices', $product), ['term' => []])
         ->assertRedirect()->assertSessionHas('error');
 
     expect($product->fresh()->priceFor('monthly', $usd->id))->toBe(12.0);
@@ -1572,11 +1590,11 @@ test('changing a price is for staff who may manage products', function () {
     plFake($central);
     plConnect();
     plPageCurrency();
-    plPagePost(['plan_id' => PL_PLAN, 'name' => 'Business', 'monthly' => 12])->assertSessionHas('success');
+    plPagePost(['plan_id' => PL_PLAN, 'name' => 'Business', 'term' => [1 => 12]])->assertSessionHas('success');
     $product = Product::where('name', 'Business')->firstOrFail();
 
     test()->actingAs(plStaff(['list_products']), 'admin')
-        ->post(route('admin.panelica-licenses.products.prices', $product), ['monthly' => 99])
+        ->post(route('admin.panelica-licenses.products.prices', $product), ['term' => [1 => 99]])
         ->assertForbidden();
 
     expect($product->fresh()->priceFor('monthly'))->toBe(12.0);
@@ -1590,6 +1608,6 @@ test('only a package of this module can be priced here', function () {
     $other = Product::factory()->create(['group_id' => ProductGroup::factory()->create()->id, 'server_type' => 'cpanel']);
 
     test()->actingAs(plStaff(['manage_products', 'manage_servers']), 'admin')
-        ->post(route('admin.panelica-licenses.products.prices', $other), ['monthly' => 99])
+        ->post(route('admin.panelica-licenses.products.prices', $other), ['term' => [1 => 99]])
         ->assertNotFound();
 });

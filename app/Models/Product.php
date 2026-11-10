@@ -65,6 +65,34 @@ class Product extends Model
         return $this->hasMany(Pricing::class, 'rel_id')->where('type', 'product');
     }
 
+    /** Prices for terms of months no billing cycle is named after. */
+    public function terms()
+    {
+        return $this->hasMany(ProductTerm::class);
+    }
+
+    /**
+     * The price row for a term of months, or null when that term is not sold.
+     *
+     * Falls back to whatever currency exists when the one asked for was never
+     * priced, the same way pricingFor() does, so a shop that added a currency
+     * later still sells the term rather than silently dropping it.
+     */
+    public function termFor(string $cycle, ?int $currencyId = null): ?ProductTerm
+    {
+        $months = BillingCycleHelper::months($cycle);
+
+        if ($months === null) {
+            return null;
+        }
+
+        $currencyId ??= Currency::getDefault()?->id;
+        $rows = ($this->relationLoaded('terms') ? $this->terms : $this->terms()->get())
+            ->where('months', $months);
+
+        return $rows->firstWhere('currency_id', $currencyId) ?? $rows->first();
+    }
+
     /**
      * The price row for a currency — the one being sold in unless asked
      * otherwise, and whatever exists if the operator never priced that one.
@@ -87,14 +115,20 @@ class Product extends Model
      */
     public function setupFeeFor(string $cycle, ?int $currencyId = null): float
     {
-        $column = BillingCycleHelper::pricingColumn($cycle);
-        $row = $column ? $this->pricingFor($currencyId) : null;
-
-        if ($this->pay_type === 'free' || ! $row) {
+        if ($this->pay_type === 'free') {
             return 0.0;
         }
 
-        return max(0.0, round((float) ($row->{$column.'_setup'} ?? 0), 2));
+        $column = BillingCycleHelper::pricingColumn($cycle);
+
+        if ($column === null) {
+            // A term of months has its setup fee beside its price.
+            return max(0.0, round((float) ($this->termFor($cycle, $currencyId)?->setup ?? 0), 2));
+        }
+
+        $row = $this->pricingFor($currencyId);
+
+        return $row ? max(0.0, round((float) ($row->{$column.'_setup'} ?? 0), 2)) : 0.0;
     }
 
     /**
@@ -106,7 +140,17 @@ class Product extends Model
     public function priceFor(string $cycle, ?int $currencyId = null): ?float
     {
         $column = BillingCycleHelper::pricingColumn($cycle);
-        $row = $column ? $this->pricingFor($currencyId) : null;
+
+        if ($column === null) {
+            // A term of months no cycle is named after - seven months, say.
+            // Priced in product_terms; unpriced means not sold, exactly as an
+            // empty column means not sold.
+            $term = $this->termFor($cycle, $currencyId);
+
+            return $term && (float) $term->price > 0 ? round((float) $term->price, 2) : null;
+        }
+
+        $row = $this->pricingFor($currencyId);
 
         if ($row && $row->{$column} !== null) {
             $price = round((float) $row->{$column}, 2);
@@ -153,20 +197,46 @@ class Product extends Model
     }
 
     /**
-     * The cycles the product is actually sold on, cheapest term first.
+     * The cycles the product is actually sold on, shortest term first.
+     *
+     * The six named cycles and any term of months the product carries a price
+     * for - seven months, say, which no cycle is named after and which lives in
+     * `product_terms`. The shop, the cart, the admin invoice screen and the
+     * customer's cycle change all ask this, so a term priced on the licences
+     * page is offered everywhere a named cycle is.
      *
      * @return array<string, float>
      */
     public function pricedCycles(?int $currencyId = null): array
     {
-        $prices = [];
+        $byMonths = [];
 
-        foreach (['monthly', 'quarterly', 'semiannually', 'annually', 'biennially', 'triennially'] as $cycle) {
+        foreach (\App\Services\ProductCreator::CYCLES as $cycle) {
             $price = $this->priceFor($cycle, $currencyId);
 
             if ($price !== null) {
-                $prices[$cycle] = $price;
+                $byMonths[BillingCycleHelper::months($cycle)] = [$cycle, $price];
             }
+        }
+
+        $terms = ($this->relationLoaded('terms') ? $this->terms : $this->terms()->get())
+            ->where('currency_id', $currencyId ?? Currency::getDefault()?->id);
+
+        foreach ($terms as $term) {
+            $months = (int) $term->months;
+            $cycle = BillingCycleHelper::cycleForMonths($months);
+            $price = $this->priceFor($cycle, $currencyId);
+
+            if (! isset($byMonths[$months]) && $price !== null) {
+                $byMonths[$months] = [$cycle, $price];
+            }
+        }
+
+        ksort($byMonths);
+        $prices = [];
+
+        foreach ($byMonths as [$cycle, $price]) {
+            $prices[$cycle] = $price;
         }
 
         return $prices;

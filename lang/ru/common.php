@@ -74,6 +74,7 @@ return [
         'annually' => 'Ежегодно',
         'biennially' => 'Раз в два года',
         'free' => 'Бесплатно',
+        'months' => '1 месяц|:count месяца|:count месяцев',
         'monthly' => 'Ежемесячно',
         'one_time' => 'Разово',
         'quarterly' => 'Ежеквартально',

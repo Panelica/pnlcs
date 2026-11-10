@@ -107,6 +107,42 @@ if (! function_exists('status_label')) {
         return ucfirst(str_replace(['_', '-'], ' ', $status));
     }
 }
+if (! function_exists('cycle_label')) {
+    /**
+     * A billing cycle in the reader's language: "Monthly", "3 months".
+     *
+     * Services store the cycle as an English word, and the screens printed it
+     * with ucfirst() - so a Turkish customer read "Monthly" beside their
+     * invoice. A term of months has no English name to print at all: it is
+     * stored as its length ("7months") and was shown exactly like that. The
+     * named cycles come from common.billing.*, a term of months from
+     * common.billing.months, which is a plural.
+     */
+    function cycle_label(?string $cycle): string
+    {
+        $word = strtolower(trim(str_replace([' ', '-', '_'], '', (string) $cycle)));
+
+        if ($word === '') {
+            return '';
+        }
+
+        $named = ['monthly' => 'monthly', 'quarterly' => 'quarterly', 'semiannually' => 'semi_annually',
+            'annually' => 'annually', 'biennially' => 'biennially', 'triennially' => 'triennially',
+            'onetime' => 'one_time', 'free' => 'free'];
+
+        if (isset($named[$word]) && Lang::has('common.billing.'.$named[$word])) {
+            return Lang::get('common.billing.'.$named[$word]);
+        }
+
+        $months = \App\Services\BillingCycleHelper::months($word);
+
+        if ($months !== null && Lang::has('common.billing.months')) {
+            return trans_choice('common.billing.months', $months, ['count' => $months]);
+        }
+
+        return ucfirst(str_replace(['_', '-'], ' ', (string) $cycle));
+    }
+}
 if (! function_exists('report_text')) {
     /**
      * A report's title, description, category or column name in the admin's

@@ -74,6 +74,7 @@ return [
         'annually' => 'Yıllık',
         'biennially' => '2 Yıllık',
         'free' => 'Ücretsiz',
+        'months' => '1 ay|:count ay',
         'monthly' => 'Aylık',
         'one_time' => 'Tek Seferlik',
         'quarterly' => '3 Aylık',

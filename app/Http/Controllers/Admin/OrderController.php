@@ -57,7 +57,7 @@ class OrderController extends Controller
         $v = $request->validate([
             'client' => 'required|string|max:255',
             'product_id' => 'required|exists:products,id',
-            'billing_cycle' => 'required|in:monthly,quarterly,semiannually,annually,biennially,triennially',
+            'billing_cycle' => ['required', \App\Services\BillingCycleHelper::rule()],
             'domain' => 'nullable|string|max:255',
             'price' => 'nullable|numeric|min:0',
             'payment_method' => ['required', 'string', function ($attribute, $value, $fail) {

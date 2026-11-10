@@ -213,7 +213,6 @@
             foreach (range(1, 12) as $n) {
                 $ladder[$n] = $n === 12 ? $costY : round($costM * $n, 2);
             }
-            $sellable = [1 => 'monthly', 3 => 'quarterly', 6 => 'semiannually', 12 => 'annually'];
         @endphp
         <tr>
             <td style="{{ $td }}"><strong>{{ $plan['name'] ?? '' }}</strong>@if(! empty($plan['description']))<br><small style="{{ $muted }}">{{ \Illuminate\Support\Str::limit((string) $plan['description'], 80) }}</small>@endif</td>
@@ -227,20 +226,23 @@
                 @php
                     // The margin is shown for the shortest term the package is
                     // actually sold on, so a yearly-only package still shows one.
-                    $marginCycle = collect(\Modules\Servers\PanelicaLicense\Http\Admin\LicensesPageController::SELLABLE_CYCLES)
-                        ->first(fn ($c) => $product->priceFor($c) !== null);
-                    $marginTerm = ['monthly' => 'per_month', 'quarterly' => 'per_quarter', 'semiannually' => 'per_half_year', 'annually' => 'per_year'];
-                    $margin = $marginCycle && $usdRate ? $product->priceFor($marginCycle) - $cost[$marginCycle] * $usdRate : null;
+                    // The shortest term the package is actually sold on, so a
+                    // package sold by the year alone still shows a margin.
+                    $marginMonths = collect(array_keys($ladder))
+                        ->first(fn ($n) => $product->priceFor(\App\Services\BillingCycleHelper::cycleForMonths($n)) !== null);
+                    $margin = $marginMonths && $usdRate
+                        ? $product->priceFor(\App\Services\BillingCycleHelper::cycleForMonths($marginMonths)) - $ladder[$marginMonths] * $usdRate
+                        : null;
                 @endphp
                 <details class="pl-pkg">
                     <summary>
                         <a href="{{ route('admin.products.edit', $product) }}">{{ $product->name }}</a>
-                        @if($margin !== null)<span class="pl-badge {{ $margin >= 0 ? 'ok' : 'bad' }}">{{ __('panelica_license.page.'.$marginTerm[$marginCycle], ['price' => $local($margin)]) }}</span>@endif
+                        @if($margin !== null)<span class="pl-badge {{ $margin >= 0 ? 'ok' : 'bad' }}"><span>{{ trans_choice('panelica_license.page.months', $marginMonths, ['count' => $marginMonths]) }}</span> <span>{{ $local($margin) }}</span></span>@endif
                         <em>{{ __('panelica_license.page.edit_prices') }}</em>
                     </summary>
                     <form method="POST" action="{{ route('admin.panelica-licenses.products.prices', $product) }}" class="pl-form">
                         @csrf
-                        @include('admin.panelica-licenses.terms', ['ladder' => $ladder, 'sellable' => $sellable, 'prices' => $product, 'suggestMonthly' => null])
+                        @include('admin.panelica-licenses.terms', ['ladder' => $ladder, 'prices' => $product, 'suggestMonthly' => null])
                         <button type="submit" class="btn btn-default btn-sm">{{ __('panelica_license.page.save_prices') }}</button>
                     </form>
                 </details>
@@ -251,7 +253,7 @@
                         @csrf
                         <input type="hidden" name="plan_id" value="{{ $plan['id'] }}">
                         <label>{{ __('panelica_license.page.product_name_label') }}<input type="text" name="name" required maxlength="255" class="form-control" style="width:170px;font-size:12.5px;padding:4px 6px;" value="{{ __('panelica_license.page.product_name', ['plan' => $plan['name'] ?? '']) }}"></label>
-                        @include('admin.panelica-licenses.terms', ['ladder' => $ladder, 'sellable' => $sellable, 'prices' => null, 'suggestMonthly' => $suggestM])
+                        @include('admin.panelica-licenses.terms', ['ladder' => $ladder, 'prices' => null, 'suggestMonthly' => $suggestM])
                         <button type="submit" class="btn btn-primary btn-sm">{{ __('panelica_license.page.create_product') }}</button>
                     </form>
                 </details>

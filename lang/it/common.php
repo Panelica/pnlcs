@@ -74,6 +74,7 @@ return [
         'annually' => 'Annuale',
         'biennially' => 'Biennale',
         'free' => 'Gratuito',
+        'months' => '1 mese|:count mesi',
         'monthly' => 'Mensile',
         'one_time' => 'Una tantum',
         'quarterly' => 'Trimestrale',

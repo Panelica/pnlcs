@@ -46,8 +46,15 @@ class BillingCycleChange
 
         $current = self::key((string) $service->billing_cycle);
         $out = [];
-        foreach (self::CYCLES as $key => $stored) {
-            if ($key === $current) {
+
+        // Every cycle the product is sold on, which is the six named ones and
+        // any term of months it carries a price for (a seven-month licence, say).
+        // Asking the product rather than listing names keeps a term the shop
+        // sells from being a cycle the customer cannot move to.
+        foreach (array_keys($product->pricedCycles()) as $cycle) {
+            $stored = self::CYCLES[self::key($cycle)] ?? $cycle;
+
+            if (self::key($cycle) === $current) {
                 continue;
             }
             $price = $product->priceFor($stored);
@@ -91,7 +98,7 @@ class BillingCycleChange
 
         ActivityLog::log("Billing cycle of service #{$service->id} changed from {$previous} to {$cycle} by the customer", auth()->user()?->email, $service->client_id);
 
-        return ['ok' => true, 'message' => __('client.services.cycle_changed', ['cycle' => __('common.billing.'.self::langKey($cycle)), 'date' => $service->next_due_date?->format(date_fmt()) ?? '-'])];
+        return ['ok' => true, 'message' => __('client.services.cycle_changed', ['cycle' => cycle_label($cycle), 'date' => $service->next_due_date?->format(date_fmt()) ?? '-'])];
     }
 
     /** monthly, quarterly, semiannually, ... from any stored spelling. */

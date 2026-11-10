@@ -5,6 +5,7 @@ namespace Modules\Servers\PanelicaLicense;
 use App\Models\ModuleQueue;
 use App\Models\Server;
 use App\Models\Service;
+use App\Services\BillingCycleHelper;
 use App\Services\Module\ModuleRegistry;
 use App\Services\NotificationService;
 use Illuminate\Contracts\Support\Htmlable;
@@ -42,14 +43,11 @@ class PanelicaLicenseModule extends AbstractServerModule
     private const CYCLES = ['monthly' => 'monthly', 'annually' => 'yearly'];
 
     /**
-     * Cycles Central sells as a term of months paid up front, rather than as
-     * one of its own two cycles. Central stores such a key as monthly with a
-     * first period as long as the term, and renews it with POST renew
-     * {months}. A year stays a yearly cycle: a yearly key is priced as a year,
-     * not as twelve months. Longer than a year Central cannot sell at all, so
-     * those cycles are still refused at order time.
+     * The longest term Central sells. A service on a longer period - two or
+     * three years - is still refused when the order is placed: Central cannot
+     * sell it, and selling it here would take money for a key nobody can issue.
      */
-    private const TERMS = ['quarterly' => 3, 'semiannually' => 6];
+    private const MAX_TERM_MONTHS = 12;
 
     public function getModuleName(): string
     {
@@ -896,7 +894,7 @@ class PanelicaLicenseModule extends AbstractServerModule
      */
     private function termMonths(Service $service): ?int
     {
-        $months = self::TERMS[$this->cycleKey($service)] ?? null;
+        $months = $this->serviceMonths($service);
 
         return $months !== null && PartnerAccount::sellsTerms() ? $months : null;
     }
@@ -904,7 +902,26 @@ class PanelicaLicenseModule extends AbstractServerModule
     /** The months to renew, whatever Central can sell today: the period paid for. */
     private function renewMonths(Service $service): ?int
     {
-        return self::TERMS[$this->cycleKey($service)] ?? null;
+        return $this->serviceMonths($service);
+    }
+
+    /**
+     * The months this service was sold for, when they are not one of Central's
+     * own two periods - a month and a year, which it prices on their own.
+     *
+     * Any other term of up to twelve months is bought as a term paid up front:
+     * three months, but seven just as well, which is what the licences page
+     * sells. Longer than that, null - the order is refused above.
+     */
+    private function serviceMonths(Service $service): ?int
+    {
+        if ($this->centralCycle($service) !== null) {
+            return null;
+        }
+
+        $months = BillingCycleHelper::months((string) $service->billing_cycle);
+
+        return $months !== null && $months <= self::MAX_TERM_MONTHS ? $months : null;
     }
 
     /**

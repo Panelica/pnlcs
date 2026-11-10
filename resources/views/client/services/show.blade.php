@@ -110,7 +110,7 @@
             <div class="sv-hicon"><i class="ri-server-line"></i></div>
             <div>
                 <h1>{{ $service->domain ?: ($service->product?->name ?? __('client.services.title')) }}</h1>
-                <div class="s">{{ $service->product?->name }} @if($service->domain)&middot; {{ ucfirst($service->billing_cycle) }}@endif</div>
+                <div class="s">{{ $service->product?->name }} @if($service->domain)&middot; {{ cycle_label($service->billing_cycle) }}@endif</div>
             </div>
         </div>
         <span class="sv-status"><span class="d" style="{{ $st==='active'?'':'background:#fbbf24;box-shadow:0 0 0 3px rgba(251,191,36,.3)' }}"></span>{{ __('client.status.' . $st) }}</span>
@@ -192,19 +192,19 @@
         <div class="sv-ph">{{ __('client.services.service_details') }}</div>
         <ul class="sv-dl">
             <li><span class="k">{{ __('client.cart.product') }}</span><span class="v">{{ $service->product?->name ?? '—' }}</span></li>
-            <li><span class="k">{{ __('client.cart.billing_cycle') }}</span><span class="v" style="text-transform:capitalize">{{ $service->billing_cycle ?? '—' }}
+            <li><span class="k">{{ __('client.cart.billing_cycle') }}</span><span class="v">{{ cycle_label($service->billing_cycle) ?: '—' }}
                 @if(! empty($cycleOptions))
                 <form method="POST" action="{{ route('client.services.cycle', $service) }}" style="display:inline-flex;gap:6px;align-items:center;margin-left:8px;text-transform:none;">@csrf
                     <select name="billing_cycle" class="form-control" style="width:auto;padding:2px 6px;font-size:12px;height:auto;" aria-label="{{ __('client.services.change_cycle') }}">
                         @foreach($cycleOptions as $cycle => $amount)
-                        <option value="{{ $cycle }}">{{ __('common.billing.'.\App\Services\BillingCycleChange::langKey($cycle)) }} · {{ display_money_fmt($amount) }}</option>
+                        <option value="{{ $cycle }}">{{ cycle_label($cycle) }} · {{ display_money_fmt($amount) }}</option>
                         @endforeach
                     </select>
                     <button type="submit" class="pn-btn pn-btn-sm">{{ __('client.services.change_cycle') }}</button>
                 </form>
                 @endif
             </span></li>
-            <li><span class="k">{{ __('client.services.amount') }}</span><span class="v">{{ display_money_fmt($service->amount) }} / {{ $service->billing_cycle }}</span></li>
+            <li><span class="k">{{ __('client.services.amount') }}</span><span class="v">{{ display_money_fmt($service->amount) }} / {{ cycle_label($service->billing_cycle) }}</span></li>
             <li><span class="k">{{ __('client.services.next_due_date') }}</span><span class="v">{{ $service->next_due_date?->format(date_fmt()) ?? '—' }}
                 @if($canRenewEarly ?? false)
                 <form method="POST" action="{{ route('client.services.renew', $service) }}" style="display:inline;margin-left:8px;">@csrf
@@ -248,7 +248,7 @@
     <div style="overflow-x:auto"><table class="pn-table">
         <thead><tr><th>{{ __('common.table.name') }}</th><th>{{ __('common.table.amount') }}</th><th>{{ __('common.table.billing_cycle') }}</th><th>{{ __('client.services.next_due_date') }}</th><th>{{ __('common.table.status') }}</th><th style="text-align:right">{{ __('common.table.actions') }}</th></tr></thead>
         <tbody>@foreach($service->addons as $addon)<tr>
-            <td>{{ $addon->label() }}</td><td>{{ display_money_fmt($addon->amount) }}</td><td style="text-transform:capitalize">{{ $addon->billing_cycle }}</td>
+            <td>{{ $addon->label() }}</td><td>{{ display_money_fmt($addon->amount) }}</td><td>{{ cycle_label($addon->billing_cycle) }}</td>
             <td class="text-muted text-sm">{{ $addon->next_due_date?->format(date_fmt()) ?? '-' }}</td>
             <td><span class="badge badge-{{ strtolower($addon->status) }}">{{ __('client.status.' . strtolower($addon->status)) }}</span></td>
             <td style="text-align:right">@if(in_array(strtolower($addon->status),['active','pending'],true))<form method="POST" action="{{ route('client.services.addons.cancel',[$service,$addon]) }}" onsubmit="return pnConfirm(event, @js(__('client.services.addon_cancel_confirm')))">@csrf<button type="submit" class="pn-btn pn-btn-sm pn-btn-danger">{{ __('client.services.addon_cancel') }}</button></form>@endif</td>

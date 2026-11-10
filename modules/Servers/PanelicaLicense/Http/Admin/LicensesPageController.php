@@ -6,8 +6,10 @@ use App\Models\Currency;
 use App\Models\Pricing;
 use App\Models\Product;
 use App\Models\ProductGroup;
+use App\Models\ProductTerm;
 use App\Models\Setting;
 use App\Models\Service;
+use App\Services\BillingCycleHelper;
 use App\Services\ExchangeRateService;
 use App\Services\ProductCreator;
 use App\Support\UniqueSlug;
@@ -28,10 +30,16 @@ class LicensesPageController
 {
     /** The product group the products made here go into. */
     /**
-     * The terms this page sells, in months: the cycles PNLCS itself bills.
-     * Central sells any 1-12 month term; these are the ones that have a price
-     * column and a renewal rhythm here.
+     * The terms this page sells, in months: every term Central sells.
+     *
+     * One, three, six and twelve months are stored on the matching pricing
+     * column, because they have a cycle named after them; the rest are stored
+     * as product terms. Either way the shop sells them, dates them and renews
+     * them by their length (App\Services\BillingCycleHelper).
      */
+    public const SELLABLE_MONTHS = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12];
+
+    /** The four of those terms a billing cycle is named after. */
     public const SELLABLE_CYCLES = ['monthly', 'quarterly', 'semiannually', 'annually'];
 
     private const GROUP_SLUG = 'panelica-licenses';
@@ -227,18 +235,13 @@ class LicensesPageController
         $validated = $request->validate([
             'plan_id' => ['required', 'string', 'max:64'],
             'name' => ['required', 'string', 'max:255'],
-            'monthly' => ['nullable', 'numeric', 'min:0.01', 'max:99999999'],
-            'quarterly' => ['nullable', 'numeric', 'min:0.01', 'max:99999999'],
-            'semiannually' => ['nullable', 'numeric', 'min:0.01', 'max:99999999'],
-            'annually' => ['nullable', 'numeric', 'min:0.01', 'max:99999999'],
-        ]);
+        ] + $this->termRules());
 
-        // The terms PNLCS can bill are its own cycles: one, three, six and
-        // twelve months. Central sells any term of 1-12 months, but a cycle
-        // here is a column on the pricing table and a rhythm the invoicing,
-        // renewal and upgrade code follows, so a seven-month product would
-        // have nowhere to recur.
-        if (collect(self::SELLABLE_CYCLES)->every(fn ($c) => blank($validated[$c] ?? null))) {
+        $prices = $this->terms($validated);
+
+        // A package nobody priced is unsellable, so at least one term is asked
+        // for. Which terms is the operator's: Central sells all twelve.
+        if ($prices === []) {
             return back()->withInput()->with('error', __('panelica_license.page.price_needed'));
         }
 
@@ -253,7 +256,7 @@ class LicensesPageController
             'headline' => __('panelica_license.page.group_headline'),
         ]);
 
-        $pricing = $this->pricingRows($validated);
+        $pricing = $this->pricingRows($prices);
 
         $product = app(ProductCreator::class)->create([
             'name' => $validated['name'],
@@ -264,6 +267,8 @@ class LicensesPageController
             'auto_setup' => 'payment',
             'server_type' => PanelicaLicenseModule::NAME,
         ], $pricing, (string) $plan['id']);
+
+        $this->saveTerms($product, $prices);
 
         return back()->with('success', __('panelica_license.page.product_created', ['name' => $product->name]));
     }
@@ -288,20 +293,21 @@ class LicensesPageController
 
         abort_unless(strtolower((string) $product->server_type) === PanelicaLicenseModule::NAME, 404);
 
-        $validated = $request->validate(collect(self::SELLABLE_CYCLES)
-            ->mapWithKeys(fn ($cycle) => [$cycle => ['nullable', 'numeric', 'min:0.01', 'max:99999999']])
-            ->all());
+        $validated = $request->validate($this->termRules());
+        $prices = $this->terms($validated);
 
-        if (collect(self::SELLABLE_CYCLES)->every(fn ($c) => blank($validated[$c] ?? null))) {
+        if ($prices === []) {
             return back()->with('error', __('panelica_license.page.price_needed'));
         }
 
-        foreach ($this->pricingRows($validated) as $currencyId => $row) {
+        foreach ($this->pricingRows($prices) as $currencyId => $row) {
             Pricing::updateOrCreate(
                 ['type' => 'product', 'currency_id' => $currencyId, 'rel_id' => $product->id],
                 $row,
             );
         }
+
+        $this->saveTerms($product, $prices);
 
         return back()->with('success', __('panelica_license.page.prices_saved', ['name' => $product->name]));
     }
@@ -321,14 +327,86 @@ class LicensesPageController
             $rate = $currency->is_default ? 1.0 : (float) $currency->rate;
             $row = [];
             foreach (self::SELLABLE_CYCLES as $cycle) {
-                $row[$cycle] = filled($prices[$cycle] ?? null) && $rate > 0
-                    ? round((float) $prices[$cycle] * $rate, 2)
+                $months = BillingCycleHelper::months($cycle);
+                $row[$cycle] = isset($prices[$months]) && $rate > 0
+                    ? round($prices[$months] * $rate, 2)
                     : -1;
             }
             $rows[$currency->id] = $row;
         }
 
         return $rows;
+    }
+
+    /**
+     * What the form may send: a price for each term of 1 to 12 months, in
+     * months rather than cycle names, because eight of the twelve have no name.
+     *
+     * @return array<string, array<int, mixed>>
+     */
+    private function termRules(): array
+    {
+        return [
+            'term' => ['nullable', 'array'],
+            'term.*' => ['nullable', 'numeric', 'min:0.01', 'max:99999999'],
+        ];
+    }
+
+    /**
+     * The terms the operator priced, months => price, in the shop's currency.
+     * A box left empty is a term that is not sold; a term Central does not
+     * sell is dropped rather than refused, so a stale form cannot block a save.
+     *
+     * @param  array<string, mixed>  $validated
+     * @return array<int, float>
+     */
+    private function terms(array $validated): array
+    {
+        $prices = [];
+
+        foreach ((array) ($validated['term'] ?? []) as $months => $price) {
+            $months = (int) $months;
+
+            if (in_array($months, self::SELLABLE_MONTHS, true) && filled($price)) {
+                $prices[$months] = (float) $price;
+            }
+        }
+
+        ksort($prices);
+
+        return $prices;
+    }
+
+    /**
+     * Store the terms no cycle is named after, in every currency, and remove
+     * the rows for terms the operator cleared - the same "not sold" that a -1
+     * means for a named cycle.
+     *
+     * @param  array<int, float>  $prices
+     */
+    private function saveTerms(Product $product, array $prices): void
+    {
+        $named = collect(self::SELLABLE_CYCLES)->map(fn ($c) => BillingCycleHelper::months($c))->all();
+
+        foreach (Currency::all() as $currency) {
+            $rate = $currency->is_default ? 1.0 : (float) $currency->rate;
+
+            foreach (self::SELLABLE_MONTHS as $months) {
+                if (in_array($months, $named, true)) {
+                    continue;
+                }
+
+                if (isset($prices[$months]) && $rate > 0) {
+                    ProductTerm::updateOrCreate(
+                        ['product_id' => $product->id, 'currency_id' => $currency->id, 'months' => $months],
+                        ['price' => round($prices[$months] * $rate, 2)],
+                    );
+                } else {
+                    ProductTerm::where('product_id', $product->id)
+                        ->where('currency_id', $currency->id)->where('months', $months)->delete();
+                }
+            }
+        }
     }
 
     public function sync(LicenseSync $sync)

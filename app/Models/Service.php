@@ -37,9 +37,10 @@ class Service extends Model
      */
     public static function monthsInCycle(?string $cycle): int
     {
-        $key = strtolower(str_replace([' ', '-', '_'], '', (string) $cycle));
-
-        return self::CYCLE_MONTHS[$key] ?? 1;
+        // The map above is kept for anything that reads it directly; a term of
+        // months - "7months" - is counted by BillingCycleHelper, which knows
+        // both spellings and is the one place that decides what a cycle means.
+        return \App\Services\BillingCycleHelper::months((string) $cycle) ?? 1;
     }
 
     /**

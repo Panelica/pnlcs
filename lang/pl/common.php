@@ -74,6 +74,7 @@ return [
         'annually' => 'Rocznie',
         'biennially' => 'Co dwa lata',
         'free' => 'Bezpłatnie',
+        'months' => '1 miesiąc|:count miesiące|:count miesięcy',
         'monthly' => 'Miesięcznie',
         'one_time' => 'Jednorazowo',
         'quarterly' => 'Kwartalnie',

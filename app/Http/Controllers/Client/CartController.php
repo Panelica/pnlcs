@@ -95,7 +95,10 @@ class CartController extends Controller
     {
         $request->validate([
             'product_id' => 'required|integer|exists:products,id',
-            'billing_cycle' => 'required|string|in:monthly,quarterly,semiannually,annually,biennially,triennially',
+            // A named cycle or a term of months (BillingCycleHelper::rule);
+            // whether the product is actually sold on it is checked below, by
+            // asking for its price.
+            'billing_cycle' => ['required', 'string', \App\Services\BillingCycleHelper::rule()],
             'domain' => 'nullable|string|max:255',
             'domain_option' => 'nullable|string|in:register,transfer,own,subdomain',
             'subdomain_parent' => 'nullable|string|max:253',
