@@ -35,12 +35,18 @@
     .pl-badge{display:inline-block;padding:2px 9px;border-radius:999px;font-size:11.5px;font-weight:600;background:#eef2f7;color:#555}
     .pl-badge.ok{background:#e7f6ec;color:#1e7b3a}.pl-badge.wait{background:#fff4e0;color:#9a5b00}.pl-badge.bad{background:#fdecea;color:#a12a1f}
     .pl-price{width:96px;font-size:12.5px;padding:4px 6px}
-    .pl-ladder{margin-top:6px}
-    .pl-ladder>summary{list-style:none;cursor:pointer;font-size:12px;color:#1a4d80}
-    .pl-ladder>summary::-webkit-details-marker{display:none}
-    .pl-ladder>summary em{font-style:normal}
-    .pl-ladder table{border-collapse:collapse;margin-top:6px;font-size:12px}
-    .pl-ladder td{padding:2px 8px 2px 0;white-space:nowrap}
+    .pl-terms{display:grid;grid-template-columns:repeat(auto-fit,minmax(118px,1fr));gap:6px;width:100%}
+    .pl-term{border:1px solid #eceff3;border-radius:5px;padding:5px 7px;background:#fff;display:flex;flex-direction:column;gap:2px}
+    .pl-term.off{background:#f7f8fa}
+    .pl-term .t{font-size:11.5px;font-weight:700;color:#444}
+    .pl-term .c{font-size:11px;color:#777}
+    .pl-term .m{font-size:11px;min-height:14px}
+    .pl-term .m.ok{color:#1e7b3a}.pl-term .m.bad{color:#a12a1f}
+    .pl-term .x{font-size:11px;color:#999;cursor:help}
+    .pl-term input{width:100%;font-size:12.5px;padding:3px 5px;margin-top:2px}
+    .pl-terms-foot{display:flex;justify-content:space-between;gap:10px;flex-wrap:wrap;font-size:11.5px;color:#777;margin-top:6px;width:100%}
+    .pl-name{width:100%;font-size:11px;color:#777}
+    .pl-name input{font-size:12.5px;padding:4px 6px;max-width:260px}
     .pl-pkg{border:1px solid #eceff3;border-radius:6px;margin-bottom:6px;background:#fcfdfe}
     .pl-pkg>summary{list-style:none;cursor:pointer;display:flex;align-items:center;gap:8px;padding:6px 10px;font-size:13px}
     .pl-pkg>summary::-webkit-details-marker{display:none}
@@ -49,6 +55,7 @@
     .pl-pkg[open]>summary em{color:#777}
     .pl-new>summary{color:#1a4d80}
     .pl-form{display:flex;gap:8px;flex-wrap:wrap;align-items:flex-end;padding:8px 10px;border-top:1px solid #eceff3}
+    .pl-form>button{margin-top:4px}
     .pl-form label{display:block;font-size:11px;color:#777;margin:0}
     @media (max-width:900px){.pl-hero{grid-template-columns:1fr}}
 </style>
@@ -210,21 +217,7 @@
         @endphp
         <tr>
             <td style="{{ $td }}"><strong>{{ $plan['name'] ?? '' }}</strong>@if(! empty($plan['description']))<br><small style="{{ $muted }}">{{ \Illuminate\Support\Str::limit((string) $plan['description'], 80) }}</small>@endif</td>
-            <td style="{{ $td }}white-space:nowrap;">
-                {{ __('panelica_license.page.per_month', ['price' => $money($costM)]) }}<br><small style="{{ $muted }}">{{ __('panelica_license.page.per_year', ['price' => $money($costY)]) }}</small>
-                <details class="pl-ladder">
-                    <summary><em>{{ __('panelica_license.page.all_terms') }}</em></summary>
-                    <table>
-                        @foreach($ladder as $n => $price)
-                        <tr>
-                            <td>{{ trans_choice('panelica_license.page.months', $n, ['count' => $n]) }}</td>
-                            <td><strong>{{ $money($price) }}</strong></td>
-                            <td>@isset($sellable[$n])<span class="pl-badge ok">{{ __('panelica_license.page.term_billable') }}</span>@else<span class="pl-badge" title="{{ __('panelica_license.page.term_not_billable_why') }}">{{ __('panelica_license.page.term_not_billable') }}</span>@endisset</td>
-                        </tr>
-                        @endforeach
-                    </table>
-                </details>
-            </td>
+            <td style="{{ $td }}white-space:nowrap;">{{ __('panelica_license.page.per_month', ['price' => $money($costM)]) }}<br><small style="{{ $muted }}">{{ __('panelica_license.page.per_year', ['price' => $money($costY)]) }}</small></td>
             <td style="{{ $td }}white-space:nowrap;{{ $muted }}">{{ __('panelica_license.page.per_month', ['price' => $money($plan['price_monthly'] ?? 0)]) }}<br><small>{{ __('panelica_license.page.per_year', ['price' => $money($plan['price_yearly'] ?? 0)]) }}</small></td>
             <td style="{{ $td }}">
                 {{-- One line per package: what it is called, what it earns, and
@@ -247,10 +240,7 @@
                     </summary>
                     <form method="POST" action="{{ route('admin.panelica-licenses.products.prices', $product) }}" class="pl-form">
                         @csrf
-                        @foreach(\Modules\Servers\PanelicaLicense\Http\Admin\LicensesPageController::SELLABLE_CYCLES as $cycle)
-                        <label>{{ __('panelica_license.page.'.$cycle) }}<input type="number" name="{{ $cycle }}" step="0.01" min="0.01" class="form-control pl-price" value="{{ $product->priceFor($cycle, $currency?->id) ?? '' }}"></label>
-                        @endforeach
-                        <span style="font-size:12px;{{ $muted }}">{{ $currency?->code }}</span>
+                        @include('admin.panelica-licenses.terms', ['ladder' => $ladder, 'sellable' => $sellable, 'prices' => $product, 'suggestMonthly' => null])
                         <button type="submit" class="btn btn-default btn-sm">{{ __('panelica_license.page.save_prices') }}</button>
                     </form>
                 </details>
@@ -261,10 +251,7 @@
                         @csrf
                         <input type="hidden" name="plan_id" value="{{ $plan['id'] }}">
                         <label>{{ __('panelica_license.page.product_name_label') }}<input type="text" name="name" required maxlength="255" class="form-control" style="width:170px;font-size:12.5px;padding:4px 6px;" value="{{ __('panelica_license.page.product_name', ['plan' => $plan['name'] ?? '']) }}"></label>
-                        @foreach(\Modules\Servers\PanelicaLicense\Http\Admin\LicensesPageController::SELLABLE_CYCLES as $cycle)
-                        <label>{{ __('panelica_license.page.'.$cycle) }}<input type="number" name="{{ $cycle }}" step="0.01" min="0.01" class="form-control pl-price" value="{{ $suggest[$cycle] ?: '' }}"></label>
-                        @endforeach
-                        <span style="font-size:12px;{{ $muted }}">{{ $currency?->code }}</span>
+                        @include('admin.panelica-licenses.terms', ['ladder' => $ladder, 'sellable' => $sellable, 'prices' => null, 'suggestMonthly' => $suggestM])
                         <button type="submit" class="btn btn-primary btn-sm">{{ __('panelica_license.page.create_product') }}</button>
                     </form>
                 </details>
@@ -456,5 +443,39 @@ document.querySelectorAll('[data-pl-copy]').forEach(function (button) {
     </div>
 </div>
 @endif
+
+{{-- Typing one term's price fills the empty ones at the same price per month,
+     and the margin under each box follows what is typed. A price below cost
+     turns the margin red; it is saved all the same. --}}
+<script>
+document.querySelectorAll('.pl-terms').forEach(function (grid) {
+    var boxes = Array.prototype.slice.call(grid.querySelectorAll('input[data-months]'));
+    function margin(box) {
+        var span = box.parentElement.querySelector('.m');
+        if (! span) { return; }
+        var cost = parseFloat(box.dataset.cost), value = parseFloat(box.value);
+        if (isNaN(cost) || isNaN(value) || box.value === '') { span.textContent = ''; span.className = 'm'; return; }
+        var diff = Math.round((value - cost) * 100) / 100;
+        span.textContent = (diff >= 0 ? '+' : '') + diff.toFixed(2);
+        span.className = 'm ' + (diff >= 0 ? 'ok' : 'bad');
+    }
+    boxes.forEach(function (box) {
+        margin(box);
+        box.addEventListener('input', function () {
+            var value = parseFloat(box.value), months = parseFloat(box.dataset.months);
+            if (! isNaN(value) && value > 0 && months > 0) {
+                var perMonth = value / months;
+                boxes.forEach(function (other) {
+                    if (other !== box && other.value === '') {
+                        other.value = (Math.round(perMonth * parseFloat(other.dataset.months) * 100) / 100).toFixed(2);
+                        margin(other);
+                    }
+                });
+            }
+            margin(box);
+        });
+    });
+});
+</script>
 
 @endsection

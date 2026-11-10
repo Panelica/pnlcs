@@ -1446,11 +1446,15 @@ test('the page says what every term of 1 to 12 months costs the partner', functi
         expect($page)->toContain(trans_choice('panelica_license.page.months', $months, ['count' => $months]))
             ->and($page)->toContain($price);
     }
+    // Only the four PNLCS can recur on carry a price box; the other eight show
+    // what they cost and say they cannot be billed.
     expect($page)->toContain('$80.00')
-        // Only the four PNLCS can recur on may be sold as a package; the rest
-        // are shown with what they cost and why they cannot be billed.
-        ->and(substr_count($page, e(__('panelica_license.page.term_billable'))))->toBe(4)
-        ->and(substr_count($page, e(__('panelica_license.page.term_not_billable'))))->toBe(8);
+        ->and(substr_count($page, 'name="monthly"'))->toBe(1)
+        ->and(substr_count($page, 'name="quarterly"'))->toBe(1)
+        ->and(substr_count($page, 'name="semiannually"'))->toBe(1)
+        ->and(substr_count($page, 'name="annually"'))->toBe(1)
+        ->and(substr_count($page, e(__('panelica_license.page.term_not_billable'))))->toBe(8)
+        ->and($page)->toContain(e(__('panelica_license.page.autofill_hint')));
 });
 
 // ------------------------------------- managing packages from the page
