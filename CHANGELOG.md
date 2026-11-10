@@ -2,6 +2,41 @@
 
 All notable changes to PNLCS are documented here. Newest first.
 
+## 1.25.1-beta.1 — 2026-11-10
+
+A beta, offered on the beta channel only. Fixes to the Panelica Licences page
+that 1.25.0 shipped, and one to duplicating a product.
+
+### Fixed
+
+- **The term grid stopped following the price after the first digit.** Typing
+  50 into the one-month box filled the other terms from the 5 that was there
+  after the first keystroke and never corrected them: the script wrote only to
+  boxes that were still empty, and after the first keystroke none were. It now
+  remembers which boxes were typed into by hand and recomputes every other one
+  on each keystroke, so the grid follows the number rather than its first
+  digit. A box filled in by hand is never written to, and clearing it hands it
+  back to the grid. Typing into any of the twelve boxes works the same way.
+- **A package made on the page could not be removed there.** Adding one was a
+  click; removing one meant leaving for the product screen to find its delete
+  button. The package line carries Remove, which refuses while customers still
+  hold the package and says how many services those are. It is a soft delete,
+  and a customer who already holds a licence keeps it.
+- **Duplicating a product dropped the terms it was sold on.** `copy()` cloned
+  the pricing rows, which hold the named cycles, so a copy of a package sold
+  for seven months arrived sold on nothing but its named terms.
+
+### For theme and module authors
+
+- `Product::heldServices()` is the one rule for whether a product may be
+  deleted - how many services on it a customer still holds. The product screen
+  and the licences page both ask it.
+
+### Views a theme may override that changed
+
+- `admin/panelica-licenses/index` — the Remove button, and the grid's script
+  moved out of the page into `public/js/pnlcs-license-terms.js`.
+
 ## 1.25.0 — 2026-11-10
 
 A stable release, offered to every installation. A product can be sold for a
