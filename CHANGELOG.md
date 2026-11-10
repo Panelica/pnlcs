@@ -153,6 +153,10 @@ All notable changes to PNLCS are documented here. Newest first.
 
 ### For theme and module authors
 
+- The Panelica licence module gained `unbindServer()` and `cancelLicense()`,
+  and `PartnerAccount::sellsTerms()` says whether the connected Central sells a
+  term of months. Anything that drives licences should ask that before offering
+  a period Central cannot sell.
 - New component `<x-language-flag :code="..." size="24x18" :alt="..." />`, and
   `fallback="badge"` where a missing flag should still fill a table cell. A
   theme that renders a language flag should use it rather than building a
