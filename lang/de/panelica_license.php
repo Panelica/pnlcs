@@ -27,7 +27,21 @@ return [
         'expired' => 'Abgelaufen',
     ],
 
+    // The kinds of balance movement Central reports; a kind we do not know
+    // yet is shown as the word Central sent.
+    'movement' => [
+        'license_renewal' => 'Verlängerung',
+        'license_purchase' => 'Neuer Schlüssel',
+        'adjustment' => 'Korrektur',
+        'refund' => 'Rückerstattung',
+        'renewal' => 'Verlängerung',
+    ],
     'field' => [
+        'when' => 'Wann',
+        'movement' => 'Bewegung',
+        'what' => 'Wofür',
+        'amount' => 'Betrag',
+        'left' => 'Guthaben danach',
         'key' => 'Lizenzschlüssel',
         'plan' => 'Tarif',
         'status' => 'Status',
@@ -89,6 +103,8 @@ return [
     ],
 
     'page' => [
+        'movements' => 'Guthabenbewegungen',
+        'this_month' => 'Diesen Monat: :in ein, :out aus',
         'menu' => 'Panelica',
         'title' => 'Panelica-Lizenzen',
         'sync' => 'Installationen jetzt prüfen',

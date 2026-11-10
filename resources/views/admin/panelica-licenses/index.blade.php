@@ -3,6 +3,7 @@
 @section('content')
 @php
     $money = fn ($amount) => '$'.number_format((float) $amount, 2);
+    $when = fn ($iso) => $iso ? \Illuminate\Support\Carbon::parse($iso)->timezone(config('app.timezone'))->format(date_fmt().' H:i') : '—';
     $local = fn ($amount) => $currency ? $currency->formatAmount((float) $amount) : number_format((float) $amount, 2);
     $muted = 'color:#777;';
     $th = 'padding:8px 10px;text-align:left;font-size:12px;color:#777;border-bottom:1px solid #e5e7eb;white-space:nowrap;';
@@ -106,6 +107,14 @@
     <div class="pl-stat">
         <div class="k">{{ __('panelica_license.page.balance') }}</div>
         <div class="v">{{ $money($account['available_balance'] ?? $account['balance'] ?? 0) }}</div>
+        @if(! empty($balance))
+        {{-- What the month has taken and added, so a refused renewal can be
+             understood without opening Central. --}}
+        <div class="s">{{ __('panelica_license.page.this_month', [
+            'in' => $money($balance['this_month_credits'] ?? 0),
+            'out' => $money($balance['this_month_debits'] ?? 0),
+        ]) }}</div>
+        @endif
         <div class="s"><a href="{{ $topUp }}" target="_blank" rel="noopener">{{ __('panelica_license.page.top_up') }}</a></div>
     </div>
     <div class="pl-stat">
@@ -353,3 +362,40 @@ document.querySelectorAll('[data-pl-copy]').forEach(function (button) {
 </script>
 @endif
 @endsection
+
+@if(! empty($movements))
+{{-- The balance movements Central reports, newest first: what each one was,
+     what it moved and what it left behind. --}}
+<div class="card" style="margin-top:18px;">
+    <div class="card-header"><strong>{{ __('panelica_license.page.movements') }}</strong></div>
+    <div class="card-body" style="padding:0;overflow-x:auto;">
+        <table style="width:100%;border-collapse:collapse;">
+            <thead>
+                <tr>
+                    <th style="{{ $th }}">{{ __('panelica_license.field.when') }}</th>
+                    <th style="{{ $th }}">{{ __('panelica_license.field.movement') }}</th>
+                    <th style="{{ $th }}">{{ __('panelica_license.field.what') }}</th>
+                    <th style="{{ $th }}text-align:right;">{{ __('panelica_license.field.amount') }}</th>
+                    <th style="{{ $th }}text-align:right;">{{ __('panelica_license.field.left') }}</th>
+                </tr>
+            </thead>
+            <tbody>
+                @foreach($movements as $movement)
+                @php
+                    $kind = (string) ($movement['type'] ?? '');
+                    $label = __('panelica_license.movement.'.$kind);
+                    $amount = (float) ($movement['amount'] ?? 0);
+                @endphp
+                <tr>
+                    <td style="{{ $td }}white-space:nowrap;">{{ $when($movement['created_at'] ?? null) }}</td>
+                    <td style="{{ $td }}">{{ $label === 'panelica_license.movement.'.$kind ? status_label($kind) : $label }}</td>
+                    <td style="{{ $td }}{{ $muted }}">{{ $movement['description'] ?? '—' }}</td>
+                    <td style="{{ $td }}text-align:right;font-variant-numeric:tabular-nums;color:{{ $amount < 0 ? '#a12a1f' : '#1c7c3c' }};">{{ $money($amount) }}</td>
+                    <td style="{{ $td }}text-align:right;font-variant-numeric:tabular-nums;{{ $muted }}">{{ $money($movement['balance_after'] ?? 0) }}</td>
+                </tr>
+                @endforeach
+            </tbody>
+        </table>
+    </div>
+</div>
+@endif

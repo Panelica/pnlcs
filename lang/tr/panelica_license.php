@@ -27,7 +27,21 @@ return [
         'expired' => 'Süresi doldu',
     ],
 
+    // The kinds of balance movement Central reports; a kind we do not know
+    // yet is shown as the word Central sent.
+    'movement' => [
+        'license_renewal' => 'Yenileme',
+        'license_purchase' => 'Yeni anahtar',
+        'adjustment' => 'Düzeltme',
+        'refund' => 'İade',
+        'renewal' => 'Yenileme',
+    ],
     'field' => [
+        'when' => 'Tarih',
+        'movement' => 'Hareket',
+        'what' => 'Neden',
+        'amount' => 'Tutar',
+        'left' => 'Kalan bakiye',
         'key' => 'Lisans anahtarı',
         'plan' => 'Plan',
         'status' => 'Durum',
@@ -89,6 +103,8 @@ return [
     ],
 
     'page' => [
+        'movements' => 'Bakiye hareketleri',
+        'this_month' => 'Bu ay: :in giriş, :out çıkış',
         'menu' => 'Panelica',
         'title' => 'Panelica Lisansları',
         'sync' => 'Kurulumları şimdi kontrol et',

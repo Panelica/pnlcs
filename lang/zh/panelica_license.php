@@ -27,7 +27,21 @@ return [
         'expired' => '已过期',
     ],
 
+    // The kinds of balance movement Central reports; a kind we do not know
+    // yet is shown as the word Central sent.
+    'movement' => [
+        'license_renewal' => '续费',
+        'license_purchase' => '新密钥',
+        'adjustment' => '调整',
+        'refund' => '退款',
+        'renewal' => '续费',
+    ],
     'field' => [
+        'when' => '时间',
+        'movement' => '变动',
+        'what' => '事由',
+        'amount' => '金额',
+        'left' => '变动后余额',
         'key' => '许可证密钥',
         'plan' => '套餐',
         'status' => '状态',
@@ -89,6 +103,8 @@ return [
     ],
 
     'page' => [
+        'movements' => '余额变动',
+        'this_month' => '本月：收入 :in，支出 :out',
         'menu' => 'Panelica',
         'title' => 'Panelica 许可证',
         'sync' => '立即检查安装',

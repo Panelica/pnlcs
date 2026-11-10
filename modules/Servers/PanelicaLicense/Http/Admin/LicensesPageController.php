@@ -38,6 +38,8 @@ class LicensesPageController
         $link = null;
         $centralLicenses = ['rows' => [], 'total' => 0];
         $installs = ['rows' => [], 'total' => 0];
+        $balance = null;
+        $movements = [];
 
         if ($client = CentralClient::partner()) {
             $me = $client->get('me');
@@ -50,6 +52,12 @@ class LicensesPageController
                 $link = $answer->ok ? (array) $answer->data : null;
                 $centralLicenses = $this->listed($client->get('licenses', ['per_page' => 100]));
                 $installs = $this->listed($client->get('installs', ['per_page' => 100]));
+                // Where the money went. The figure alone left an operator who
+                // saw a renewal refused for want of balance with nowhere to
+                // look but Central itself. A Central that cannot answer leaves
+                // the rest of the page exactly as it was.
+                $balance = ($answerBalance = $client->get('balance'))->ok ? (array) $answerBalance->data : null;
+                $movements = $this->listed($client->get('balance/transactions', ['per_page' => 10]))['rows'];
             } else {
                 $accountError = $me->error;
             }
@@ -91,6 +99,8 @@ class LicensesPageController
 
         return view('admin.panelica-licenses.index', [
             'connected' => PartnerAccount::connected(),
+            'balance' => $balance,
+            'movements' => $movements,
             'centralUrl' => PartnerAccount::centralUrl(),
             'customCentral' => PartnerAccount::centralUrl() !== PartnerAccount::DEFAULT_CENTRAL,
             'account' => $account,

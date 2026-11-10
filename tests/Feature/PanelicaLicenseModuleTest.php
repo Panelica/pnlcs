@@ -63,6 +63,16 @@ function plCentral(array $over = []): array
         'renew' => 200,
         'unbind' => 200,
         'cancel' => 200,
+        'balance' => 200,
+        // What Central reports the balance has been doing, newest first.
+        'movements' => [
+            ['id' => 'm1', 'type' => 'license_renewal', 'amount' => '-80.00', 'balance_before' => '180.95',
+                'balance_after' => '100.95', 'description' => 'Renewal of PNLC-AAAA-BBBB-CCCC-DDDD',
+                'created_at' => '2026-11-09T18:33:49.000000Z'],
+            ['id' => 'm2', 'type' => 'adjustment', 'amount' => '100.00', 'balance_before' => '80.95',
+                'balance_after' => '180.95', 'description' => 'Balance adjustment',
+                'created_at' => '2026-11-08T10:00:00.000000Z'],
+        ],
         // A Central that sells a term of months on convert publishes it in its
         // schema; false is an older one that takes only monthly or yearly.
         'terms' => false,
@@ -86,6 +96,11 @@ function plFake(array &$central): void
                 ['plan_id' => ['type' => 'string'], 'billing_cycle' => ['type' => 'string']],
                 ! empty($central['terms']) ? ['term_months' => ['type' => 'integer']] : [],
             )]]]]]]]], 200),
+            $path === $api.'balance/transactions' => $ok($central['movements'], ['total' => count($central['movements']), 'current_page' => 1, 'last_page' => 1, 'per_page' => 20]),
+            $path === $api.'balance' => ($central['balance'] ?? 200) === 200
+                ? $ok(['current_balance' => '100.95', 'credit_limit' => '0.00', 'billing_mode' => 'postpaid',
+                    'available_credit' => 100.95, 'this_month_credits' => 100, 'this_month_debits' => 80, 'discount_percentage' => 20])
+                : $no($central['balance'], 'Balance is not available.'),
             $path === $api.'me' => $ok(['id' => 'r1', 'company_name' => 'Acme Hosting', 'status' => 'approved', 'balance' => 500]),
             $path === $api.'plans' => $ok([['id' => PL_PLAN, 'name' => 'Business', 'reseller_price_monthly' => 8, 'reseller_price_yearly' => 80]]),
             $path === $api.'install-link' && $request->method() === 'PUT' => (function () use (&$central, $request, $ok, $no) {
@@ -1315,4 +1330,54 @@ test('a key with no server bound offers nothing to free', function () {
 
     expect($page)->not->toContain(route('admin.services.panelica-license.unbind', $service))
         ->and($page)->toContain(route('admin.services.panelica-license.cancel', $service));
+});
+
+// ------------------------------------------------------- balance movements
+
+/*
+ * What the partner's balance has been doing.
+ *
+ * The page showed the figure Central reports in `me` and nothing else, so an
+ * operator who saw a renewal refused for want of balance had to open Central
+ * to find out where the money went. Central answers that with GET balance and
+ * GET balance/transactions.
+ */
+
+test('the licences page shows what the balance has been doing', function () {
+    $central = plCentral();
+    plFake($central);
+    plConnect();
+
+    $page = $this->actingAs(plStaff(['manage_products', 'manage_servers']), 'admin')
+        ->get(route('admin.panelica-licenses.index'))->assertOk()->getContent();
+
+    expect($page)->toContain(__('panelica_license.page.movements'))
+        // the newest movement, what it was and what it left behind
+        ->toContain('Renewal of PNLC-AAAA-BBBB-CCCC-DDDD')
+        ->toContain(__('panelica_license.movement.license_renewal'))
+        // what the month took and added, with the figures filled in
+        ->toContain(__('panelica_license.page.this_month', ['in' => '$100.00', 'out' => '$80.00']))
+        // the balance left behind by that movement
+        ->toContain('$100.95');
+});
+
+test('a Central that cannot answer about the balance does not break the page', function () {
+    $central = plCentral(['balance' => 500]);
+    plFake($central);
+    plConnect();
+
+    $this->actingAs(plStaff(['manage_products', 'manage_servers']), 'admin')
+        ->get(route('admin.panelica-licenses.index'))->assertOk()
+        ->assertSee(__('panelica_license.page.balance'), false);
+});
+
+test('the movements are the partner account own, read once per page', function () {
+    $central = plCentral();
+    plFake($central);
+    plConnect();
+
+    $this->actingAs(plStaff(['manage_products', 'manage_servers']), 'admin')->get(route('admin.panelica-licenses.index'))->assertOk();
+
+    expect(plCalls($central, 'GET', 'balance/transactions'))->toHaveCount(1)
+        ->and(plCalls($central, 'GET', '/balance'))->toHaveCount(1);
 });
