@@ -13,7 +13,7 @@
 
 <!-- Status Filter Tabs -->
 <div style="margin-bottom:16px;border-bottom:1px solid #ddd;display:flex;gap:0;flex-wrap:wrap;">
-    @foreach(["" => "All", "active" => "Active", "suspended" => "Suspended", "terminated" => "Terminated", "pending" => "Pending", "cancelled" => "Cancelled"] as $val => $label)
+    @foreach(["" => __('common.form.all'), "active" => __('common.status.active'), "suspended" => __('common.status.suspended'), "terminated" => __('common.status.terminated'), "pending" => __('common.status.pending'), "cancelled" => __('common.status.cancelled')] as $val => $label)
     @php $isActive = (request("status","") == $val); @endphp
     <a href="{{ route("admin.services.index", array_filter(["status" => $val, "q" => request("q")])) }}"
        style="display:inline-block;padding:8px 16px;font-size:13px;text-decoration:none;color:{{ $isActive ? "#1a4d80" : "#666" }};font-weight:{{ $isActive ? "700" : "400" }};border-bottom:{{ $isActive ? "3px solid #1a4d80" : "3px solid transparent" }};margin-bottom:-1px;">

@@ -50,6 +50,12 @@ All notable changes to PNLCS are documented here. Newest first.
   an empty circle. A new `initial()` helper takes the first character (a whole
   emoji when intl is installed) and upper-cases it for its script (#420). The
   project message list, a fourth place doing the same, uses it too.
+- **The status tabs on the admin lists speak the operator's language.** The
+  order, service and ticket lists wrote their filter tabs — All, Pending,
+  Active, Suspended, Customer Reply, On Hold … — as English literals inside the
+  loop that draws them, so they stayed English whatever language the panel was
+  in. They read the existing `common.status.*` keys now; what each tab filters
+  by is unchanged (#420).
 - **A language whose flag is not a country's is drawn, not left blank.**
   flagcdn serves ISO 3166-1 alpha-2 codes only, so a regional code such as
   `es-ct` (Catalan — one we ship) answered 404 on both its png and its svg: the
