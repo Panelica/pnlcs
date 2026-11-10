@@ -223,6 +223,7 @@ return [
     ],
 
     'error' => [
+        'no_license' => '此服务尚无 Panelica 密钥。',
         'no_key' => '此服务器记录缺少合作伙伴 API 密钥。',
         'unreachable' => '无法连接 Panelica Central。',
         'ended' => '此服务的许可证已结束。',

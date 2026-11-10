@@ -553,7 +553,7 @@ class PanelicaLicenseModule extends AbstractServerModule
         $data = $this->getModuleData($service);
 
         if (empty($data['license_id'])) {
-            return $this->buildResult(false, __('panelica_license.error.nothing_bought'));
+            return $this->buildResult(false, __('panelica_license.error.no_license'));
         }
 
         $client = CentralClient::partner();
@@ -593,7 +593,7 @@ class PanelicaLicenseModule extends AbstractServerModule
         $data = $this->getModuleData($service);
 
         if (empty($data['license_id'])) {
-            return $this->buildResult(false, __('panelica_license.error.nothing_bought'));
+            return $this->buildResult(false, __('panelica_license.error.no_license'));
         }
 
         $client = CentralClient::partner();

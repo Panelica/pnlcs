@@ -223,6 +223,7 @@ return [
     ],
 
     'error' => [
+        'no_license' => 'Dieser Dienst hat noch keinen Panelica-Schlüssel.',
         'no_key' => 'Bei diesem Servereintrag fehlt der Partner-API-Schlüssel.',
         'unreachable' => 'Panelica Central war nicht erreichbar.',
         'ended' => 'Die Lizenz dieses Dienstes ist beendet.',

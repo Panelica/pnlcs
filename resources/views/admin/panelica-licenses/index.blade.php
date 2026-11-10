@@ -361,8 +361,6 @@ document.querySelectorAll('[data-pl-copy]').forEach(function (button) {
 });
 </script>
 @endif
-@endsection
-
 @if(! empty($movements))
 {{-- The balance movements Central reports, newest first: what each one was,
      what it moved and what it left behind. --}}
@@ -399,3 +397,5 @@ document.querySelectorAll('[data-pl-copy]').forEach(function (button) {
     </div>
 </div>
 @endif
+
+@endsection

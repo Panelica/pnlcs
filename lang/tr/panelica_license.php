@@ -223,6 +223,7 @@ return [
     ],
 
     'error' => [
+        'no_license' => 'Bu hizmetin henüz bir Panelica anahtarı yok.',
         'no_key' => 'Bu sunucu kaydında bayi API anahtarı yok.',
         'unreachable' => 'Panelica Central\'a ulaşılamadı.',
         'ended' => 'Bu hizmetin lisansı sona erdi.',

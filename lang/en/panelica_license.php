@@ -223,6 +223,7 @@ return [
     ],
 
     'error' => [
+        'no_license' => 'This service has no Panelica key yet.',
         'no_key' => 'The partner API key is missing on this server record.',
         'unreachable' => 'Panelica Central could not be reached.',
         'ended' => 'This service\'s license has ended.',
