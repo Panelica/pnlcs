@@ -103,6 +103,10 @@ return [
     ],
 
     'page' => [
+        'quarterly' => '3 个月',
+        'semiannually' => '6 个月',
+        'per_quarter' => ':price / 3 个月',
+        'per_half_year' => ':price / 6 个月',
         'movements' => '余额变动',
         'this_month' => '本月：收入 :in，支出 :out',
         'menu' => 'Panelica',

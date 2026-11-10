@@ -103,6 +103,10 @@ return [
     ],
 
     'page' => [
+        'quarterly' => '3 months',
+        'semiannually' => '6 months',
+        'per_quarter' => ':price / 3 mo',
+        'per_half_year' => ':price / 6 mo',
         'movements' => 'Balance movements',
         'this_month' => 'This month: :in in, :out out',
         'menu' => 'Panelica',

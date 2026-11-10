@@ -103,6 +103,10 @@ return [
     ],
 
     'page' => [
+        'quarterly' => '3 Monate',
+        'semiannually' => '6 Monate',
+        'per_quarter' => ':price / 3 Mon.',
+        'per_half_year' => ':price / 6 Mon.',
         'movements' => 'Guthabenbewegungen',
         'this_month' => 'Diesen Monat: :in ein, :out aus',
         'menu' => 'Panelica',

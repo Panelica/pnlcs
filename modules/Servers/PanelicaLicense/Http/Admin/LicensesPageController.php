@@ -26,6 +26,13 @@ use Modules\Servers\PanelicaLicense\PartnerAccount;
 class LicensesPageController
 {
     /** The product group the products made here go into. */
+    /**
+     * The terms this page sells, in months: the cycles PNLCS itself bills.
+     * Central sells any 1-12 month term; these are the ones that have a price
+     * column and a renewal rhythm here.
+     */
+    public const SELLABLE_CYCLES = ['monthly', 'quarterly', 'semiannually', 'annually'];
+
     private const GROUP_SLUG = 'panelica-licenses';
 
     public function index()
@@ -220,10 +227,17 @@ class LicensesPageController
             'plan_id' => ['required', 'string', 'max:64'],
             'name' => ['required', 'string', 'max:255'],
             'monthly' => ['nullable', 'numeric', 'min:0.01', 'max:99999999'],
+            'quarterly' => ['nullable', 'numeric', 'min:0.01', 'max:99999999'],
+            'semiannually' => ['nullable', 'numeric', 'min:0.01', 'max:99999999'],
             'annually' => ['nullable', 'numeric', 'min:0.01', 'max:99999999'],
         ]);
 
-        if (blank($validated['monthly'] ?? null) && blank($validated['annually'] ?? null)) {
+        // The terms PNLCS can bill are its own cycles: one, three, six and
+        // twelve months. Central sells any term of 1-12 months, but a cycle
+        // here is a column on the pricing table and a rhythm the invoicing,
+        // renewal and upgrade code follows, so a seven-month product would
+        // have nowhere to recur.
+        if (collect(self::SELLABLE_CYCLES)->every(fn ($c) => blank($validated[$c] ?? null))) {
             return back()->withInput()->with('error', __('panelica_license.page.price_needed'));
         }
 
@@ -241,10 +255,13 @@ class LicensesPageController
         $pricing = [];
         foreach (Currency::all() as $currency) {
             $rate = $currency->is_default ? 1.0 : (float) $currency->rate;
-            $pricing[$currency->id] = [
-                'monthly' => filled($validated['monthly'] ?? null) && $rate > 0 ? round((float) $validated['monthly'] * $rate, 2) : -1,
-                'annually' => filled($validated['annually'] ?? null) && $rate > 0 ? round((float) $validated['annually'] * $rate, 2) : -1,
-            ];
+            $row = [];
+            foreach (self::SELLABLE_CYCLES as $cycle) {
+                $row[$cycle] = filled($validated[$cycle] ?? null) && $rate > 0
+                    ? round((float) $validated[$cycle] * $rate, 2)
+                    : -1;
+            }
+            $pricing[$currency->id] = $row;
         }
 
         $product = app(ProductCreator::class)->create([

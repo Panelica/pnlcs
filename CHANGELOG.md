@@ -2,6 +2,24 @@
 
 All notable changes to PNLCS are documented here. Newest first.
 
+## Unreleased
+
+### Added
+
+- **The Panelica Licences page sells three and six months too.** It offered a
+  monthly and an annual price box, so a partner who wanted to sell a quarter or
+  a half year had to leave the page and build the product by hand — although
+  PNLCS bills both cycles and Central now sells them as a 3- or 6-month term.
+  The page has a box for each of the four terms it can bill, each pre-filled
+  from the plan's own list price, with what the term costs the partner beside
+  it (months at the monthly price, as Central charges them) and the margin
+  badge per term.
+
+  Central sells any term of 1 to 12 months, but a billing cycle here is a
+  column on the pricing table and a rhythm the invoicing, renewal and upgrade
+  code follows, so 1, 3, 6 and 12 months are the terms a product can actually
+  recur on. A 2- or 7-month product would have nowhere to renew.
+
 ## 1.22.0 — 2026-11-10
 
 A stable release, offered to every installation. Most of it is the Panelica

@@ -170,13 +170,19 @@
             $products = $productsByPlan->get((string) $plan['id'], collect());
             $costM = (float) ($plan['reseller_price_monthly'] ?? 0);
             $costY = (float) ($plan['reseller_price_yearly'] ?? 0);
+            // A term of months is charged at the monthly price, as Central
+            // charges it; a full year is charged as a year, which is cheaper.
+            $costQ = round($costM * 3, 2);
+            $costH = round($costM * 6, 2);
             $suggestM = $usdRate ? round((float) ($plan['price_monthly'] ?? 0) * $usdRate, 2) : null;
             $suggestY = $usdRate ? round((float) ($plan['price_yearly'] ?? 0) * $usdRate, 2) : null;
+            $suggestQ = $suggestM ? round($suggestM * 3, 2) : null;
+            $suggestH = $suggestM ? round($suggestM * 6, 2) : null;
             $first = $products->first();
         @endphp
         <tr>
             <td style="{{ $td }}"><strong>{{ $plan['name'] ?? '' }}</strong>@if(! empty($plan['description']))<br><small style="{{ $muted }}">{{ \Illuminate\Support\Str::limit((string) $plan['description'], 80) }}</small>@endif</td>
-            <td style="{{ $td }}white-space:nowrap;">{{ __('panelica_license.page.per_month', ['price' => $money($costM)]) }}<br>{{ __('panelica_license.page.per_year', ['price' => $money($costY)]) }}</td>
+            <td style="{{ $td }}white-space:nowrap;">{{ __('panelica_license.page.per_month', ['price' => $money($costM)]) }}<br>{{ __('panelica_license.page.per_quarter', ['price' => $money($costQ)]) }}<br>{{ __('panelica_license.page.per_half_year', ['price' => $money($costH)]) }}<br>{{ __('panelica_license.page.per_year', ['price' => $money($costY)]) }}</td>
             <td style="{{ $td }}white-space:nowrap;{{ $muted }}">{{ __('panelica_license.page.per_month', ['price' => $money($plan['price_monthly'] ?? 0)]) }}<br>{{ __('panelica_license.page.per_year', ['price' => $money($plan['price_yearly'] ?? 0)]) }}</td>
             <td style="{{ $td }}">
                 @foreach($products as $product)
@@ -184,6 +190,8 @@
                     <a href="{{ route('admin.products.edit', $product) }}" style="font-weight:600;">{{ $product->name }}</a>
                     <span style="{{ $muted }}font-size:12px;">
                         @if(($m = $product->priceFor('monthly')) !== null) · {{ __('panelica_license.page.per_month', ['price' => $local($m)]) }}@endif
+                        @if(($q = $product->priceFor('quarterly')) !== null) · {{ __('panelica_license.page.per_quarter', ['price' => $local($q)]) }}@endif
+                        @if(($h = $product->priceFor('semiannually')) !== null) · {{ __('panelica_license.page.per_half_year', ['price' => $local($h)]) }}@endif
                         @if(($y = $product->priceFor('annually')) !== null) · {{ __('panelica_license.page.per_year', ['price' => $local($y)]) }}@endif
                     </span>
                 </div>
@@ -194,6 +202,8 @@
                     <input type="hidden" name="plan_id" value="{{ $plan['id'] }}">
                     <input type="text" name="name" required maxlength="255" class="form-control" style="width:170px;font-size:12.5px;padding:4px 6px;" value="{{ __('panelica_license.page.product_name', ['plan' => $plan['name'] ?? '']) }}" aria-label="{{ __('panelica_license.page.product_name_label') }}">
                     <input type="number" name="monthly" step="0.01" min="0.01" class="form-control pl-price" value="{{ $suggestM ?: '' }}" placeholder="{{ __('panelica_license.page.monthly') }}" aria-label="{{ __('panelica_license.page.monthly') }}" title="{{ __('panelica_license.page.monthly') }}">
+                    <input type="number" name="quarterly" step="0.01" min="0.01" class="form-control pl-price" value="{{ $suggestQ ?: '' }}" placeholder="{{ __('panelica_license.page.quarterly') }}" aria-label="{{ __('panelica_license.page.quarterly') }}" title="{{ __('panelica_license.page.quarterly') }}">
+                    <input type="number" name="semiannually" step="0.01" min="0.01" class="form-control pl-price" value="{{ $suggestH ?: '' }}" placeholder="{{ __('panelica_license.page.semiannually') }}" aria-label="{{ __('panelica_license.page.semiannually') }}" title="{{ __('panelica_license.page.semiannually') }}">
                     <input type="number" name="annually" step="0.01" min="0.01" class="form-control pl-price" value="{{ $suggestY ?: '' }}" placeholder="{{ __('panelica_license.page.annually') }}" aria-label="{{ __('panelica_license.page.annually') }}" title="{{ __('panelica_license.page.annually') }}">
                     <span style="font-size:12px;{{ $muted }}">{{ $currency?->code }}</span>
                     <button type="submit" class="btn btn-primary btn-sm"><i class="fas fa-plus"></i> {{ __('panelica_license.page.create_product') }}</button>
@@ -201,8 +211,10 @@
                 @endif
             </td>
             <td style="{{ $td }}white-space:nowrap;">
-                @if($first && $usdRate && ($first->priceFor('monthly') !== null || $first->priceFor('annually') !== null))
+                @if($first && $usdRate && collect(\Modules\Servers\PanelicaLicense\Http\Admin\LicensesPageController::SELLABLE_CYCLES)->contains(fn ($c) => $first->priceFor($c) !== null))
                     @if(($m = $first->priceFor('monthly')) !== null)<span class="pl-badge {{ $m - $costM * $usdRate >= 0 ? 'ok' : 'bad' }}">{{ __('panelica_license.page.per_month', ['price' => $local($m - $costM * $usdRate)]) }}</span><br>@endif
+                    @if(($q = $first->priceFor('quarterly')) !== null)<span class="pl-badge {{ $q - $costQ * $usdRate >= 0 ? 'ok' : 'bad' }}" style="margin-top:3px;">{{ __('panelica_license.page.per_quarter', ['price' => $local($q - $costQ * $usdRate)]) }}</span><br>@endif
+                    @if(($h = $first->priceFor('semiannually')) !== null)<span class="pl-badge {{ $h - $costH * $usdRate >= 0 ? 'ok' : 'bad' }}" style="margin-top:3px;">{{ __('panelica_license.page.per_half_year', ['price' => $local($h - $costH * $usdRate)]) }}</span><br>@endif
                     @if(($y = $first->priceFor('annually')) !== null)<span class="pl-badge {{ $y - $costY * $usdRate >= 0 ? 'ok' : 'bad' }}" style="margin-top:3px;">{{ __('panelica_license.page.per_year', ['price' => $local($y - $costY * $usdRate)]) }}</span>@endif
                 @elseif(! $first && $usdRate)
                     <span style="{{ $muted }}font-size:12px;">{{ __('panelica_license.page.per_year', ['price' => $local(max(0, ($suggestY ?? 0) - $costY * $usdRate))]) }}</span>

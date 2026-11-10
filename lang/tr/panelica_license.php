@@ -103,6 +103,10 @@ return [
     ],
 
     'page' => [
+        'quarterly' => '3 aylık',
+        'semiannually' => '6 aylık',
+        'per_quarter' => ':price / 3 ay',
+        'per_half_year' => ':price / 6 ay',
         'movements' => 'Bakiye hareketleri',
         'this_month' => 'Bu ay: :in giriş, :out çıkış',
         'menu' => 'Panelica',

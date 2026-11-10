@@ -1381,3 +1381,66 @@ test('the movements are the partner account own, read once per page', function (
     expect(plCalls($central, 'GET', 'balance/transactions'))->toHaveCount(1)
         ->and(plCalls($central, 'GET', '/balance'))->toHaveCount(1);
 });
+
+// ------------------------------------------- selling three and six months
+
+/*
+ * The Panelica Licences page makes the product that sells a plan. It offered
+ * two boxes, monthly and annual, so a partner who wanted to sell three or six
+ * months had to go and build the product by hand - even though PNLCS bills
+ * those cycles and Central now sells them as a 3- or 6-month term.
+ *
+ * The terms PNLCS can bill are its own cycles: 1, 3, 6 and 12 months. A term
+ * like 7 months is not offered because PNLCS has no cycle to renew it on.
+ */
+
+test('the page offers a price box for every term it can bill', function () {
+    $central = plCentral();
+    plFake($central);
+    plConnect();
+
+    $page = $this->actingAs(plStaff(['manage_products', 'manage_servers']), 'admin')
+        ->get(route('admin.panelica-licenses.index'))->assertOk()->getContent();
+
+    foreach (['monthly', 'quarterly', 'semiannually', 'annually'] as $cycle) {
+        expect($page)->toContain('name="'.$cycle.'"');
+    }
+    // Months Central can sell but PNLCS cannot bill are not offered.
+    expect($page)->not->toContain('name="term_months"');
+});
+
+test('a three-month price is stored on the quarterly cycle, and six on the half-year', function () {
+    $central = plCentral();
+    plFake($central);
+    plConnect();
+    Currency::query()->update(['is_default' => false]);
+    $usd = Currency::firstOrCreate(['code' => 'USD'], ['prefix' => '$', 'suffix' => '', 'format' => 1, 'rate' => 1]);
+    $usd->forceFill(['is_default' => true, 'rate' => 1])->save();
+
+    $this->actingAs(plStaff(['manage_products', 'manage_servers']), 'admin')
+        ->post(route('admin.panelica-licenses.products.store'), [
+            'plan_id' => PL_PLAN, 'name' => 'Business', 'quarterly' => 27, 'semiannually' => 50,
+        ])->assertRedirect()->assertSessionHas('success');
+
+    $product = Product::where('server_type', 'panelicalicense')->latest('id')->firstOrFail();
+
+    expect($product->priceFor('Quarterly', $usd->id))->toBe(27.0)
+        ->and($product->priceFor('Semi-Annually', $usd->id))->toBe(50.0)
+        // Nothing was invented for the cycles the operator left empty.
+        ->and($product->priceFor('Monthly', $usd->id))->toBeNull()
+        ->and($product->priceFor('Annually', $usd->id))->toBeNull();
+});
+
+test('the page says what three and six months cost the partner', function () {
+    $central = plCentral();
+    plFake($central);
+    plConnect();
+
+    $page = $this->actingAs(plStaff(['manage_products', 'manage_servers']), 'admin')
+        ->get(route('admin.panelica-licenses.index'))->assertOk()->getContent();
+
+    // The fake plan costs the partner 8 a month, so three months cost 24 and
+    // six cost 48 - months are charged at the monthly price, as Central does.
+    expect($page)->toContain(__('panelica_license.page.per_quarter', ['price' => '$24.00']))
+        ->and($page)->toContain(__('panelica_license.page.per_half_year', ['price' => '$48.00']));
+});
