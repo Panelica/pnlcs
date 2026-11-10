@@ -35,6 +35,12 @@
     .pl-badge{display:inline-block;padding:2px 9px;border-radius:999px;font-size:11.5px;font-weight:600;background:#eef2f7;color:#555}
     .pl-badge.ok{background:#e7f6ec;color:#1e7b3a}.pl-badge.wait{background:#fff4e0;color:#9a5b00}.pl-badge.bad{background:#fdecea;color:#a12a1f}
     .pl-price{width:96px;font-size:12.5px;padding:4px 6px}
+    .pl-ladder{margin-top:6px}
+    .pl-ladder>summary{list-style:none;cursor:pointer;font-size:12px;color:#1a4d80}
+    .pl-ladder>summary::-webkit-details-marker{display:none}
+    .pl-ladder>summary em{font-style:normal}
+    .pl-ladder table{border-collapse:collapse;margin-top:6px;font-size:12px}
+    .pl-ladder td{padding:2px 8px 2px 0;white-space:nowrap}
     .pl-pkg{border:1px solid #eceff3;border-radius:6px;margin-bottom:6px;background:#fcfdfe}
     .pl-pkg>summary{list-style:none;cursor:pointer;display:flex;align-items:center;gap:8px;padding:6px 10px;font-size:13px}
     .pl-pkg>summary::-webkit-details-marker{display:none}
@@ -191,11 +197,34 @@
             // The longer terms are in the cost cell's tooltip rather than on
             // four lines of their own; the page is read far more often than
             // the prices are changed.
-            $costTerms = __('panelica_license.page.per_quarter', ['price' => $money($costQ)]).' · '.__('panelica_license.page.per_half_year', ['price' => $money($costH)]);
+            // Central sells any term of 1 to 12 months, charged at the monthly
+            // price, with the twelfth month charged as a year instead (it is
+            // cheaper). The partner page on panelica.com shows the same ladder,
+            // so the operator sees the floor for every term here too - and which
+            // of them PNLCS can actually recur on.
+            $ladder = [];
+            foreach (range(1, 12) as $n) {
+                $ladder[$n] = $n === 12 ? $costY : round($costM * $n, 2);
+            }
+            $sellable = [1 => 'monthly', 3 => 'quarterly', 6 => 'semiannually', 12 => 'annually'];
         @endphp
         <tr>
             <td style="{{ $td }}"><strong>{{ $plan['name'] ?? '' }}</strong>@if(! empty($plan['description']))<br><small style="{{ $muted }}">{{ \Illuminate\Support\Str::limit((string) $plan['description'], 80) }}</small>@endif</td>
-            <td style="{{ $td }}white-space:nowrap;" title="{{ $costTerms }}">{{ __('panelica_license.page.per_month', ['price' => $money($costM)]) }}<br><small style="{{ $muted }}">{{ __('panelica_license.page.per_year', ['price' => $money($costY)]) }}</small></td>
+            <td style="{{ $td }}white-space:nowrap;">
+                {{ __('panelica_license.page.per_month', ['price' => $money($costM)]) }}<br><small style="{{ $muted }}">{{ __('panelica_license.page.per_year', ['price' => $money($costY)]) }}</small>
+                <details class="pl-ladder">
+                    <summary><em>{{ __('panelica_license.page.all_terms') }}</em></summary>
+                    <table>
+                        @foreach($ladder as $n => $price)
+                        <tr>
+                            <td>{{ trans_choice('panelica_license.page.months', $n, ['count' => $n]) }}</td>
+                            <td><strong>{{ $money($price) }}</strong></td>
+                            <td>@isset($sellable[$n])<span class="pl-badge ok">{{ __('panelica_license.page.term_billable') }}</span>@else<span class="pl-badge" title="{{ __('panelica_license.page.term_not_billable_why') }}">{{ __('panelica_license.page.term_not_billable') }}</span>@endisset</td>
+                        </tr>
+                        @endforeach
+                    </table>
+                </details>
+            </td>
             <td style="{{ $td }}white-space:nowrap;{{ $muted }}">{{ __('panelica_license.page.per_month', ['price' => $money($plan['price_monthly'] ?? 0)]) }}<br><small>{{ __('panelica_license.page.per_year', ['price' => $money($plan['price_yearly'] ?? 0)]) }}</small></td>
             <td style="{{ $td }}">
                 {{-- One line per package: what it is called, what it earns, and

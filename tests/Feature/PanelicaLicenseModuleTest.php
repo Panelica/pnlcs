@@ -1431,7 +1431,7 @@ test('a three-month price is stored on the quarterly cycle, and six on the half-
         ->and($product->priceFor('Annually', $usd->id))->toBeNull();
 });
 
-test('the page says what three and six months cost the partner', function () {
+test('the page says what every term of 1 to 12 months costs the partner', function () {
     $central = plCentral();
     plFake($central);
     plConnect();
@@ -1439,10 +1439,18 @@ test('the page says what three and six months cost the partner', function () {
     $page = $this->actingAs(plStaff(['manage_products', 'manage_servers']), 'admin')
         ->get(route('admin.panelica-licenses.index'))->assertOk()->getContent();
 
-    // The fake plan costs the partner 8 a month, so three months cost 24 and
-    // six cost 48 - months are charged at the monthly price, as Central does.
-    expect($page)->toContain(__('panelica_license.page.per_quarter', ['price' => '$24.00']))
-        ->and($page)->toContain(__('panelica_license.page.per_half_year', ['price' => '$48.00']));
+    // The fake plan costs the partner 8 a month and 80 a year, as Central
+    // charges it: months at the monthly price, the twelfth month as a year.
+    // The ladder is the one the partner page on panelica.com shows.
+    foreach ([1 => '$8.00', 2 => '$16.00', 3 => '$24.00', 6 => '$48.00', 7 => '$56.00', 11 => '$88.00'] as $months => $price) {
+        expect($page)->toContain(trans_choice('panelica_license.page.months', $months, ['count' => $months]))
+            ->and($page)->toContain($price);
+    }
+    expect($page)->toContain('$80.00')
+        // Only the four PNLCS can recur on may be sold as a package; the rest
+        // are shown with what they cost and why they cannot be billed.
+        ->and(substr_count($page, e(__('panelica_license.page.term_billable'))))->toBe(4)
+        ->and(substr_count($page, e(__('panelica_license.page.term_not_billable'))))->toBe(8);
 });
 
 // ------------------------------------- managing packages from the page
