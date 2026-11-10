@@ -65,6 +65,22 @@ class Product extends Model
         return $this->hasMany(Pricing::class, 'rel_id')->where('type', 'product');
     }
 
+    /**
+     * How many services on this product a customer still holds.
+     *
+     * services.product_id is a plain column, so deleting a product customers
+     * still hold leaves their services pointing at nothing - no name on the
+     * renewal line, no server module to suspend or terminate with. Both the
+     * product screen and the Panelica Licences page ask this before deleting,
+     * so the rule is one rule rather than two that can drift apart.
+     */
+    public function heldServices(): int
+    {
+        return \App\Models\Service::where('product_id', $this->id)
+            ->whereNotIn('status', ['terminated', 'cancelled', 'fraud'])
+            ->count();
+    }
+
     /** Prices for terms of months no billing cycle is named after. */
     public function terms()
     {

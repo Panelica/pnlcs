@@ -31,6 +31,7 @@ Route::middleware(['web', 'admin.auth', 'admin.2fa'])
                 Route::get('/', 'index')->name('index');
                 Route::post('products', 'createProduct')->name('products.store');
                 Route::post('products/{product}/prices', 'updateProductPrices')->name('products.prices');
+                Route::delete('products/{product}', 'destroyProduct')->name('products.destroy');
                 Route::post('sync', 'sync')->middleware('throttle:6,1')->name('sync');
             });
 

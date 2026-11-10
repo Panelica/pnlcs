@@ -35,6 +35,7 @@
     .pl-badge{display:inline-block;padding:2px 9px;border-radius:999px;font-size:11.5px;font-weight:600;background:#eef2f7;color:#555}
     .pl-badge.ok{background:#e7f6ec;color:#1e7b3a}.pl-badge.wait{background:#fff4e0;color:#9a5b00}.pl-badge.bad{background:#fdecea;color:#a12a1f}
     .pl-price{width:96px;font-size:12.5px;padding:4px 6px}
+    .pl-remove{padding:0 10px 8px;text-align:right}
     .pl-terms{display:grid;grid-template-columns:repeat(auto-fit,minmax(118px,1fr));gap:6px;width:100%}
     .pl-term{border:1px solid #eceff3;border-radius:5px;padding:5px 7px;background:#fff;display:flex;flex-direction:column;gap:2px}
     .pl-term.off{background:#f7f8fa}
@@ -245,6 +246,13 @@
                         @include('admin.panelica-licenses.terms', ['ladder' => $ladder, 'prices' => $product, 'suggestMonthly' => null])
                         <button type="submit" class="btn btn-default btn-sm">{{ __('panelica_license.page.save_prices') }}</button>
                     </form>
+                    {{-- Removing a package is as easy as adding one. Refused
+                         while customers hold it, and a soft delete either way. --}}
+                    <form method="POST" action="{{ route('admin.panelica-licenses.products.destroy', $product) }}" class="pl-remove"
+                          onsubmit="return pnConfirm(event, @js(__('panelica_license.page.confirm_remove_package')))">
+                        @csrf @method('DELETE')
+                        <button type="submit" class="btn btn-danger btn-sm">{{ __('panelica_license.page.remove_package') }}</button>
+                    </form>
                 </details>
                 @endforeach
                 <details class="pl-pkg pl-new">
@@ -446,38 +454,9 @@ document.querySelectorAll('[data-pl-copy]').forEach(function (button) {
 </div>
 @endif
 
-{{-- Typing one term's price fills the empty ones at the same price per month,
-     and the margin under each box follows what is typed. A price below cost
-     turns the margin red; it is saved all the same. --}}
-<script>
-document.querySelectorAll('.pl-terms').forEach(function (grid) {
-    var boxes = Array.prototype.slice.call(grid.querySelectorAll('input[data-months]'));
-    function margin(box) {
-        var span = box.parentElement.querySelector('.m');
-        if (! span) { return; }
-        var cost = parseFloat(box.dataset.cost), value = parseFloat(box.value);
-        if (isNaN(cost) || isNaN(value) || box.value === '') { span.textContent = ''; span.className = 'm'; return; }
-        var diff = Math.round((value - cost) * 100) / 100;
-        span.textContent = (diff >= 0 ? '+' : '') + diff.toFixed(2);
-        span.className = 'm ' + (diff >= 0 ? 'ok' : 'bad');
-    }
-    boxes.forEach(function (box) {
-        margin(box);
-        box.addEventListener('input', function () {
-            var value = parseFloat(box.value), months = parseFloat(box.dataset.months);
-            if (! isNaN(value) && value > 0 && months > 0) {
-                var perMonth = value / months;
-                boxes.forEach(function (other) {
-                    if (other !== box && other.value === '') {
-                        other.value = (Math.round(perMonth * parseFloat(other.dataset.months) * 100) / 100).toFixed(2);
-                        margin(other);
-                    }
-                });
-            }
-            margin(box);
-        });
-    });
-});
-</script>
+{{-- The grid's own script: it fills the terms the operator has not typed into
+     and keeps every margin up to date. public/js so it can be read, cached and
+     measured on its own rather than living inside this page. --}}
+<script src="{{ asset('js/pnlcs-license-terms.js') }}"></script>
 
 @endsection

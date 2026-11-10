@@ -1611,3 +1611,86 @@ test('only a package of this module can be priced here', function () {
         ->post(route('admin.panelica-licenses.products.prices', $other), ['term' => [1 => 99]])
         ->assertNotFound();
 });
+
+test('a package can be removed from the page, as easily as it was added', function () {
+    $central = plCentral();
+    plFake($central);
+    plConnect();
+    plPageCurrency();
+
+    plPagePost(['plan_id' => PL_PLAN, 'name' => 'Business', 'term' => [1 => 12, 7 => 70]])->assertSessionHas('success');
+    $product = Product::where('name', 'Business')->firstOrFail();
+
+    // The button is on the page, beside the prices it saves.
+    expect(plPageHtml())->toContain(route('admin.panelica-licenses.products.destroy', $product));
+
+    test()->actingAs(plStaff(['manage_products', 'manage_servers']), 'admin')
+        ->delete(route('admin.panelica-licenses.products.destroy', $product))
+        ->assertRedirect()->assertSessionHas('success');
+
+    expect(Product::find($product->id))->toBeNull()
+        ->and(Product::withTrashed()->find($product->id))->not->toBeNull();
+});
+
+test('a package customers still hold is not removed', function () {
+    $central = plCentral();
+    plFake($central);
+    plConnect();
+    plPageCurrency();
+
+    plPagePost(['plan_id' => PL_PLAN, 'name' => 'Business', 'term' => [1 => 12]])->assertSessionHas('success');
+    $product = Product::where('name', 'Business')->firstOrFail();
+    \App\Models\Service::factory()->create(['product_id' => $product->id, 'status' => 'active']);
+
+    test()->actingAs(plStaff(['manage_products', 'manage_servers']), 'admin')
+        ->delete(route('admin.panelica-licenses.products.destroy', $product))
+        ->assertRedirect()->assertSessionHas('error');
+
+    expect(Product::find($product->id))->not->toBeNull();
+});
+
+test('removing a package is for staff who may manage products, and only a package of this module', function () {
+    $central = plCentral();
+    plFake($central);
+    plConnect();
+    plPageCurrency();
+
+    plPagePost(['plan_id' => PL_PLAN, 'name' => 'Business', 'term' => [1 => 12]])->assertSessionHas('success');
+    $product = Product::where('name', 'Business')->firstOrFail();
+    $other = Product::factory()->create(['server_type' => 'cpanel']);
+
+    test()->actingAs(plStaff(['view_products']), 'admin')
+        ->delete(route('admin.panelica-licenses.products.destroy', $product))->assertForbidden();
+    test()->actingAs(plStaff(['manage_products', 'manage_servers']), 'admin')
+        ->delete(route('admin.panelica-licenses.products.destroy', $other))->assertNotFound();
+
+    expect(Product::find($product->id))->not->toBeNull();
+});
+
+test('copying a package carries the terms it is sold on', function () {
+    $central = plCentral();
+    plFake($central);
+    plConnect();
+    $usd = plPageCurrency();
+
+    plPagePost(['plan_id' => PL_PLAN, 'name' => 'Business', 'term' => [1 => 12, 7 => 70]])->assertSessionHas('success');
+    $product = Product::where('name', 'Business')->firstOrFail();
+
+    test()->actingAs(plStaff(['manage_products', 'list_products']), 'admin')
+        ->post(route('admin.products.copy', $product))->assertRedirect();
+
+    $copy = Product::where('name', 'Business - copy')->firstOrFail();
+    expect($copy->priceFor('monthly', $usd->id))->toBe(12.0)
+        ->and($copy->priceFor('7months', $usd->id))->toBe(70.0);
+});
+
+test('the term grid brings its own script, and the script is shipped', function () {
+    $central = plCentral();
+    plFake($central);
+    plConnect();
+
+    expect(plPageHtml())->toContain('js/pnlcs-license-terms.js')
+        // Shipped as a file of its own, so a release carries it and a browser
+        // caches it rather than re-reading it with every page.
+        ->and(file_exists(public_path('js/pnlcs-license-terms.js')))->toBeTrue();
+});

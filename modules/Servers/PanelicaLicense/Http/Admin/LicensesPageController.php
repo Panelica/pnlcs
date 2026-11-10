@@ -313,6 +313,35 @@ class LicensesPageController
     }
 
     /**
+     * Remove a package made here.
+     *
+     * Adding one is a click, so removing one should be: the operator who made
+     * a package by mistake had to leave for the product screen to find the
+     * delete button. A package customers still hold is refused, with how many
+     * - the same rule the product screen applies (Product::heldServices), for
+     * the same reason: a service whose product is gone has no name on its
+     * renewal line and no module to suspend it with. The delete is Laravel's
+     * soft delete, so a package removed by mistake is still in the database.
+     */
+    public function destroyProduct(Product $product)
+    {
+        $this->guard();
+
+        abort_unless(strtolower((string) $product->server_type) === PanelicaLicenseModule::NAME, 404);
+
+        $held = $product->heldServices();
+
+        if ($held > 0) {
+            return back()->with('error', __('panelica_license.page.package_in_use', ['count' => $held]));
+        }
+
+        $name = $product->name;
+        $product->delete();
+
+        return back()->with('success', __('panelica_license.page.package_removed', ['name' => $name]));
+    }
+
+    /**
      * What each currency's price row should hold: the figures the operator
      * typed for the currency the site sells in, converted by its rate for the
      * others, and -1 ("not sold") where a box was left empty.
