@@ -257,11 +257,15 @@ class AuthController extends Controller
             'email' => 'required|email|unique:users,email',
             'password' => 'required|string|min:8|confirmed',
             'company_name' => 'nullable|string|max:255',
-            'address1' => 'required|string|max:255',
+            // The billing address is asked at checkout and on the profile
+            // page; the signup form no longer carries it, so a missing one
+            // must not refuse an account. The tax rate falls back to the shop
+            // country (ClientRegistrationService) until it is filled in.
+            'address1' => 'nullable|string|max:255',
             'address2' => 'nullable|string|max:255',
-            'city' => 'required|string|max:255',
+            'city' => 'nullable|string|max:255',
             'state' => 'nullable|string|max:100',
-            'postcode' => 'required|string|max:20',
+            'postcode' => 'nullable|string|max:20',
             'country' => 'required|string|size:2',
             'tax_id' => 'nullable|string|max:50',
             'client_type' => 'nullable|in:individual,company',
