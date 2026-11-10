@@ -2,7 +2,22 @@
 
 All notable changes to PNLCS are documented here. Newest first.
 
-## Unreleased
+## 1.23.0 — 2026-11-10
+
+A stable release, offered to every installation. The Panelica Licences page
+stops being a first-run screen: it manages the packages a plan sells, and it
+sells the terms PNLCS can bill — one, three, six and twelve months — rather
+than only a month or a year.
+
+**What changes on that page.** A plan can now sell more than one package, so a
+monthly package and a three-month one can sit side by side; the create form no
+longer disappears once the first package exists. Every package carries its four
+price boxes with what it sells for today, saved from the page itself, and
+clearing a box withdraws that term. The partner's cost is shown per term —
+months at the monthly price, as Central charges them, a year at the yearly price
+— with the margin badge beside each.
+
+Nothing else in the panel changes, and no migration runs.
 
 ### Added
 
