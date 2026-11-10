@@ -41,6 +41,16 @@ class PanelicaLicenseModule extends AbstractServerModule
     /** PNLCS billing cycle => Central billing cycle. Central sells no other. */
     private const CYCLES = ['monthly' => 'monthly', 'annually' => 'yearly'];
 
+    /**
+     * Cycles Central sells as a term of months paid up front, rather than as
+     * one of its own two cycles. Central stores such a key as monthly with a
+     * first period as long as the term, and renews it with POST renew
+     * {months}. A year stays a yearly cycle: a yearly key is priced as a year,
+     * not as twelve months. Longer than a year Central cannot sell at all, so
+     * those cycles are still refused at order time.
+     */
+    private const TERMS = ['quarterly' => 3, 'semiannually' => 6];
+
     public function getModuleName(): string
     {
         return self::NAME;
@@ -91,7 +101,7 @@ class PanelicaLicenseModule extends AbstractServerModule
             return $this->buildResult(false, __('panelica_license.error.no_plan'));
         }
 
-        if (! $this->centralCycle($service)) {
+        if (! $this->centralCycle($service) && ! $this->termMonths($service)) {
             return $this->buildResult(false, __('panelica_license.error.cycle', ['cycle' => (string) $service->billing_cycle]));
         }
 
@@ -322,7 +332,12 @@ class PanelicaLicenseModule extends AbstractServerModule
         }
 
         $due = $service->fresh()?->next_due_date?->toDateString() ?? now()->toDateString();
-        $response = $client->post('licenses/'.$data['license_id'].'/renew', [], $this->idempotencyKey($service, 'renew-'.$due));
+        // The months the customer paid for, when they are not one of Central's
+        // own periods: a quarterly service renews three months, not one.
+        $months = $this->renewMonths($service);
+        $response = $client->post('licenses/'.$data['license_id'].'/renew',
+            $months ? ['months' => $months] : [],
+            $this->idempotencyKey($service, 'renew-'.$due));
 
         if (! $response->ok) {
             return $this->buildResult(false, $response->isBalanceShort()
@@ -439,10 +454,9 @@ class PanelicaLicenseModule extends AbstractServerModule
             return $this->buildResult(true, __('panelica_license.result.unpaid'));
         }
 
-        $converted = $client->post('licenses/'.$license['id'].'/convert', [
-            'plan_id' => $this->planId($service),
-            'billing_cycle' => $this->centralCycle($service),
-        ], $this->idempotencyKey($service, 'convert-'.$license['id']));
+        $converted = $client->post('licenses/'.$license['id'].'/convert',
+            ['plan_id' => $this->planId($service)] + $this->termOrCycle($service),
+            $this->idempotencyKey($service, 'convert-'.$license['id']));
 
         $this->setModuleData($service, $seen);
 
@@ -785,7 +799,47 @@ class PanelicaLicenseModule extends AbstractServerModule
 
     private function centralCycle(Service $service): ?string
     {
-        return self::CYCLES[strtolower(str_replace(['-', ' '], '', (string) $service->billing_cycle))] ?? null;
+        return self::CYCLES[$this->cycleKey($service)] ?? null;
+    }
+
+    /**
+     * The term in months Central should sell, or null for one of its cycles.
+     *
+     * Only when the connected Central actually sells terms on convert
+     * (PartnerAccount::sellsTerms, read from its own schema). Against an older
+     * Central the period is refused at order time instead, because converting
+     * it as monthly would charge one month for three.
+     */
+    private function termMonths(Service $service): ?int
+    {
+        $months = self::TERMS[$this->cycleKey($service)] ?? null;
+
+        return $months !== null && PartnerAccount::sellsTerms() ? $months : null;
+    }
+
+    /** The months to renew, whatever Central can sell today: the period paid for. */
+    private function renewMonths(Service $service): ?int
+    {
+        return self::TERMS[$this->cycleKey($service)] ?? null;
+    }
+
+    /**
+     * How the order is expressed to Central: its own cycle where there is one,
+     * otherwise the term in months. One or the other, never both - Central
+     * takes billing_cycle only when no term is given.
+     *
+     * @return array{billing_cycle?: string, term_months?: int}
+     */
+    private function termOrCycle(Service $service): array
+    {
+        $cycle = $this->centralCycle($service);
+
+        return $cycle !== null ? ['billing_cycle' => $cycle] : ['term_months' => $this->termMonths($service)];
+    }
+
+    private function cycleKey(Service $service): string
+    {
+        return strtolower(str_replace(['-', ' '], '', (string) $service->billing_cycle));
     }
 
     private function idempotencyKey(Service $service, string $what): string

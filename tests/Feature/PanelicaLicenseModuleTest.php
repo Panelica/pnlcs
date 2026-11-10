@@ -61,6 +61,9 @@ function plCentral(array $over = []): array
         ]],
         'convert' => 200,
         'renew' => 200,
+        // A Central that sells a term of months on convert publishes it in its
+        // schema; false is an older one that takes only monthly or yearly.
+        'terms' => false,
         'script' => 200,
         'filter' => true,
     ], $over);
@@ -77,6 +80,10 @@ function plFake(array &$central): void
         $api = '/api/reseller/v1/';
 
         return match (true) {
+            $path === $api.'openapi.json' => Http::response(['paths' => ['/licenses/{id}/convert' => ['post' => ['requestBody' => ['content' => ['application/json' => ['schema' => ['properties' => array_merge(
+                ['plan_id' => ['type' => 'string'], 'billing_cycle' => ['type' => 'string']],
+                ! empty($central['terms']) ? ['term_months' => ['type' => 'integer']] : [],
+            )]]]]]]]], 200),
             $path === $api.'me' => $ok(['id' => 'r1', 'company_name' => 'Acme Hosting', 'status' => 'approved', 'balance' => 500]),
             $path === $api.'plans' => $ok([['id' => PL_PLAN, 'name' => 'Business', 'reseller_price_monthly' => 8, 'reseller_price_yearly' => 80]]),
             $path === $api.'install-link' && $request->method() === 'PUT' => (function () use (&$central, $request, $ok, $no) {
@@ -268,15 +275,18 @@ test('Create again keeps the same link and never buys a second license', functio
         ->and($central['calls'])->toBe([]);
 });
 
-test('a period Central does not sell is refused before anything is asked of Central', function () {
-    $central = plCentral();
+test('a period Central does not sell is refused before any money moves', function () {
+    // Central is asked one read-only question - its own schema, to learn
+    // whether it sells a term of months - and nothing else: no install command
+    // is handed to the customer and nothing is charged.
+    $central = plCentral(['terms' => false]);
     plFake($central);
-    $service = plService(['billing_cycle' => 'Quarterly']);
+    $service = plService(['billing_cycle' => 'Biennially']);
 
     $result = plModule()->create($service);
 
     expect($result['success'])->toBeFalse()
-        ->and($result['message'])->toContain('Quarterly')
+        ->and($result['message'])->toContain('Biennially')
         ->and($central['calls'])->toBe([]);
 });
 
@@ -1095,4 +1105,81 @@ test('switched off under Setup -> Modules: no menu, no page, no install link, no
 
     app(ModuleRegistry::class)->switchOff('server', PanelicaLicenseModule::NAME, false);
     $this->actingAs($staff, 'admin')->get($menu)->assertOk();
+});
+
+// ---------------------------------------------------------------- terms 1-12
+
+/*
+ * A term of 1 to 12 months.
+ *
+ * Central sells a key either on a cycle (monthly, yearly) or for a term of 1
+ * to 12 months paid up front, and renews a term with POST renew {months}.
+ * PNLCS refused every cycle but monthly and annually at order time, so a
+ * three- or six-month product could not be sold at all.
+ */
+
+function plSold(array &$central, string $cycle): Service
+{
+    $service = plWaiting($central, ['billing_cycle' => $cycle]);
+    $central['installs'] = [plInstall($service)];
+    expect(plModule()->checkInstall($service->fresh())['success'])->toBeTrue();
+
+    return $service->fresh();
+}
+
+test('a quarterly order buys the trial for a three-month term', function () {
+    $central = plCentral(['terms' => true]);
+    plSold($central, 'Quarterly');
+
+    $convert = plCalls($central, 'POST', '/convert');
+    expect($convert)->toHaveCount(1)
+        ->and($convert[0][3])->toBe(['plan_id' => PL_PLAN, 'term_months' => 3]);
+});
+
+test('a six-month order asks for six months', function () {
+    $central = plCentral(['terms' => true]);
+    plSold($central, 'Semi-Annually');
+
+    expect(plCalls($central, 'POST', '/convert')[0][3])->toBe(['plan_id' => PL_PLAN, 'term_months' => 6]);
+});
+
+test('monthly asks for the cycle, not a term', function () {
+    $central = plCentral();
+    plSold($central, 'Monthly');
+
+    expect(plCalls($central, 'POST', '/convert')[0][3])->toBe(['plan_id' => PL_PLAN, 'billing_cycle' => 'monthly']);
+});
+
+test('a Central that does not sell terms refuses the period at order time', function () {
+    // Converting a three-month order as monthly would charge one month and
+    // write one month of licence. Refusing it before the customer is given an
+    // install command is the only honest answer.
+    $central = plCentral(['terms' => false]);
+    plFake($central);
+    $service = plService(['billing_cycle' => 'Quarterly']);
+
+    $result = plModule()->create($service);
+
+    expect($result['success'])->toBeFalse()
+        ->and($result['message'])->toContain('Quarterly')
+        ->and(plCalls($central, 'POST', '/convert'))->toBeEmpty();
+});
+
+
+test('a term renewal buys exactly the months the customer paid for', function () {
+    $central = plCentral(['terms' => true]);
+    $service = plSold($central, 'Quarterly');
+
+    expect(plModule()->renew($service)['success'])->toBeTrue();
+    expect(plCalls($central, 'POST', '/renew')[0][3])->toBe(['months' => 3]);
+});
+
+test('a monthly or annual renewal leaves the period to Central, as before', function () {
+    foreach (['Monthly', 'Annually'] as $cycle) {
+        $central = plCentral();
+        $service = plSold($central, $cycle);
+
+        expect(plModule()->renew($service)['success'])->toBeTrue();
+        expect(plCalls($central, 'POST', '/renew')[0][3])->toBe([]);
+    }
 });

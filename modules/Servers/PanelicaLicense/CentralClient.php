@@ -91,6 +91,32 @@ final class CentralClient
         return $body;
     }
 
+    /**
+     * Whether Central's own published schema says the convert call takes a
+     * term of months. Asked of the schema, not guessed: a Central that takes
+     * only monthly or yearly would charge one month for a three-month order.
+     * Unreachable or unreadable means no.
+     */
+    public function convertTakesTerm(): bool
+    {
+        try {
+            $schema = Http::withToken($this->apiKey)->acceptJson()->withUserAgent('PNLCS')
+                ->timeout(15)->get($this->baseUrl().self::API.'openapi.json');
+        } catch (\Throwable $e) {
+            Log::warning('Panelica license: Central did not serve its schema', ['error' => $e->getMessage()]);
+
+            return false;
+        }
+
+        if (! $schema->successful()) {
+            return false;
+        }
+
+        $convert = data_get($schema->json(), 'paths./licenses/{id}/convert.post.requestBody.content.application/json.schema.properties');
+
+        return is_array($convert) && array_key_exists('term_months', $convert);
+    }
+
     private function request(): PendingRequest
     {
         return Http::withToken($this->apiKey)

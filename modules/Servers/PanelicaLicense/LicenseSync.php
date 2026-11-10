@@ -33,6 +33,11 @@ final class LicenseSync
      */
     public function run(?int $serviceId = null, ?callable $line = null): array
     {
+        // A sync is the operator asking Central what is true now, so what
+        // Central can sell is asked again too, not read from the few hours of
+        // remembering an order is allowed to use.
+        PartnerAccount::forgetTermSupport();
+
         $done = ['checked' => 0, 'refreshed' => 0];
         if (! PanelicaLicenseModule::enabled() || ! PartnerAccount::connected()) {
             return $done;
