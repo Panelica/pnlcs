@@ -2,7 +2,28 @@
 
 All notable changes to PNLCS are documented here. Newest first.
 
-## Unreleased
+## 1.22.0 — 2026-11-10
+
+A stable release, offered to every installation. Most of it is the Panelica
+licence module catching up with what the partner API can actually do: a key can
+be sold for a term of 1 to 12 months, the server a key is bound to can be
+freed, a key can be ended for good, and the page says what the balance has been
+doing. Around it: the product description is translated and has a small
+Markdown editor, the product form edits one price in the shop currency, a
+Polish shop can name the National Bank of Poland as its official rate source,
+and the front page no longer waits for the panel on every visit.
+
+Thank you [@hedon77](https://github.com/hedon77) (#415, #416, #417, #423),
+[@ertugrulkeyvan](https://github.com/ertugrulkeyvan) (#418, #419, #421) and
+[@hestiacn](https://github.com/hestiacn) (#420), whose report fixed nine places
+rather than the three it named.
+
+**One thing to know about terms.** A three- or six-month plan is sold as a term
+only where the connected Panelica Central sells one; that is read from
+Central's own published schema, not assumed. Where it cannot, the period is
+refused when the order is placed, as before — converting it as a monthly key
+would charge one month for three. Central gained the ability on 10 November, so
+an up-to-date Central sells it today.
 
 ### Added
 
@@ -58,6 +79,11 @@ All notable changes to PNLCS are documented here. Newest first.
 
 ### Changed
 
+- The sign-up form keeps the billing address title and fields but drops the
+  line saying invoices are issued to that address: it read as a billing-email
+  note, and the address is asked at checkout and on the profile page anyway.
+  The hint stays on the checkout card, where an address is entered for an
+  invoice (#423).
 - **The product form edits one price, in the shop currency.** It offered a
   price block per currency, but the customer is always charged the shop
   currency's price converted at the daily rate — the other rows were stored and
