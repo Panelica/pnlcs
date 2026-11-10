@@ -65,7 +65,7 @@
                 <td>@if($app['version'])<span class="ra-ver">{{ $runtime === 'python' && $app['framework'] ? $app['version'].' · '.$app['framework'] : $app['version'] }}</span>@else—@endif</td>
                 <td>
                     @php $on = in_array($app['status'], ['running', 'active', 'deployed', 'online'], true); @endphp
-                    <span class="ra-st {{ $on ? 'on' : 'off' }}"><span class="dot"></span>{{ $app['status'] ? ucfirst($app['status']) : '—' }}</span>
+                    <span class="ra-st {{ $on ? 'on' : 'off' }}"><span class="dot"></span>{{ $app['status'] ? status_label($app['status']) : '—' }}</span>
                 </td>
                 <td style="text-align:right">
                     @if($app['url'])<a href="{{ $app['url'] }}" target="_blank" rel="noopener" class="ra-open">{{ __('client.hosting.runtime.open') }} <i class="ri-external-link-line"></i></a>@endif

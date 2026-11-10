@@ -50,12 +50,17 @@ All notable changes to PNLCS are documented here. Newest first.
   an empty circle. A new `initial()` helper takes the first character (a whole
   emoji when intl is installed) and upper-cases it for its script (#420). The
   project message list, a fourth place doing the same, uses it too.
-- **The status tabs on the admin lists speak the operator's language.** The
-  order, service and ticket lists wrote their filter tabs — All, Pending,
-  Active, Suspended, Customer Reply, On Hold … — as English literals inside the
-  loop that draws them, so they stayed English whatever language the panel was
-  in. They read the existing `common.status.*` keys now; what each tab filters
-  by is unchanged (#420).
+- **Every stored status is read through one helper, so none is left in
+  English.** `status_label()` has turned a stored status into the reader's
+  language since the invoice pass; nine places had not caught up. The filter
+  tabs on the order, service and ticket lists wrote All, Pending, Suspended,
+  Customer Reply, On Hold … as English literals inside the loop that draws
+  them, and six more views — the admin client list, the project list and
+  detail, the customer's domain list and detail, and the running-apps panel —
+  still printed `ucfirst()` on the raw word. All nine go through the helper
+  now: a status with a translation is translated in all five languages, one
+  without still reads as words rather than a key, and what each tab filters by
+  is unchanged (#420).
 - **A language whose flag is not a country's is drawn, not left blank.**
   flagcdn serves ISO 3166-1 alpha-2 codes only, so a regional code such as
   `es-ct` (Catalan — one we ship) answered 404 on both its png and its svg: the

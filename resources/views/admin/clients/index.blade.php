@@ -82,7 +82,7 @@
                 <td><a href="{{ route("admin.clients.show", $client) }}" style="color:#337ab7;text-decoration:none;font-weight:500;">{{ $client->full_name }}</a></td>
                 <td>{{ $client->email }}</td>
                 <td>{{ $client->company_name ?? "-" }}</td>
-                <td><span class="badge {{ $badgeClass }}">{{ ucfirst($statusVal) }}</span></td>
+                <td><span class="badge {{ $badgeClass }}">{{ status_label($statusVal) }}</span></td>
                 <td style="color:#666;">{{ $client->created_at->format(date_fmt()) }}</td>
                 <td>
                     <a href="{{ route("admin.clients.show", $client) }}" class="btn btn-default btn-xs">{{ __('common.actions.view') }}</a>

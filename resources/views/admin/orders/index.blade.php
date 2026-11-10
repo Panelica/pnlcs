@@ -11,8 +11,11 @@
 
 <!-- Status Filter Tabs -->
 <div style="margin-bottom:16px;border-bottom:1px solid #ddd;display:flex;gap:0;flex-wrap:wrap;">
-    @foreach(["" => __('common.form.all'), "pending" => __('common.status.pending'), "active" => __('common.status.active'), "fraud" => __('common.status.fraud'), "cancelled" => __('common.status.cancelled')] as $val => $label)
-    @php $isActive = (request("status","") == $val); @endphp
+    @foreach(["", "pending", "active", "fraud", "cancelled"] as $val)
+    @php
+        $label = $val === "" ? __('common.form.all') : status_label($val);
+        $isActive = (request("status", "") == $val);
+    @endphp
     <a href="{{ route("admin.orders.index", ["status" => $val]) }}"
        style="display:inline-block;padding:8px 16px;font-size:13px;text-decoration:none;color:{{ $isActive ? "#1a4d80" : "#666" }};font-weight:{{ $isActive ? "700" : "400" }};border-bottom:{{ $isActive ? "3px solid #1a4d80" : "3px solid transparent" }};margin-bottom:-1px;">
         {{ $label }}

@@ -9,8 +9,11 @@
 
 <!-- Status Filter Tabs -->
 <div style="margin-bottom:16px;border-bottom:1px solid #ddd;display:flex;gap:0;flex-wrap:wrap;">
-    @foreach(["" => __('common.form.all'), "open" => __('common.status.open'), "answered" => __('common.status.answered'), "customer-reply" => __('common.status.customer-reply'), "closed" => __('common.status.closed'), "on hold" => __('common.status.on-hold')] as $val => $label)
-    @php $isActive = (request("status","") == $val); @endphp
+    @foreach(["", "open", "answered", "customer-reply", "closed", "on hold"] as $val)
+    @php
+        $label = $val === "" ? __('common.form.all') : status_label($val);
+        $isActive = (request("status", "") == $val);
+    @endphp
     <a href="{{ route("admin.tickets.index", ["status" => $val]) }}"
        style="display:inline-block;padding:8px 16px;font-size:13px;text-decoration:none;color:{{ $isActive ? "#1a4d80" : "#666" }};font-weight:{{ $isActive ? "700" : "400" }};border-bottom:{{ $isActive ? "3px solid #1a4d80" : "3px solid transparent" }};margin-bottom:-1px;">
         {{ $label }}

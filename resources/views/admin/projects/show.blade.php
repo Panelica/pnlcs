@@ -17,7 +17,7 @@
 @endphp
 
 <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-bottom:15px;">
-    <div class="stat-card"><div class="stat-value"><span class="{{ $badgeClass }}">{{ ucfirst(str_replace('_',' ',$project->status)) }}</span></div><div class="stat-label">{{ __('admin.projects.status') }}</div></div>
+    <div class="stat-card"><div class="stat-value"><span class="{{ $badgeClass }}">{{ status_label($project->status) }}</span></div><div class="stat-label">{{ __('admin.projects.status') }}</div></div>
     <div class="stat-card"><div class="stat-value">{{ $done }}<span style="font-size:14px;font-weight:400;color:#999;">/{{ $total }}</span></div><div class="stat-label">{{ __('admin.projects.tasks_done') }}</div></div>
     <div class="stat-card">
         <div style="margin-bottom:5px;">

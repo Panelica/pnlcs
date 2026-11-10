@@ -59,7 +59,7 @@
                 <tr>
                     <td>@if(strtolower((string) $d->status) === 'active' && (float) $d->recurring_amount > 0)<input type="checkbox" name="domain_ids[]" value="{{ $d->id }}" form="renew-many" aria-label="{{ $d->domain }}">@endif</td>
                     <td style="font-weight:600"><a href="{{ route('client.domains.show', $d) }}" style="text-decoration:none;color:inherit;">{{ $d->domain }}</a></td>
-                    <td><span class="badge badge-{{ strtolower($d->status) }}">{{ ucfirst($d->status) }}</span></td>
+                    <td><span class="badge badge-{{ strtolower($d->status) }}">{{ status_label($d->status) }}</span></td>
                     <td class="text-muted text-sm">{{ $d->registration_date?->format(date_fmt()) ?? "-" }}</td>
                     <td style="{{ $expired ? "color:var(--danger);font-weight:600" : ($expiringSoon ? "color:var(--warning);font-weight:600" : "") }}">
                         {{ $d->expiry_date?->format(date_fmt()) ?? "-" }}

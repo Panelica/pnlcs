@@ -52,3 +52,28 @@ it('filters by the same values as before, whatever the language', function (stri
         expect($html)->toContain($query);
     }
 })->with('status tab pages');
+
+it('turns a stored status into a word through the one helper, wherever it is shown', function () {
+    // status_label() has been the mechanism since 64e07f73 (invoice statuses,
+    // 30 Aug) and is used in 30 places. Six views still printed ucfirst() on
+    // a raw status; they go through the helper now, so a status with a
+    // translation is translated and one without still reads as words.
+    app()->setLocale('tr');
+
+    expect(status_label('terminated'))->toBe(__('common.status.terminated'))
+        ->and(status_label('customer-reply'))->toBe(__('common.status.customer-reply'))
+        ->and(status_label('on hold'))->toBe(__('common.status.on-hold'))
+        // no key for this one: read as words, as before, not as a key
+        ->and(status_label('awaiting_review'))->toBe('Awaiting review');
+
+    foreach ([
+        'resources/views/admin/clients/index.blade.php',
+        'resources/views/admin/projects/index.blade.php',
+        'resources/views/admin/projects/show.blade.php',
+        'resources/views/client/domains/index.blade.php',
+        'resources/views/client/domains/show.blade.php',
+        'resources/views/client/services/hosting/runtime-apps.blade.php',
+    ] as $view) {
+        expect(file_get_contents(base_path($view)))->not->toMatch('/ucfirst\([^)]*status/i');
+    }
+});

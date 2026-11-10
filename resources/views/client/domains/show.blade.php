@@ -17,7 +17,7 @@
         <h1>{{ $domain->domain }}</h1>
     </div>
     <div style="display:flex; align-items:center; gap:8px; flex-wrap:wrap;">
-        <span class="badge badge-{{ strtolower($domain->status ?? 'active') }}">{{ ucfirst($domain->status ?? 'Active') }}</span>
+        <span class="badge badge-{{ strtolower($domain->status ?? 'active') }}">{{ status_label($domain->status ?? 'active') }}</span>
         <a href="{{ route('client.domains.index') }}" class="btn btn-outline btn-sm">&larr; {{ __('client.nav.my_domains') }}</a>
     </div>
 </div>
