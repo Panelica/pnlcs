@@ -2,6 +2,43 @@
 
 All notable changes to PNLCS are documented here. Newest first.
 
+## 1.24.0 — 2026-11-10
+
+A stable release, offered to every installation. The Panelica Licences page is
+tidied: a plan is a row again, and the price boxes open when they are needed.
+
+The page asked for everything at once. Each plan showed four cost figures, two
+list prices, a price form per package with four boxes standing open, another
+form with five more boxes for creating a package, and up to four margin badges
+— around a dozen inputs and badges for one plan. It now shows the month and
+the year a plan costs, with the three- and six-month figures in the cell's
+tooltip, and one line per package: its name, what it earns, and its prices a
+click away. Creating another package is a click too. Nothing was taken away:
+every box, every figure and every margin is still there, one step further in.
+
+Nothing else in the panel changes, and no migration runs.
+
+### Changed
+
+- **The Panelica Licences plan table is a table again.** The margin column was
+  dropped and the margin now sits beside the package it belongs to; a package
+  sold only by the year used to show no margin at all and now shows its yearly
+  one. The four price boxes of a package, and the form that creates another
+  package, open on a click instead of standing open under every plan, and the
+  boxes are labelled with the term rather than relying on a placeholder.
+
+### Fixed
+
+- **Price boxes were labelled in English on a Spanish, Italian, Russian or
+  Ukrainian panel.** Those four language files never received the six strings
+  the terms are named with — Save, 3 months, 6 months, the two per-term prices
+  and the product name label — so the page fell back to English for them. The
+  translation coverage test only reads English, which is why nothing failed.
+
+### Views a theme may override that changed
+
+- `admin/panelica-licenses/index` — the plan table's markup and its columns.
+
 ## 1.23.0 — 2026-11-10
 
 A stable release, offered to every installation. The Panelica Licences page
