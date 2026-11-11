@@ -35,6 +35,21 @@ it('puts every settings section in a tab that exists', function () {
     expect($orphans)->toBe([]);
 });
 
+it('offers no tab without a section in it', function () {
+    $view = stView();
+    preg_match_all('/<button type="button" class="settings-tab[^"]*" data-tab="([a-z_]+)"/', $view, $tabs);
+
+    // A tab with nothing in it shows the Save button alone and looks broken:
+    // "Other" shipped that way with the tabs (#332).
+    $empty = array_values(array_filter($tabs[1], fn ($tab) => ! str_contains($view, '<div class="card" data-tab="'.$tab.'"')));
+
+    expect($empty)->toBe([]);
+});
+
+it('keeps the email verification switch with the other account protections', function () {
+    expect(stView())->toContain('<div class="card" data-tab="security" id="settings-email_verification"');
+});
+
 it('opens the tab a link points into, for every section the admin search offers', function () {
     $view = stView();
 

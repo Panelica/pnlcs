@@ -873,6 +873,38 @@ class ClientController extends Controller
     }
 
     /**
+     * Confirm the account owner's email address on their behalf.
+     *
+     * Verification is on by default and holds an unverified customer at the
+     * payment step. When the email never arrives - a typo fixed by staff, a
+     * mailbox that rejects us, an account staff created over the phone - the
+     * customer had no way forward and staff had no button. The address is
+     * only marked as verified: nobody is signed in and nothing is sent.
+     */
+    public function verifyEmail(Client $client)
+    {
+        $login = $client->owner();
+
+        if (! $login) {
+            return back()->with('error', __('admin.clients.verify_email_no_login'));
+        }
+
+        if ($login->hasVerifiedEmail()) {
+            return back()->with('success', __('admin.clients.verify_email_already', ['email' => $login->email]));
+        }
+
+        $login->markEmailAsVerified();
+
+        ActivityLog::log(
+            "Staff marked the email address of client #{$client->id} ({$login->email}) as verified",
+            auth('admin')->user()?->full_name ?: 'admin',
+            $client->id,
+        );
+
+        return back()->with('success', __('admin.clients.verify_email_done', ['email' => $login->email]));
+    }
+
+    /**
      * Stop impersonation and return to admin.
      */
     public function stopImpersonation()

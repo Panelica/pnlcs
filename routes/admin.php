@@ -102,6 +102,9 @@ Route::middleware(['admin.auth', 'admin.2fa'])->prefix('admin')->name('admin.')-
         // the link to add one themselves.
         Route::post('clients/{client}/card-request', [ClientController::class, 'sendCardRequest'])
             ->middleware('throttle:6,1')->name('clients.card-request');
+        // The customer never got the verification email (or cannot open it):
+        // staff who know the customer confirm the address for them.
+        Route::post('clients/{client}/verify-email', [ClientController::class, 'verifyEmail'])->name('clients.verify-email');
         Route::get('impersonation/stop', [ClientController::class, 'stopImpersonation'])->name('clients.stop-impersonation');
     });
     Route::middleware('admin.permission:delete_clients')->group(function () {
