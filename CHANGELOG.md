@@ -2,6 +2,68 @@
 
 All notable changes to PNLCS are documented here. Newest first.
 
+## 1.26.0 — 2026-11-11
+
+A stable release, offered to every installation. Staff can confirm a customer's
+email address when the verification mail cannot reach them, and the currency
+menu names each currency once.
+
+Thank you [@ertugrulkeyvan](https://github.com/ertugrulkeyvan) (#424, #425),
+both reported from a fresh install and from demo.pnlcs.com.
+
+A new admin action and a new route make this a minor release rather than a
+patch, although both changes read as fixes: the rule is what `main` contains,
+not what the commits are called.
+
+### Added
+
+- **Staff can mark a customer's email address as verified.** Verification is on
+  by default and holds an unverified customer at the payment step, so an
+  address the mail never reaches — a mailbox that rejects us, an account staff
+  opened over the phone, a new install with no mail configured yet — left the
+  customer stuck with nothing for staff to press. The client page now shows the
+  state of the owner's login under the email address and, while it is
+  unverified, a **Mark as verified** button (`POST
+  admin/clients/{client}/verify-email`, behind `edit_clients`, with a
+  confirmation prompt). Only the account owner's login is touched, nothing is
+  sent, nobody is signed in, and the action is written to the activity log with
+  the staff member's name. An address that was already verified keeps its
+  original date.
+
+### Changed
+
+- **The email verification switch moved to Security on the settings page**, and
+  the **Other** tab is gone: it had carried no section since the tabs were
+  introduced, so it showed an empty page with a Save button.
+- **One rule for who owns a client account.** `Client::owner()` reads the logins
+  a page has already loaded instead of asking the database again, and the client
+  page asks it rather than spelling the rule out a second time.
+
+### Fixed
+
+- **The currency menu named each currency twice.** With "Let customers choose
+  their currency" on, the menu read `USD ($  USD)`: the code, then the prefix
+  and the suffix glued together, and the suffix a new installation ships with is
+  the code again. It now reads `USD ($)`, `EUR (€)`, `PLN (zł)`, and a currency
+  whose prefix and suffix say no more than its code gets no brackets at all.
+  Amounts are untouched — `formatAmount()` still prints prefix and suffix as
+  configured.
+
+### For theme and module authors
+
+- `Currency::symbol()` is new: the sign of a currency without its own code, for
+  a label that already names the code.
+- `Client::owner()` now answers from a loaded `users` relation when there is
+  one. Code that called it in a loop gets fewer queries; nothing else changes.
+
+### Views a theme may override that changed
+
+- `sections/topbar` and `client/layouts/partials/currency-selector` — the
+  currency label comes from `Currency::symbol()`.
+- `admin/clients/show` — the email verification row and its button.
+- `admin/settings/general` — the Other tab button is gone and the email
+  verification card sits under Security.
+
 ## 1.25.1 — 2026-11-11
 
 A stable release, offered to every installation. Everything in it had a day on
