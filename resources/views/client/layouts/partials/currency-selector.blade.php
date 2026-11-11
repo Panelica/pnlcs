@@ -9,7 +9,7 @@
     <div class="pn-dropdown" style="right:0;left:auto;min-width:140px;">
         @foreach($customerCurrencyChoice as $choice)
         <a href="{{ request()->fullUrlWithQuery(['currency' => $choice->code]) }}" rel="nofollow" style="{{ $choice->id === $displayCurrency?->id ? 'background:var(--primary-light);color:var(--primary);' : '' }}">
-            {{ $choice->code }}@if(trim($choice->prefix.$choice->suffix) !== '') ({{ trim($choice->prefix.' '.$choice->suffix) }})@endif
+            {{ $choice->code }}@if($choice->symbol() !== '') ({{ $choice->symbol() }})@endif
         </a>
         @endforeach
     </div>

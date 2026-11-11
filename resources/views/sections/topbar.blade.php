@@ -42,7 +42,7 @@
                     <div class="top-bar__language-menu">
                         @foreach($customerCurrencyChoice as $choice)
                             <a href="{{ request()->fullUrlWithQuery(['currency' => $choice->code]) }}" rel="nofollow" class="top-bar__language-option {{ $choice->id === $displayCurrency?->id ? 'top-bar__language-option--active' : '' }}">
-                                {{ $choice->code }}@if(trim($choice->prefix.$choice->suffix) !== '') ({{ trim($choice->prefix.' '.$choice->suffix) }})@endif
+                                {{ $choice->code }}@if($choice->symbol() !== '') ({{ $choice->symbol() }})@endif
                             </a>
                         @endforeach
                     </div>
