@@ -76,6 +76,9 @@
                     @csrf
                     <button type="submit" class="btn btn-default btn-xs">{{ __('common.actions.test') }}</button>
                 </form>
+                @if(isset($syncable[$server->id]))
+                <a href="{{ route('admin.config.servers.sync', $server) }}" class="btn btn-default btn-xs">{{ __('admin.server_sync.button') }}</a>
+                @endif
                 @if(strtolower((string) $server->type) === 'proxmox')
                 <a href="{{ route('admin.config.servers.images', $server) }}" class="btn btn-default btn-xs">{{ __('proxmox.images.button') }}</a>
                 <a href="{{ route('admin.config.servers.capacity', $server) }}" class="btn btn-default btn-xs">{{ __('proxmox.capacity.button') }}</a>

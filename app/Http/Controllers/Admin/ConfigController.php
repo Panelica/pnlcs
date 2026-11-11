@@ -62,6 +62,7 @@ use App\Models\TodoItem;
 use App\Models\Transaction;
 use App\Services\Module\ModuleRegistry;
 use App\Services\NotificationService;
+use App\Services\ServerAccountSync;
 use App\Support\ApiReference;
 use App\Support\AutoCharge;
 use App\Support\ContentTranslations;
@@ -831,6 +832,9 @@ class ConfigController extends Controller
             'servers' => $servers,
             'groups' => ServerGroup::all(),
             'serverTypes' => $types,
+            // The servers whose accounts the sync page lists and imports, by id.
+            'syncable' => $servers->filter(fn (Server $server) => app(ServerAccountSync::class)->moduleFor($server) !== null)
+                ->keyBy('id')->map(fn () => true)->all(),
         ]);
     }
 

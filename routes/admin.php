@@ -28,6 +28,7 @@ use App\Http\Controllers\Admin\QuoteController;
 use App\Http\Controllers\Admin\RegistrarBalanceController;
 use App\Http\Controllers\Admin\ReportController;
 use App\Http\Controllers\Admin\SearchController;
+use App\Http\Controllers\Admin\ServerSyncController;
 use App\Http\Controllers\Admin\ServiceController;
 use App\Http\Controllers\Admin\SettingController;
 use App\Http\Controllers\Admin\SslOrderController;
@@ -438,6 +439,9 @@ Route::middleware(['admin.auth', 'admin.2fa'])->prefix('admin')->name('admin.')-
             Route::put('servers/{server}', [ConfigController::class, 'updateServer'])->name('servers.update');
             Route::delete('servers/{server}', [ConfigController::class, 'destroyServer'])->name('servers.destroy');
             Route::post('servers/{server}/test', [ConfigController::class, 'testServerConnection'])->name('servers.test');
+            Route::get('servers/{server}/sync', [ServerSyncController::class, 'show'])->name('servers.sync');
+            Route::post('servers/{server}/sync/price-list', [ServerSyncController::class, 'priceList'])->name('servers.sync.price-list');
+            Route::post('servers/{server}/sync/import', [ServerSyncController::class, 'import'])->middleware('throttle:20,1')->name('servers.sync.import');
             Route::get('servers/{server}/images', [ProxmoxImageController::class, 'show'])->name('servers.images');
             Route::get('servers/{server}/capacity', [ProxmoxImageController::class, 'capacity'])->name('servers.capacity');
             Route::get('servers/{server}/images/status', [ProxmoxImageController::class, 'status'])->name('servers.images.status');

@@ -266,6 +266,56 @@ class PleskModule extends AbstractServerModule
     }
 
     /**
+     * Every subscription on the server with what an import needs to bill it:
+     * the domain, its owner, the service plan it follows and the day it was
+     * created (the anniversary a yearly renewal usually falls on). Read for
+     * the server sync page; a failure returns an empty list.
+     *
+     * @return list<array{id: string, domain: string, owner: string, email: string, status: string, plan: ?string, created: ?string}>
+     */
+    public function listAccountDetails(Server $server): array
+    {
+        $xml = $this->xmlApi($server, '<webspace><get><filter/><dataset><gen_info/><subscriptions/></dataset></get></webspace>'
+            .'<service-plan><get><filter/></get></service-plan>');
+
+        $results = $xml ? ($xml->xpath('//webspace/get/result[status="ok"]') ?: []) : [];
+        if ($results === []) {
+            // A panel that does not take the subscriptions dataset still lists them, without their plan.
+            $xml = $this->xmlApi($server, '<webspace><get><filter/><dataset><gen_info/></dataset></get></webspace>');
+            $results = $xml ? ($xml->xpath('//webspace/get/result[status="ok"]') ?: []) : [];
+        }
+
+        $plans = [];
+        foreach ($xml ? ($xml->xpath('//service-plan/get/result[status="ok"]') ?: []) : [] as $plan) {
+            $plans[(string) $plan->guid] = trim((string) $plan->name);
+        }
+
+        $owners = $results === [] ? [] : $this->owners($server);
+        $accounts = [];
+
+        foreach ($results as $result) {
+            $info = $result->data->gen_info;
+            $owner = $owners[(string) $info->{'owner-id'}] ?? null;
+            $planGuid = (string) ($result->data->subscriptions->subscription->plan->{'plan-guid'} ?? '');
+            $created = (string) $info->cr_date;
+
+            $accounts[] = [
+                'id' => (string) $result->id,
+                'domain' => (string) $info->name,
+                'owner' => $owner ? ($owner['name'] ?: $owner['login']) : '',
+                'email' => $owner['email'] ?? '',
+                'status' => (int) $info->status === 0 ? 'active' : 'suspended',
+                'plan' => $plans[$planGuid] ?? null,
+                'created' => preg_match('/^\d{4}-\d{2}-\d{2}/', $created) ? substr($created, 0, 10) : null,
+            ];
+        }
+
+        usort($accounts, fn ($a, $b) => strcasecmp($a['domain'], $b['domain']));
+
+        return $accounts;
+    }
+
+    /**
      * The subscription a service is linked to, for the "already linked" check.
      */
     public function linkedPanelAccount(Service $service): ?string
