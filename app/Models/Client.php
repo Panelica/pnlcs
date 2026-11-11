@@ -260,6 +260,13 @@ class Client extends Model
 
     public function owner(): ?User
     {
+        // The logins are already in hand on a page that listed them, so the
+        // owner is read from them rather than asked for again; the client
+        // page used to spell this rule out for itself.
+        if ($this->relationLoaded('users')) {
+            return $this->users->first(fn (User $login) => (bool) ($login->pivot->owner ?? false));
+        }
+
         return $this->users()->wherePivot('owner', true)->first();
     }
 

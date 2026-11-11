@@ -134,7 +134,8 @@ $tabs = ['summary'=>__('admin.clients.tab_summary'),'services'=>__('admin.client
                     {{-- A block, not @php(...): an inline @php before a later @endphp is read as
                          the start of that block and swallows the rows in between. --}}
                     @php
-                        $ownerLogin = $client->users->first(fn ($login) => (bool) $login->pivot->owner);
+                        // Client::owner() reads the logins this page already loaded.
+                        $ownerLogin = $client->owner();
                     @endphp
                     @if($ownerLogin)
                     <tr><td style="padding:5px 0;color:#777;">{{ __('admin.clients.email_verification') }}</td><td style="padding:5px 0;">
