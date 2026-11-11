@@ -131,6 +131,26 @@ $tabs = ['summary'=>__('admin.clients.tab_summary'),'services'=>__('admin.client
                     <tr><td style="padding:5px 0;color:#777;">{{ __('admin.clients.billing_national_id') }}</td><td style="padding:5px 0;">{{ $client->national_id ?: '-' }}</td></tr>
                     @endif
                     <tr><td style="padding:5px 0;color:#777;">{{ __('admin.clients.email') }}</td><td style="padding:5px 0;"><a href="mailto:{{ $client->email }}" style="color:#337ab7;">{{ $client->email }}</a></td></tr>
+                    {{-- A block, not @php(...): an inline @php before a later @endphp is read as
+                         the start of that block and swallows the rows in between. --}}
+                    @php
+                        $ownerLogin = $client->users->first(fn ($login) => (bool) $login->pivot->owner);
+                    @endphp
+                    @if($ownerLogin)
+                    <tr><td style="padding:5px 0;color:#777;">{{ __('admin.clients.email_verification') }}</td><td style="padding:5px 0;">
+                        @if($ownerLogin->hasVerifiedEmail())
+                        {{ __('admin.clients.email_verified', ['date' => $ownerLogin->email_verified_at->format(date_fmt())]) }}
+                        @else
+                        <span style="color:#a94442;">{{ __('admin.clients.email_unverified') }}</span>
+                        @if(auth('admin')->user()?->hasPermission('edit_clients'))
+                        <form method="POST" action="{{ route('admin.clients.verify-email', $client) }}" style="display:inline;margin-left:8px;">
+                            @csrf
+                            <button type="submit" class="btn btn-default btn-sm" onclick="return pnConfirm(event, @js(__('admin.clients.verify_email_confirm', ['email' => $ownerLogin->email])))">{{ __('admin.clients.verify_email') }}</button>
+                        </form>
+                        @endif
+                        @endif
+                    </td></tr>
+                    @endif
                     <tr><td style="padding:5px 0;color:#777;">{{ __('common.form.billing_email') }}</td><td style="padding:5px 0;">@if($client->billing_email)<a href="mailto:{{ $client->billing_email }}" style="color:#337ab7;">{{ $client->billing_email }}</a>@else - @endif</td></tr>
                     <tr><td style="padding:5px 0;color:#777;">{{ __('admin.clients.phone') }}</td><td style="padding:5px 0;">{{ $client->full_phone ?: '-' }}</td></tr>
                     <tr><td style="padding:5px 0;color:#777;">{{ __('admin.clients.address') }}</td><td style="padding:5px 0;">{{ $client->address1 ?: '-' }}@if($client->city)<br>{{ $client->city }}{{ $client->state ? ', '.$client->state : '' }} {{ $client->postcode }}@endif</td></tr>

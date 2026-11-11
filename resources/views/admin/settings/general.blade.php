@@ -26,7 +26,6 @@
         <button type="button" class="settings-tab" data-tab="security">{{ __('admin.settings.tab_security') }}</button>
         <button type="button" class="settings-tab" data-tab="automation">{{ __('admin.settings.tab_automation') }}</button>
         <button type="button" class="settings-tab" data-tab="seo">{{ __('admin.settings.tab_seo') }}</button>
-        <button type="button" class="settings-tab" data-tab="other">{{ __('admin.settings.tab_other') }}</button>
     </div>
 
     <div class="card" data-tab="company" id="settings-company_information" style="margin-bottom:15px;">
@@ -231,7 +230,7 @@
     {{-- Proving the address on a new account. On unless an operator turns it
          off: the safer behaviour is the one you get without reading a
          settings screen. --}}
-    <div class="card" data-tab="notifications" id="settings-email_verification" style="margin-bottom:15px;">
+    <div class="card" data-tab="security" id="settings-email_verification" style="margin-bottom:15px;">
         <div class="card-header"><strong>{{ __('admin.settings.email_verification') }}</strong></div>
         <div class="card-body">
             <label style="font-size:13px;display:flex;align-items:center;gap:6px;cursor:pointer;">
