@@ -16,9 +16,14 @@ use Modules\Servers\AbstractServerModule;
  *  - POST   /domains                      create subscription (hosting_type=virtual,
  *                                         hosting_settings.ftp_login/ftp_password REQUIRED,
  *                                         owner_client assigns the customer)
- *  - PUT    /clients/{id}/suspend        suspend account
- *  - PUT    /clients/{id}/activate       reactivate account
+ *  - PUT    /clients/{id}/suspend        suspend account (services without a subscription id)
+ *  - PUT    /clients/{id}/activate       reactivate account (idem)
  *  - DELETE /clients/{id}                 remove customer (cascades subscriptions)
+ *
+ * The XML API (agent.php) covers what REST does not: service plans, the list
+ * of existing subscriptions with their owners, and suspending, reactivating
+ * or removing one subscription (webspace set/del) without touching the
+ * customer's others.
  *  - PUT    /clients/{id}                 update (password, ...)
  *  - PUT    /domains/{id}                 update (plan change)
  *  - GET    /clients/{id}/statistics      disk/traffic usage
@@ -113,37 +118,7 @@ class PleskModule extends AbstractServerModule
      */
     public function listPackages(Server $server): array
     {
-        $key = trim((string) $server->access_hash);
-
-        // The XML API (agent.php) takes a secret key in the KEY header;
-        // X-API-Key is the REST API's header, which agent.php does not read.
-        $headers = $key !== ''
-            ? ['KEY' => $key]
-            : [
-                'HTTP_AUTH_LOGIN' => (string) ($server->username ?: 'admin'),
-                'HTTP_AUTH_PASSWD' => (string) $server->password,
-            ];
-
-        try {
-            $port = (int) ($server->port ?: 8443);
-            $url = "https://{$this->serverHost($server)}:{$port}/enterprise/control/agent.php";
-
-            $response = Http::withoutVerifying()
-                ->withHeaders($headers)
-                ->timeout(30)
-                ->withBody('<packet><service-plan><get><filter/></get></service-plan></packet>', 'text/xml')
-                ->post($url);
-        } catch (\Throwable $e) {
-            Log::warning('Plesk listPackages failed', ['server' => $server->id, 'error' => $e->getMessage()]);
-
-            return [];
-        }
-
-        if (! $response->successful()) {
-            return [];
-        }
-
-        $xml = @simplexml_load_string($response->body());
+        $xml = $this->xmlApi($server, '<service-plan><get><filter/></get></service-plan>');
 
         if (! $xml) {
             return [];
@@ -164,6 +139,203 @@ class PleskModule extends AbstractServerModule
         return array_values($plans);
     }
 
+    /**
+     * One call to the XML API (agent.php), which reads what the REST API does
+     * not: service plans, every subscription with its owner, and the status of
+     * a single subscription.
+     *
+     * The XML API takes a secret key in the KEY header; X-API-Key is the REST
+     * API's header, which agent.php does not read. A failure returns null.
+     */
+    private function xmlApi(Server $server, string $operations): ?\SimpleXMLElement
+    {
+        $key = trim((string) $server->access_hash);
+
+        $headers = $key !== ''
+            ? ['KEY' => $key]
+            : [
+                'HTTP_AUTH_LOGIN' => (string) ($server->username ?: 'admin'),
+                'HTTP_AUTH_PASSWD' => (string) $server->password,
+            ];
+
+        try {
+            $port = (int) ($server->port ?: 8443);
+            $url = "https://{$this->serverHost($server)}:{$port}/enterprise/control/agent.php";
+
+            $response = Http::withoutVerifying()
+                ->withHeaders($headers)
+                ->timeout(30)
+                ->withBody("<packet>{$operations}</packet>", 'text/xml')
+                ->post($url);
+        } catch (\Throwable $e) {
+            Log::warning('Plesk XML API call failed', ['server' => $server->id, 'error' => $e->getMessage()]);
+
+            return null;
+        }
+
+        if (! $response->successful()) {
+            return null;
+        }
+
+        return @simplexml_load_string($response->body()) ?: null;
+    }
+
+    /**
+     * Whether every result of an XML API answer came back ok.
+     */
+    private function xmlOk(?\SimpleXMLElement $xml): bool
+    {
+        if (! $xml || $xml->xpath('//system/status')) {
+            return false;
+        }
+
+        $statuses = $xml->xpath('//result/status') ?: [];
+
+        return $statuses !== [] && collect($statuses)->every(fn ($status) => (string) $status === 'ok');
+    }
+
+    private function xmlError(?\SimpleXMLElement $xml): string
+    {
+        $error = $xml ? ($xml->xpath('//errtext') ?: []) : [];
+
+        return $error ? (string) $error[0] : 'Plesk did not answer.';
+    }
+
+    /**
+     * Customers and resellers by id: login, name and email.
+     *
+     * The reseller object names its dataset gen-info where the customer one
+     * says gen_info, and wants an explicit <all/> filter: asked any other way,
+     * Plesk rejects the whole packet and every subscription reads as the
+     * administrator's.
+     *
+     * @return array<string, array{login: string, name: string, email: string}>
+     */
+    private function owners(Server $server): array
+    {
+        $xml = $this->xmlApi($server, '<customer><get><filter/><dataset><gen_info/></dataset></get></customer>'
+            .'<reseller><get><filter><all/></filter><dataset><gen-info/></dataset></get></reseller>');
+
+        $owners = [];
+        foreach ($xml ? ($xml->xpath('//get/result[status="ok"]') ?: []) : [] as $result) {
+            $info = $result->data->gen_info ?? $result->data->{'gen-info'};
+            $owners[(string) $result->id] = [
+                'login' => (string) $info->login,
+                'name' => trim((string) $info->cname) ?: trim((string) $info->pname),
+                'email' => (string) $info->email,
+            ];
+        }
+
+        return $owners;
+    }
+
+    /**
+     * The subscriptions that already exist on the server, so an operator moving
+     * customers in can link a billing service to the real subscription instead
+     * of creating a new one. The id is the subscription's; the label carries
+     * the domain and who owns it on the panel. A failure returns an empty list.
+     *
+     * @return array<int, array{id: string, username: string, email: string, status: string}>
+     */
+    public function listAccounts(Server $server): array
+    {
+        $xml = $this->xmlApi($server, '<webspace><get><filter/><dataset><gen_info/></dataset></get></webspace>');
+
+        if (! $xml) {
+            return [];
+        }
+
+        $owners = $this->owners($server);
+        $accounts = [];
+
+        foreach ($xml->xpath('//webspace/get/result[status="ok"]') ?: [] as $result) {
+            $info = $result->data->gen_info;
+            $owner = $owners[(string) $info->{'owner-id'}] ?? null;
+
+            $accounts[] = [
+                'id' => (string) $result->id,
+                'username' => (string) $info->name.($owner ? ' · '.($owner['name'] ?: $owner['login']) : ''),
+                'email' => $owner['email'] ?? '',
+                'status' => (int) $info->status === 0 ? 'active' : 'suspended',
+            ];
+        }
+
+        usort($accounts, fn ($a, $b) => strcasecmp($a['username'], $b['username']));
+
+        return $accounts;
+    }
+
+    /**
+     * The subscription a service is linked to, for the "already linked" check.
+     */
+    public function linkedPanelAccount(Service $service): ?string
+    {
+        return $this->getDomainId($service);
+    }
+
+    /**
+     * Link a billing service to a subscription that already runs on the server.
+     *
+     * Records the subscription and, when a customer or reseller owns it, that
+     * owner: what suspend, terminate and the password change address. Nothing
+     * on the panel changes. A subscription another live service manages is not
+     * linked twice.
+     *
+     * @return array{success: bool, message: string, data: array<string, mixed>}
+     */
+    public function linkAccount(Service $service, string $subscriptionId): array
+    {
+        $server = $this->getServer($service);
+        if (! $server || ! ctype_digit($subscriptionId)) {
+            return $this->buildResult(false, 'Missing server or subscription.');
+        }
+
+        $taken = Service::where('server_id', $server->id)->where('id', '!=', $service->id)
+            ->whereNotIn('status', ['terminated', 'cancelled', 'fraud'])->get(['id', 'module_data'])
+            ->first(fn ($other) => (string) $this->linkedPanelAccount($other) === $subscriptionId);
+        if ($taken) {
+            return $this->buildResult(false, "Service #{$taken->id} already manages this Plesk subscription.");
+        }
+
+        $xml = $this->xmlApi($server, "<webspace><get><filter><id>{$subscriptionId}</id></filter><dataset><gen_info/></dataset></get></webspace>");
+        $found = $xml ? ($xml->xpath('//webspace/get/result[status="ok"]') ?: []) : [];
+        if (! $found) {
+            return $this->buildResult(false, 'Plesk has no subscription #'.$subscriptionId.'.');
+        }
+
+        $info = $found[0]->data->gen_info;
+        $ownerId = (string) $info->{'owner-id'};
+        $owner = $this->owners($server)[$ownerId] ?? null;
+
+        // A subscription the administrator owns has no customer to address.
+        $this->setModuleData($service, array_filter([
+            'plesk_domain_id' => $subscriptionId,
+            'plesk_client_id' => $owner ? $ownerId : null,
+        ]));
+
+        $service->forceFill(array_filter([
+            'username' => $owner['login'] ?? null,
+            'domain' => $service->domain ?: (string) $info->name,
+        ]))->save();
+
+        $this->logAction($service, 'link', ['success' => true]);
+
+        return $this->buildResult(true, 'Linked to Plesk subscription '.$info->name.'.');
+    }
+
+    /**
+     * Set one subscription's status: 0 active, 16 suspended by the administrator.
+     *
+     * @return array{ok: bool, message: string}
+     */
+    private function setSubscriptionStatus(Server $server, string $domainId, int $status): array
+    {
+        $id = (int) $domainId;
+        $xml = $this->xmlApi($server, "<webspace><set><filter><id>{$id}</id></filter><values><gen_setup><status>{$status}</status></gen_setup></values></set></webspace>");
+
+        return $this->xmlOk($xml) ? ['ok' => true, 'message' => ''] : ['ok' => false, 'message' => $this->xmlError($xml)];
+    }
+
     private function getClientId(Service $service): ?string
     {
         return $this->getModuleData($service)['plesk_client_id'] ?? null;
@@ -175,6 +347,17 @@ class PleskModule extends AbstractServerModule
 
         // plesk_webspace_id is the legacy key from the previous module version
         return $data['plesk_domain_id'] ?? $data['plesk_webspace_id'] ?? null;
+    }
+
+    /**
+     * The subscription id when it is one Plesk issued (numeric); otherwise the
+     * service is addressed through its customer, as before.
+     */
+    private function subscriptionId(Service $service): ?string
+    {
+        $id = (string) $this->getDomainId($service);
+
+        return ctype_digit($id) ? $id : null;
     }
 
     private function errorMessage($response): string
@@ -267,53 +450,101 @@ class PleskModule extends AbstractServerModule
         ]);
     }
 
+    /**
+     * Suspend the subscription this service bills for.
+     *
+     * Suspending the Plesk customer instead took every other subscription of
+     * that customer down with it: one unpaid domain suspended all their sites.
+     * A service recorded before the subscription id was kept still suspends
+     * the customer, as it always did.
+     */
     public function suspend(Service $service, string $reason = ''): array
     {
-        $server = $this->getServer($service);
-        $clientId = $this->getClientId($service);
-
-        if (! $server || ! $clientId) {
-            return $this->buildResult(false, 'Missing server or Plesk client ID.');
-        }
-
-        $resp = $this->http($server)->put("{$this->baseUrl($server)}/clients/{$clientId}/suspend");
-
-        $result = $this->buildResult($resp->successful(), $resp->successful() ? 'Account suspended.' : $this->errorMessage($resp));
-        $this->logAction($service, 'suspend', $result);
-
-        return $result;
+        return $this->toggle($service, 'suspend');
     }
 
     public function unsuspend(Service $service): array
     {
-        $server = $this->getServer($service);
-        $clientId = $this->getClientId($service);
+        return $this->toggle($service, 'unsuspend');
+    }
 
-        if (! $server || ! $clientId) {
-            return $this->buildResult(false, 'Missing server or Plesk client ID.');
+    /**
+     * @return array{success: bool, message: string, data: array<string, mixed>}
+     */
+    private function toggle(Service $service, string $action): array
+    {
+        $server = $this->getServer($service);
+        $domainId = $this->subscriptionId($service);
+        $clientId = $this->getClientId($service);
+        $suspend = $action === 'suspend';
+
+        if ($server && $domainId) {
+            $set = $this->setSubscriptionStatus($server, $domainId, $suspend ? 16 : 0);
+            $result = $this->buildResult($set['ok'], $set['ok'] ? ($suspend ? 'Subscription suspended.' : 'Subscription unsuspended.') : $set['message']);
+        } elseif ($server && $clientId) {
+            $resp = $this->http($server)->put("{$this->baseUrl($server)}/clients/{$clientId}/".($suspend ? 'suspend' : 'activate'));
+            $result = $this->buildResult($resp->successful(), $resp->successful() ? ($suspend ? 'Account suspended.' : 'Account unsuspended.') : $this->errorMessage($resp));
+        } else {
+            return $this->buildResult(false, 'Missing server or Plesk subscription ID.');
         }
 
-        $resp = $this->http($server)->put("{$this->baseUrl($server)}/clients/{$clientId}/activate");
-
-        $result = $this->buildResult($resp->successful(), $resp->successful() ? 'Account unsuspended.' : $this->errorMessage($resp));
-        $this->logAction($service, 'unsuspend', $result);
+        $this->logAction($service, $action, $result);
 
         return $result;
     }
 
+    /**
+     * Remove the subscription this service bills for, and the Plesk customer
+     * only once nothing else of theirs is left on the server.
+     *
+     * Deleting the customer outright cascaded to every subscription they own,
+     * so terminating one service wiped the customer's other sites too.
+     */
     public function terminate(Service $service): array
     {
         $server = $this->getServer($service);
+        $domainId = $this->subscriptionId($service);
         $clientId = $this->getClientId($service);
 
-        if (! $server || ! $clientId) {
-            return $this->buildResult(false, 'Missing server or Plesk client ID.');
+        if (! $server || (! $domainId && ! $clientId)) {
+            return $this->buildResult(false, 'Missing server or Plesk subscription ID.');
         }
 
-        // DELETE /clients/{id} cascades subscriptions (webspaces)
-        $resp = $this->http($server)->delete("{$this->baseUrl($server)}/clients/{$clientId}");
+        if (! $domainId) {
+            // A service recorded before the subscription id was kept.
+            $resp = $this->http($server)->delete("{$this->baseUrl($server)}/clients/{$clientId}");
+            $result = $this->buildResult($resp->successful(), $resp->successful() ? 'Account terminated.' : $this->errorMessage($resp));
+            $this->logAction($service, 'terminate', $result);
 
-        $result = $this->buildResult($resp->successful(), $resp->successful() ? 'Account terminated.' : $this->errorMessage($resp));
+            return $result;
+        }
+
+        $id = (int) $domainId;
+        $deleted = $this->xmlApi($server, "<webspace><del><filter><id>{$id}</id></filter></del></webspace>");
+        if (! $this->xmlOk($deleted)) {
+            $result = $this->buildResult(false, $this->xmlError($deleted));
+            $this->logAction($service, 'terminate', $result);
+
+            return $result;
+        }
+
+        $message = 'Subscription removed.';
+        if ($clientId) {
+            $owner = (int) $clientId;
+            $left = $this->xmlApi($server, "<webspace><get><filter><owner-id>{$owner}</owner-id></filter><dataset><gen_info/></dataset></get></webspace>");
+            $remaining = $left ? count($left->xpath('//webspace/get/result[status="ok"]') ?: []) : null;
+
+            if ($remaining === 0) {
+                $resp = $this->http($server)->delete("{$this->baseUrl($server)}/clients/{$clientId}");
+                $message = $resp->successful()
+                    ? 'Subscription and Plesk customer removed.'
+                    : 'Subscription removed; the Plesk customer was kept: '.$this->errorMessage($resp);
+            } else {
+                $message = 'Subscription removed; the Plesk customer still has other subscriptions and was kept.';
+            }
+        }
+
+        $result = $this->buildResult(true, $message);
         $this->logAction($service, 'terminate', $result);
 
         return $result;
