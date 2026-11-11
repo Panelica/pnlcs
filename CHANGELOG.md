@@ -2,6 +2,15 @@
 
 All notable changes to PNLCS are documented here. Newest first.
 
+## 1.25.1 — 2026-11-11
+
+A stable release, offered to every installation. Everything in it had a day on
+the beta channel as 1.25.1-beta.1; nothing has been added since.
+
+Three fixes: the term grid on the Panelica Licences page follows the price
+being typed rather than its first digit, a package made on that page can be
+removed there, and duplicating a product keeps the terms it is sold on.
+
 ## 1.25.1-beta.1 — 2026-11-10
 
 A beta, offered on the beta channel only. Fixes to the Panelica Licences page
