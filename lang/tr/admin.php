@@ -3903,6 +3903,7 @@ return [
         'filter' => 'Alan adı, sahip veya e-postaya göre süz',
         'empty' => 'Sunucuda hesap yok.',
         'select_all' => 'Gösterilenlerin tümünü seç',
+        'kind_reseller' => 'Bayi',
         'col_account' => 'Hesap',
         'col_plan' => 'Paket',
         'col_client' => 'Müşteri (id)',

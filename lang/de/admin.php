@@ -3899,6 +3899,7 @@ return [
         'filter' => 'Nach Domain, Inhaber oder E-Mail filtern',
         'empty' => 'Der Server hat keine Konten.',
         'select_all' => 'Alle angezeigten auswählen',
+        'kind_reseller' => 'Wiederverkäufer',
         'col_account' => 'Konto',
         'col_plan' => 'Tarif',
         'col_client' => 'Kunde (ID)',

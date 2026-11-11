@@ -3903,6 +3903,7 @@ return [
         'filter' => '按域名、所有者或邮箱筛选',
         'empty' => '服务器上没有账户。',
         'select_all' => '全选显示的账户',
+        'kind_reseller' => '分销商',
         'col_account' => '账户',
         'col_plan' => '套餐',
         'col_client' => '客户（ID）',

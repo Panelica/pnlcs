@@ -94,6 +94,9 @@
                 </td>
                 <td>
                     <strong>{{ $row['domain'] }}</strong>
+                    @if (($row['kind'] ?? null) === 'reseller')
+                        <span class="badge badge-pending">{{ __('admin.server_sync.kind_reseller') }}</span>
+                    @endif
                     <div class="ssy-sub">{{ $row['owner'] }}@if ($row['email']) · {{ $row['email'] }}@endif</div>
                     @if ($row['created'])
                         <div class="ssy-sub">{{ __('admin.server_sync.created', ['date' => $row['created']]) }}</div>

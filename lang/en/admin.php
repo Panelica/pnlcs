@@ -3905,6 +3905,7 @@ return [
         'filter' => 'Filter by domain, owner or email',
         'empty' => 'The server has no accounts.',
         'select_all' => 'Select all shown',
+        'kind_reseller' => 'Reseller',
         'col_account' => 'Account',
         'col_plan' => 'Plan',
         'col_client' => 'Client (id)',

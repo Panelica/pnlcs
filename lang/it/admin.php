@@ -3865,6 +3865,7 @@ return [
         'filter' => 'Filtra per dominio, proprietario o email',
         'empty' => 'Il server non ha account.',
         'select_all' => 'Seleziona tutti quelli mostrati',
+        'kind_reseller' => 'Reseller',
         'col_account' => 'Account',
         'col_plan' => 'Piano',
         'col_client' => 'Cliente (id)',

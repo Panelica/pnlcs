@@ -3903,6 +3903,7 @@ return [
         'filter' => 'Filtruj po domenie, właścicielu lub e-mailu',
         'empty' => 'Serwer nie ma kont.',
         'select_all' => 'Zaznacz wszystkie widoczne',
+        'kind_reseller' => 'Odsprzedawca',
         'col_account' => 'Konto',
         'col_plan' => 'Pakiet',
         'col_client' => 'Klient (id)',
