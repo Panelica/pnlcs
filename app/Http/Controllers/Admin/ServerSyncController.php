@@ -5,10 +5,14 @@ namespace App\Http\Controllers\Admin;
 use App\Constants\Permissions;
 use App\Http\Controllers\Controller;
 use App\Models\Client;
+use App\Models\Product;
 use App\Models\Server;
+use App\Services\BillingCycleHelper;
+use App\Services\ProductCreator;
 use App\Services\ServerAccountSync;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Collection;
 use Illuminate\Validation\Rule;
 use Illuminate\View\View;
 
@@ -33,13 +37,16 @@ class ServerSyncController extends Controller
             $error = $e->getMessage();
         }
 
+        $products = $this->sync->products($server);
+
         return view('admin.config.server-sync', [
             'server' => $server,
             'rows' => $rows,
             'error' => $error,
-            'products' => $this->sync->products($server),
+            'products' => $products,
             'clients' => Client::orderBy('company_name')->orderBy('last_name')->get(['id', 'first_name', 'last_name', 'company_name', 'email']),
-            'cycles' => ServerAccountSync::CYCLES,
+            'productCycles' => $this->productCycles($products),
+            'cycleNames' => implode(', ', [...ProductCreator::CYCLES, '2months … 11months']),
             'priceListColumns' => ServerAccountSync::PRICE_LIST_COLUMNS,
             'priceListCount' => count((array) $request->session()->get($this->priceListKey($server), [])),
             'canImport' => $this->mayImport(),
@@ -79,7 +86,7 @@ class ServerSyncController extends Controller
             'rows' => ['required', 'array', 'max:100'],
             'rows.*.client_id' => ['required', 'integer', Rule::exists('clients', 'id')],
             'rows.*.product_id' => ['required', 'integer', Rule::in($productIds)],
-            'rows.*.billing_cycle' => ['required', Rule::in(ServerAccountSync::CYCLES)],
+            'rows.*.billing_cycle' => ['required', 'string', BillingCycleHelper::rule()],
             'rows.*.amount' => ['required', 'numeric', 'min:0'],
             'rows.*.next_due_date' => ['nullable', 'date'],
         ], [], ['rows' => __('admin.server_sync.selection')]);
@@ -120,6 +127,21 @@ class ServerSyncController extends Controller
         $admin = auth('admin')->user();
 
         return (bool) ($admin?->hasPermission(Permissions::EDIT_CLIENTS) && $admin->hasPermission(Permissions::MANAGE_SERVICES));
+    }
+
+    /**
+     * The cycles each product sells, with their labels, for the cycle list to
+     * follow the product picked on a row; '' holds the list for no product.
+     *
+     * @param  Collection<int, Product>  $products
+     * @return array<int|string, list<array{value: string, label: string}>>
+     */
+    private function productCycles(Collection $products): array
+    {
+        $options = fn (array $cycles): array => array_map(fn (string $cycle) => ['value' => $cycle, 'label' => cycle_label($cycle)], $cycles);
+
+        return ['' => $options($this->sync->cyclesFor(null))]
+            + $products->mapWithKeys(fn ($product) => [$product->id => $options($this->sync->cyclesFor($product))])->all();
     }
 
     private function priceListKey(Server $server): string
