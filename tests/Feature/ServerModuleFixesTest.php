@@ -108,7 +108,9 @@ test('plesk create posts to /domains with required ftp credentials and owner_cli
 test('plesk suspend and unsuspend use the dedicated endpoints', function () {
     Http::fake(['*' => Http::response(null, 200)]);
 
-    $service = fixSvc('plesk', [], ['notes' => json_encode(['plesk_client_id' => 42, 'plesk_domain_id' => 43])]);
+    // A service without its subscription id; one with it is suspended per
+    // subscription (PleskExistingSubscriptionsTest).
+    $service = fixSvc('plesk', [], ['notes' => json_encode(['plesk_client_id' => 42])]);
     $module = new \Modules\Servers\Plesk\PleskModule();
 
     expect($module->suspend($service->fresh(['server']), 'nonpayment')['success'])->toBeTrue();

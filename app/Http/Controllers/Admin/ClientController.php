@@ -388,10 +388,14 @@ class ClientController extends Controller
         // A panel account another live service already manages is not linked
         // a second time (claim() asks the same of a virtual server).
         if (! $request->boolean('provision') && $linkUserId !== '' && ! empty($validated['server_id'])) {
+            $linkModule = app(ModuleRegistry::class)->getServerModule((string) Server::find($validated['server_id'])?->type);
+            $accountOf = is_callable([$linkModule, 'linkedPanelAccount'])
+                ? fn ($s) => (string) $linkModule->linkedPanelAccount($s)
+                : fn ($s) => (string) (($s->module_data ?? [])['panelica_user_id'] ?? '');
             $taken = Service::where('server_id', $validated['server_id'])
                 ->whereNotIn('status', ['terminated', 'cancelled', 'fraud'])
                 ->get(['id', 'module_data'])
-                ->first(fn ($s) => (string) (($s->module_data ?? [])['panelica_user_id'] ?? '') === $linkUserId);
+                ->first(fn ($s) => $accountOf($s) === $linkUserId);
             if ($taken) {
                 return back()->withInput()->with('error', __('admin.clients.link_taken', ['service' => $taken->id]));
             }
@@ -453,6 +457,14 @@ class ClientController extends Controller
 
                 return redirect()->route('admin.clients.show', ['client' => $client, 'tab' => 'services'])
                     ->with($claimed['success'] ? 'success' : 'error', $claimed['message']);
+            }
+            // A module that records its own account ids (Plesk: subscription
+            // and owner) links the service itself.
+            if (is_callable([$module, 'linkAccount'])) {
+                $linkResult = $module->linkAccount($service, $linkUserId);
+
+                return redirect()->route('admin.clients.show', ['client' => $client, 'tab' => 'services'])
+                    ->with($linkResult['success'] ? 'success' : 'error', $linkResult['message']);
             }
             if ($service->server) {
                 $module = app(ModuleRegistry::class)->getServerModule($service->server->type);
