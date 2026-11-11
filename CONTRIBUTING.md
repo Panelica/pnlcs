@@ -131,6 +131,15 @@ Both are CI-enforced — please run them locally before pushing.
 php artisan test
 ```
 
+On a machine with several cores the suite runs about three times faster in parallel. The installer's tests share `storage/installed.lock`, so they run in a second, serial pass:
+
+```bash
+php artisan test --parallel --exclude-group=serial
+php artisan test --group=serial
+```
+
+Each parallel process works on its own copy of the test database (`pnlcs_test_test_1`, `_2`, …), so the database user needs to be allowed to create them.
+
 CI runs the same suite plus Pint and PHPStan.
 
 ---

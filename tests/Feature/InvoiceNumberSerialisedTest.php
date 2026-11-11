@@ -18,9 +18,13 @@ function secondConnection(): PDO
     return new PDO("mysql:host={$c['host']};port={$c['port']};dbname={$c['database']}", $c['username'], $c['password']);
 }
 
+test('the numbering lock is the database\'s own', function () {
+    expect(InvoiceService::numberLock())->toBe(InvoiceService::NUMBER_LOCK.':'.config('database.connections.mysql.database'));
+});
+
 test('invoice numbering waits for whoever is numbering an invoice right now', function () {
     $other = secondConnection();
-    expect((int) $other->query("SELECT GET_LOCK('".InvoiceService::NUMBER_LOCK."', 0)")->fetchColumn())->toBe(1);
+    expect((int) $other->query("SELECT GET_LOCK('".InvoiceService::numberLock()."', 0)")->fetchColumn())->toBe(1);
 
     InvoiceService::$numberLockSeconds = 1;
     $client = Client::factory()->create(['tax_exempt' => true]);
@@ -29,7 +33,7 @@ test('invoice numbering waits for whoever is numbering an invoice right now', fu
         expect(fn () => app(InvoiceService::class)->createInvoice($client, [['description' => 'x', 'amount' => 1]]))
             ->toThrow(RuntimeException::class);
     } finally {
-        $other->query("SELECT RELEASE_LOCK('".InvoiceService::NUMBER_LOCK."')");
+        $other->query("SELECT RELEASE_LOCK('".InvoiceService::numberLock()."')");
         InvoiceService::$numberLockSeconds = 15;
     }
 
@@ -37,6 +41,6 @@ test('invoice numbering waits for whoever is numbering an invoice right now', fu
     // handed back afterwards, so nothing waits on us.
     $invoice = app(InvoiceService::class)->createInvoice($client, [['description' => 'x', 'amount' => 1]]);
     expect($invoice->invoice_num)->not->toBe('')
-        ->and((int) $other->query("SELECT GET_LOCK('".InvoiceService::NUMBER_LOCK."', 0)")->fetchColumn())->toBe(1);
-    $other->query("SELECT RELEASE_LOCK('".InvoiceService::NUMBER_LOCK."')");
+        ->and((int) $other->query("SELECT GET_LOCK('".InvoiceService::numberLock()."', 0)")->fetchColumn())->toBe(1);
+    $other->query("SELECT RELEASE_LOCK('".InvoiceService::numberLock()."')");
 });
