@@ -57,7 +57,7 @@ class ServerAccountSync
      * The server's accounts, the same shape whatever the module: modules that
      * know more (plan, creation date) say so through listAccountDetails().
      *
-     * @return list<array{id: string, domain: string, owner: string, email: string, status: string, plan: ?string, created: ?string}>
+     * @return list<array{id: string, domain: string, owner: string, email: string, status: string, plan: ?string, created: ?string, kind?: string, package?: ?string}>
      */
     public function accounts(Server $server, object $module): array
     {
@@ -73,6 +73,7 @@ class ServerAccountSync
             'status' => (string) ($account['status'] ?? 'active'),
             'plan' => $account['plan'] ?? null,
             'created' => $account['created'] ?? null,
+            'kind' => $account['kind'] ?? 'account',
         ], $module->listAccounts($server));
     }
 
@@ -105,7 +106,7 @@ class ServerAccountSync
             $service = $linked->get($account['id']);
             $domain = strtolower($account['domain']);
             $listed = $priceList[$domain] ?? [];
-            $product = $this->productFor($account['plan'], $products);
+            $product = $this->productFor($account['package'] ?? $account['plan'], $products);
             $cycle = in_array($listed['billing_cycle'] ?? null, self::CYCLES, true) ? $listed['billing_cycle'] : 'Annually';
             $price = $product?->priceFor($cycle);
 
@@ -155,7 +156,8 @@ class ServerAccountSync
                     'client_id' => $billing['client_id'],
                     'product_id' => $billing['product_id'],
                     'server_id' => $server->id,
-                    'domain' => $account['domain'] ?: null,
+                    // A reseller account has a login, not a domain of its own.
+                    'domain' => ($account['kind'] ?? null) === 'reseller' ? null : ($account['domain'] ?: null),
                     'qty' => 1,
                     'first_payment_amount' => $billing['amount'],
                     'amount' => $billing['amount'],
