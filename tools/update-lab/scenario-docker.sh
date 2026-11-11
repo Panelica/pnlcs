@@ -25,6 +25,22 @@ snapshot() { as_www php "$LAB/snapshot.php" "$APP" > "$1"; }
 # Not `docker logs | grep -q`: with pipefail, grep leaving early fails the pipe.
 SINCE=""
 logs_have() { docker logs ${SINCE:+--since "$SINCE"} "$CT" > "$DIR/.logs" 2>&1; grep -q "$1" "$DIR/.logs"; }
+# The admin login over HTTP, waited for rather than asked once.
+#
+# wait_ready() returns when the entrypoint hands off to supervisord, which is
+# before nginx has a php-fpm worker to talk to. Asked at that moment on a busy
+# machine, the first request is a 502 and the scenario reported a failure that
+# did not reproduce on a quiet one (1.26.0's release run). It is the stack
+# coming up, not the page: a page that is really broken stays broken for the
+# whole minute.
+http_code() { docker exec "$CT" curl -s -o /dev/null -w '%{http_code}' -H 'Host: lab.example.test' "http://127.0.0.1$1"; }
+wait_http_200() {
+    for i in $(seq 1 30); do
+        [ "$(http_code "$1")" = 200 ] && return 0
+        sleep 2
+    done
+    return 1
+}
 wait_ready() {
     for i in $(seq 1 120); do
         logs_have "Handing off to supervisord" && return 0
@@ -85,7 +101,7 @@ if [ "$VARIANT" = good ]; then
     in_ct grep -q "operator: our own note at the top" $APP/resources/views/admin/layouts/app.blade.php && in_ct grep -q "lab release: added near the end" $APP/resources/views/admin/layouts/app.blade.php \
         && ok "admin layout merged" || bad "admin layout merge"
     in_ct sh -c "[ \$(stat -c %U $APP/app/Support/LabProbe.php) = www-data ]" && ok "new files belong to www-data" || bad "new files are not www-data's"
-    [ "$(docker exec "$CT" curl -s -o /dev/null -w '%{http_code}' -H 'Host: lab.example.test' http://127.0.0.1/admin/login)" = 200 ] && ok "nginx + php-fpm serve the admin login (200)" || bad "admin login over HTTP"
+    wait_http_200 /admin/login && ok "nginx + php-fpm serve the admin login (200)" || bad "admin login over HTTP (last: $(http_code /admin/login))"
     as_www php artisan pnlcs:update-health >>"$LOG" 2>&1 && ok "health after update" || bad "health after update"
 else
     if [ "$VARIANT" = crash ]; then
@@ -101,7 +117,7 @@ else
     php "$LAB/compare.php" "$DIR/before.json" "$DIR/after.json" --content-only=storage/ $SCHEDULER_MOVES >>"$LOG" 2>&1 && ok "files and database exactly as before" || { bad "something differs"; php "$LAB/compare.php" "$DIR/before.json" "$DIR/after.json" --content-only=storage/ $SCHEDULER_MOVES | head -10; }
     [ "$(in_ct cat $APP/VERSION)" = "${LAB_A}" ] && ok "VERSION is still ${LAB_A}" || bad "VERSION is $(in_ct cat $APP/VERSION)"
     in_ct test ! -f $APP/storage/framework/down && ok "site is up" || bad "site is in maintenance"
-    [ "$(docker exec "$CT" curl -s -o /dev/null -w '%{http_code}' -H 'Host: lab.example.test' http://127.0.0.1/admin/login)" = 200 ] && ok "admin login answers 200" || bad "admin login over HTTP"
+    wait_http_200 /admin/login && ok "admin login answers 200" || bad "admin login over HTTP (last: $(http_code /admin/login))"
 fi
 
 docker logs "$CT" >"$DIR/container.log" 2>&1
