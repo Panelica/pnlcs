@@ -33,3 +33,17 @@ $installedLock = __DIR__.'/../storage/installed.lock';
 if (! file_exists($installedLock)) {
     @file_put_contents($installedLock, date('c'));
 }
+
+/*
+ * The installer's tests park storage/installed.lock and put it back. There is
+ * one lock for every process, so under --parallel the others met an installer
+ * that was open or closed at the wrong moment. They run in a second, serial
+ * pass: php artisan test --parallel --exclude-group=serial, then
+ * php artisan test --group=serial. A plain php artisan test runs them all.
+ */
+pest()->group('serial')->in(
+    'Feature/InstallDatabaseStepTest.php',
+    'Feature/InstallerLanguageTest.php',
+    'Feature/InstallerReachableTest.php',
+    'Feature/InstallRequirementsAndImapTest.php',
+);

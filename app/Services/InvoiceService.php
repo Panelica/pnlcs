@@ -3,6 +3,7 @@
 namespace App\Services;
 
 use App\Enums\InvoiceStatus;
+use App\Events\InvoiceCancelled;
 use App\Events\InvoiceCreated;
 use App\Events\InvoicePaid;
 use App\Models\Client;
@@ -26,6 +27,22 @@ class InvoiceService
      */
     public const NUMBER_LOCK = 'pnlcs:invoice-number';
 
+    /**
+     * The numbering lock of this database.
+     *
+     * A named lock belongs to the MySQL server, not to a database, so two
+     * installations on one server - or the per-process copies a parallel test
+     * run makes - waited on each other's invoices. The database name keeps each
+     * to its own numbering; a name past MySQL's 64 characters is hashed.
+     */
+    public static function numberLock(): string
+    {
+        $database = (string) DB::connection()->getDatabaseName();
+        $name = self::NUMBER_LOCK.':'.$database;
+
+        return strlen($name) <= 64 ? $name : self::NUMBER_LOCK.':'.sha1($database);
+    }
+
     /** How long to wait for the numbering lock; tests shorten it. */
     public static int $numberLockSeconds = 15;
 
@@ -35,7 +52,7 @@ class InvoiceService
      */
     public function createInvoice(Client $client, array $items, array $options = []): Invoice
     {
-        $got = DB::selectOne('SELECT GET_LOCK(?, ?) AS got', [self::NUMBER_LOCK, self::$numberLockSeconds]);
+        $got = DB::selectOne('SELECT GET_LOCK(?, ?) AS got', [self::numberLock(), self::$numberLockSeconds]);
 
         if ((int) ($got->got ?? 0) !== 1) {
             throw new \RuntimeException('Could not obtain the invoice numbering lock.');
@@ -44,7 +61,7 @@ class InvoiceService
         try {
             $invoice = $this->createInvoiceLocked($client, $items, $options);
         } finally {
-            DB::selectOne('SELECT RELEASE_LOCK(?) AS released', [self::NUMBER_LOCK]);
+            DB::selectOne('SELECT RELEASE_LOCK(?) AS released', [self::numberLock()]);
         }
 
         return $invoice;
@@ -572,7 +589,7 @@ class InvoiceService
 
         $invoice->update(['status' => InvoiceStatus::Cancelled->value]);
         // Admin, bulk action and API all cancel through here.
-        event(new \App\Events\InvoiceCancelled($invoice->fresh()));
+        event(new InvoiceCancelled($invoice->fresh()));
 
         return $invoice->fresh();
     }
