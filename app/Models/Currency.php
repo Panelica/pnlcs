@@ -81,6 +81,18 @@ class Currency extends Model
         return $rate === null ? null : $amount * $rate;
     }
 
+    /**
+     * The sign of the currency without its own code, for a label that already
+     * names the code: "$" for the default "$" + " USD", "zł" for " zł", and
+     * nothing when prefix and suffix say no more than the code does.
+     */
+    public function symbol(): string
+    {
+        $sign = str_ireplace((string) $this->code, '', $this->prefix.' '.$this->suffix);
+
+        return trim((string) preg_replace('/\s+/u', ' ', $sign));
+    }
+
     public function formatAmount(float $amount): string
     {
         return $this->prefix.$this->number($amount).$this->suffix;

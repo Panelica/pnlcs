@@ -174,6 +174,28 @@ test('a visitor picks a currency from the top bar and keeps it for the session',
     expect(session(CustomerCurrency::SESSION_KEY))->toBe($usd->id);
 });
 
+test('the menu names each currency once: the code and its sign, not the code twice', function () {
+    ccShop();
+    // What a new installation ships with: the sign in front and the code behind.
+    Currency::where('code', 'USD')->update(['prefix' => '$', 'suffix' => ' USD']);
+    ccOn();
+
+    $html = (string) preg_replace('/\s+/', ' ', $this->get(route('client.store'))->assertOk()->getContent());
+
+    // It read "USD ($  USD)".
+    expect($html)->toContain('USD ($)')
+        ->and($html)->toContain('PLN (zł)')
+        ->and($html)->toContain('EUR (€)')
+        ->and($html)->not->toContain('USD)');
+});
+
+test('a currency whose prefix and suffix only repeat the code gets no brackets', function () {
+    expect((new Currency(['code' => 'CHF', 'prefix' => '', 'suffix' => ' CHF']))->symbol())->toBe('')
+        ->and((new Currency(['code' => 'USD', 'prefix' => '$', 'suffix' => ' USD']))->symbol())->toBe('$')
+        ->and((new Currency(['code' => 'TRY', 'prefix' => '', 'suffix' => ' TL']))->symbol())->toBe('TL')
+        ->and((new Currency(['code' => 'EUR', 'prefix' => null, 'suffix' => null]))->symbol())->toBe('');
+});
+
 test('anything that is not a usable currency code is ignored', function (mixed $value) {
     [$usd, $pln] = ccShop();
     ccOn();
