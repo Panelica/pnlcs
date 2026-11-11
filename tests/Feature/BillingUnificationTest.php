@@ -311,8 +311,16 @@ test('a cart order invoice points its hosting line at the service, not the produ
     $service = Service::where('order_id', $order->id)->firstOrFail();
     $line = InvoiceItem::where('invoice_id', $order->invoice_id)->where('type', 'Hosting')->firstOrFail();
 
-    expect((int) $line->rel_id)->toBe($service->id)
-        ->and((int) $line->rel_id)->not->toBe($fx['product']->id);
+    expect((int) $line->rel_id)->toBe($service->id);
+
+    // The old bug wrote the product's id here instead, which "not the
+    // product's id" tells apart only while the two ids differ. In a parallel
+    // run they were both 21 - the two sequences are independent and each
+    // process starts them from scratch - and this failed on a line that was
+    // right. It is asked when it has something to say.
+    if ($service->id !== (int) $fx['product']->id) {
+        expect((int) $line->rel_id)->not->toBe($fx['product']->id);
+    }
 });
 
 test('placing an order through the cart fires the same events as any other order', function () {
