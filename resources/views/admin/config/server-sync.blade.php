@@ -47,7 +47,7 @@
                 <button type="submit" class="btn btn-default btn-xs">{{ __('admin.server_sync.price_list_clear') }}</button>
             </form>
         @endif
-        <p class="ssy-sub" style="margin:8px 0 0;">{{ __('admin.server_sync.price_list_help', ['columns' => implode(', ', $priceListColumns), 'cycles' => implode(', ', $cycles)]) }}</p>
+        <p class="ssy-sub" style="margin:8px 0 0;">{{ __('admin.server_sync.price_list_help', ['columns' => implode(', ', $priceListColumns), 'cycles' => $cycleNames]) }}</p>
     </div>
 </div>
 
@@ -115,7 +115,7 @@
                         <div class="ssy-sub" data-ssy-client-name>{{ $row['client_id'] ? ($clientLabels[$row['client_id']] ?? '') : '' }}</div>
                     </td>
                     <td>
-                        <select name="{{ $key }}[product_id]" class="form-control" disabled>
+                        <select name="{{ $key }}[product_id]" class="form-control" data-ssy-product disabled>
                             <option value="">-</option>
                             @foreach ($products as $product)
                                 <option value="{{ $product->id }}" @selected($row['product_id'] === $product->id)>{{ $product->name }}</option>
@@ -123,9 +123,9 @@
                         </select>
                     </td>
                     <td>
-                        <select name="{{ $key }}[billing_cycle]" class="form-control" disabled>
-                            @foreach ($cycles as $cycle)
-                                <option value="{{ $cycle }}" @selected($row['billing_cycle'] === $cycle)>{{ __('common.billing.'.strtolower(str_replace('-', '_', $cycle))) }}</option>
+                        <select name="{{ $key }}[billing_cycle]" class="form-control" data-ssy-cycle disabled>
+                            @foreach ($row['cycles'] as $cycle)
+                                <option value="{{ $cycle }}" @selected($row['billing_cycle'] === $cycle)>{{ cycle_label($cycle) }}</option>
                             @endforeach
                         </select>
                     </td>
@@ -162,6 +162,7 @@
     const submit = document.getElementById('ssy-submit');
     const labels = new Map([...document.querySelectorAll('#ssy-clients option')].map((o) => [o.value, o.textContent]));
     const maxRows = 100;
+    const productCycles = @js($productCycles);
 
     const picked = () => rows.filter((row) => row.querySelector('[data-ssy-pick]')?.checked);
     const refresh = () => {
@@ -183,6 +184,15 @@
         pick?.addEventListener('change', () => {
             row.querySelectorAll('input:not([data-ssy-pick]), select').forEach((field) => { field.disabled = !pick.checked; });
             refresh();
+        });
+        // The cycle list follows the product: what it sells, keeping the cycle already chosen when it still sells it.
+        const product = row.querySelector('[data-ssy-product]');
+        const cycle = row.querySelector('[data-ssy-cycle]');
+        product?.addEventListener('change', () => {
+            const options = productCycles[product.value] || productCycles[''];
+            const values = options.map((o) => o.value);
+            const keep = values.includes(cycle.value) ? cycle.value : (values.includes('annually') ? 'annually' : values[0]);
+            cycle.replaceChildren(...options.map((o) => new Option(o.label, o.value, false, o.value === keep)));
         });
         const client = row.querySelector('[data-ssy-client]');
         client?.addEventListener('input', () => {

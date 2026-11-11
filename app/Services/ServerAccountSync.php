@@ -29,14 +29,38 @@ use Throwable;
  */
 class ServerAccountSync
 {
-    public const CYCLES = ['Monthly', 'Quarterly', 'Semi-Annually', 'Annually', 'Biennially', 'Triennially'];
-
     /** The columns a price list may carry; client_email stands in for client_id. */
     public const PRICE_LIST_COLUMNS = ['domain', 'client_id', 'client_email', 'amount', 'billing_cycle', 'next_due_date'];
 
     private const CLOSED_STATUSES = ['terminated', 'cancelled', 'fraud'];
 
     public function __construct(private ModuleRegistry $registry) {}
+
+    /**
+     * The cycles an account sold with this product can be billed on: whatever
+     * the product sells, a term of months included, shortest first; the six
+     * named cycles when there is no product or it sells nothing.
+     *
+     * @return list<string>
+     */
+    public function cyclesFor(?Product $product): array
+    {
+        $priced = $product ? array_map('strval', array_keys($product->pricedCycles())) : [];
+
+        return $priced !== [] ? $priced : ProductCreator::CYCLES;
+    }
+
+    /**
+     * A cycle written any way BillingCycleHelper reads one ("Semi-Annually",
+     * "7 months") in the form services store it ("semiannually", "7months"),
+     * or null when it is not a cycle at all.
+     */
+    public static function normaliseCycle(?string $cycle): ?string
+    {
+        $months = BillingCycleHelper::months((string) $cycle);
+
+        return $months === null ? null : BillingCycleHelper::cycleForMonths($months);
+    }
 
     /**
      * The module for a server whose accounts can be listed and linked, or
@@ -107,7 +131,8 @@ class ServerAccountSync
             $domain = strtolower($account['domain']);
             $listed = $priceList[$domain] ?? [];
             $product = $this->productFor($account['package'] ?? $account['plan'], $products);
-            $cycle = in_array($listed['billing_cycle'] ?? null, self::CYCLES, true) ? $listed['billing_cycle'] : 'Annually';
+            $cycles = $this->cyclesFor($product);
+            $cycle = $listed['billing_cycle'] ?? (in_array('annually', $cycles, true) ? 'annually' : $cycles[0]);
             $price = $product?->priceFor($cycle);
 
             return $account + [
@@ -115,6 +140,8 @@ class ServerAccountSync
                 'client_id' => $listed['client_id'] ?? $clientByDomain->get($domain) ?? $clientByEmail->get(strtolower($account['email'])),
                 'product_id' => $product?->id,
                 'billing_cycle' => $cycle,
+                // A cycle from the price list stays on offer even when the product no longer sells it.
+                'cycles' => array_values(array_unique([...$cycles, $cycle])),
                 'amount' => $listed['amount'] ?? ($price === null ? '' : number_format($price, 2, '.', '')),
                 'next_due_date' => $listed['next_due_date'] ?? $this->nextAnniversary($account['created'], $cycle),
                 'from_price_list' => $listed !== [],
@@ -133,6 +160,7 @@ class ServerAccountSync
             ->whereRaw('LOWER(server_type) = ?', [strtolower((string) $server->type)])
             ->where('retired', false)
             ->orderBy('name')
+            ->with(['pricing', 'terms'])
             ->get();
     }
 
@@ -161,7 +189,7 @@ class ServerAccountSync
                     'qty' => 1,
                     'first_payment_amount' => $billing['amount'],
                     'amount' => $billing['amount'],
-                    'billing_cycle' => $billing['billing_cycle'],
+                    'billing_cycle' => self::normaliseCycle($billing['billing_cycle']) ?? $billing['billing_cycle'],
                     'next_due_date' => $billing['next_due_date'] ?: null,
                     'registration_date' => $account['created'] ?: now()->toDateString(),
                     'status' => $account['status'] === 'suspended' ? 'suspended' : 'active',
@@ -218,7 +246,7 @@ class ServerAccountSync
 
             $amount = str_replace(',', '.', trim((string) ($row['amount'] ?? '')));
             $due = trim((string) ($row['next_due_date'] ?? ''));
-            $cycle = collect(self::CYCLES)->first(fn ($c) => strcasecmp($c, trim((string) ($row['billing_cycle'] ?? ''))) === 0);
+            $cycle = self::normaliseCycle($row['billing_cycle'] ?? null);
 
             $rows[$domain] = array_filter([
                 'client_id' => ctype_digit(trim((string) ($row['client_id'] ?? ''))) ? (int) $row['client_id'] : null,

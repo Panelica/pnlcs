@@ -24,13 +24,14 @@ Each row opens with a guess you can change:
 |---|---|
 | Client | The price list; else a domain or service already in PNLCS; else the owner's email |
 | Product | The product whose Plesk plan matches the subscription's; the only Plesk product if there is one |
+| Cycle | The price list; else annually, or the product's shortest cycle when it does not sell annual terms. The list offers the cycles the product sells, terms of months included |
 | Amount | The price list; else the product's price for the cycle |
 | Next due date | The price list; else the next anniversary of the subscription's creation |
 | Status | Active, or suspended if the subscription is suspended on Plesk |
 
 ### Price list
 
-To fill many rows at once, upload a CSV with a header row and these columns: `domain`, `client_id` (or `client_email`), `amount`, `billing_cycle` (`Monthly`, `Quarterly`, `Semi-Annually`, `Annually`, `Biennially`, `Triennially`) and `next_due_date` (`YYYY-MM-DD`). Commas or semicolons both work, and any column can be left empty. The list is kept for your session; rows filled from it are marked.
+To fill many rows at once, upload a CSV with a header row and these columns: `domain`, `client_id` (or `client_email`), `amount`, `billing_cycle` (`Monthly`, `Quarterly`, `Semi-Annually`, `Annually`, `Biennially`, `Triennially`, or a term of 1 to 12 months written as `7 months`) and `next_due_date` (`YYYY-MM-DD`). Commas or semicolons both work, and any column can be left empty. The list is kept for your session; rows filled from it are marked.
 
 ```csv
 domain,client_id,amount,billing_cycle,next_due_date

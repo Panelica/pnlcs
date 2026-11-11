@@ -3,8 +3,11 @@
 use App\Models\Admin;
 use App\Models\AdminRole;
 use App\Models\Client;
+use App\Models\Currency;
+use App\Models\Pricing;
 use App\Models\Product;
 use App\Models\ProductGroup;
+use App\Models\ProductTerm;
 use App\Models\Server;
 use App\Models\Service;
 use App\Services\ServerAccountSync;
@@ -123,7 +126,7 @@ it('fills client, price, cycle and renewal from an uploaded price list', functio
     fakeSyncPlesk([11 => ['name' => 'rossi.it', 'owner' => 5]]);
     $server = syncServer();
     $client = Client::factory()->create();
-    $csv = "domain;client_id;amount;billing_cycle;next_due_date\nRossi.it;{$client->id};60,00;Biennially;2027-03-15\nnobody.it;999999;10;Annually;2027-01-01\n";
+    $csv = "domain;client_id;amount;billing_cycle;next_due_date\nRossi.it;{$client->id};60,00;7 Months;2027-03-15\nnobody.it;999999;10;Annually;2027-01-01\n";
 
     $this->actingAs(syncAdmin(), 'admin')
         ->post(route('admin.config.servers.sync.price-list', $server), [
@@ -135,7 +138,7 @@ it('fills client, price, cycle and renewal from an uploaded price list', functio
     expect($row)
         ->client_id->toBe($client->id)
         ->amount->toBe('60.00')
-        ->billing_cycle->toBe('Biennially')
+        ->billing_cycle->toBe('7months')
         ->next_due_date->toBe('2027-03-15')
         ->from_price_list->toBeTrue();
 });
@@ -160,13 +163,40 @@ it('imports the selected accounts as services linked to their subscription', fun
         ->domain->toBe('rossi.it')
         ->status->toBe('suspended')
         ->username->toBe('rossi')
-        ->billing_cycle->toBe('Annually')
+        ->billing_cycle->toBe('annually')
         ->and((float) $service->amount)->toBe(60.0)
         ->and($service->next_due_date->toDateString())->toBe('2027-02-20')
         ->and($service->registration_date->toDateString())->toBe('2019-02-20')
         ->and($service->module_data)->toMatchArray(['plesk_domain_id' => '11', 'plesk_client_id' => '5']);
 
     Http::assertNotSent(fn (Request $request) => preg_match('/<(set|del|add)>/', $request->body()) === 1);
+});
+
+it('offers the cycles the product sells and imports on a term of months', function () {
+    fakeSyncPlesk([11 => ['name' => 'rossi.it', 'owner' => 5, 'plan' => 'g-pro']]);
+    $server = syncServer();
+    $product = syncProduct('Hosting Pro');
+    $currency = Currency::getDefault() ?? Currency::create(['code' => 'USD', 'prefix' => '$', 'suffix' => '', 'format' => 1, 'rate' => 1.0, 'is_default' => true]);
+    Pricing::create(['type' => 'product', 'currency_id' => $currency->id, 'rel_id' => $product->id, 'monthly' => 10]);
+    ProductTerm::create(['product_id' => $product->id, 'currency_id' => $currency->id, 'months' => 7, 'price' => 63.0]);
+    $client = Client::factory()->create();
+
+    $row = $this->actingAs(syncAdmin(), 'admin')
+        ->get(route('admin.config.servers.sync', $server))
+        ->assertOk()
+        ->assertSee(cycle_label('7months'))
+        ->viewData('rows')[0];
+
+    expect($row)
+        ->cycles->toBe(['monthly', '7months'])
+        ->billing_cycle->toBe('monthly')
+        ->amount->toBe('10.00');
+
+    $this->post(route('admin.config.servers.sync.import', $server), ['rows' => [
+        11 => ['client_id' => $client->id, 'product_id' => $product->id, 'billing_cycle' => '7months', 'amount' => '63', 'next_due_date' => '2027-06-01'],
+    ]])->assertSessionHas('success');
+
+    expect(Service::where('server_id', $server->id)->sole()->billing_cycle)->toBe('7months');
 });
 
 it('does not import an account a live service already manages', function () {
