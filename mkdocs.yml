@@ -86,6 +86,7 @@ nav:
       - Configure Email: guides/configure-email.md
       - Payment Gateways: guides/payment-gateways.md
       - Connect a Server: guides/connect-a-server.md
+      - "Plesk: Existing Accounts": guides/plesk-existing-accounts.md
       - Live Servers: guides/live-servers.md
       - Modules: guides/modules.md
       - Sell Domains: guides/sell-domains.md
