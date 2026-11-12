@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\DomainPricing;
+use App\Support\DomainSuggestions;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\RateLimiter;
 
@@ -137,28 +138,18 @@ class DomainSearchController extends Controller
     /**
      * @param  array<string, array{domain: string, available: bool, checked: bool}>  $lookups
      */
-    /** The endings the operator wants suggested, in order, each with its leading dot. */
-    public const DEFAULT_SUGGESTIONS = '.com .net .org .io .co .dev .app .online .site .xyz';
+    /** Kept for the admin screen, which prints the built-in list as a placeholder. */
+    public const DEFAULT_SUGGESTIONS = DomainSuggestions::DEFAULT_SUGGESTIONS;
 
     /** @return array<int, string> */
     protected function suggestionTlds(): array
     {
-        $raw = (string) \App\Models\Setting::get('DomainSuggestionTlds', '');
-        $raw = trim($raw) === '' ? self::DEFAULT_SUGGESTIONS : $raw;
-
-        $tlds = [];
-        foreach (preg_split('/[\s,]+/', strtolower($raw), -1, PREG_SPLIT_NO_EMPTY) as $tld) {
-            $tlds[] = '.'.ltrim($tld, '.');
-        }
-
-        return array_values(array_unique($tlds));
+        return DomainSuggestions::tlds();
     }
 
     protected function suggestionCount(): int
     {
-        $count = (int) \App\Models\Setting::get('DomainSuggestionCount', 6);
-
-        return $count > 0 ? min($count, 12) : 6;
+        return DomainSuggestions::count();
     }
 
     protected function checkSingleDomain(string $sld, string $tld, $allTlds, array $lookups = []): ?array

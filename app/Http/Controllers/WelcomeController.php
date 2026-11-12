@@ -10,6 +10,7 @@ use App\Models\HomepageSection;
 use App\Models\Product;
 use App\Models\Server;
 use App\Services\Module\ModuleRegistry;
+use App\Support\DomainSuggestions;
 use Illuminate\Support\Facades\Cache;
 
 class WelcomeController extends Controller
@@ -26,10 +27,7 @@ class WelcomeController extends Controller
             ->orderBy('sort_order')
             ->get();
 
-        $domainPricing = DomainPricing::where('enabled', true)
-            ->orderBy('sort_order')
-            ->take(8)
-            ->get();
+        $domainPricing = $this->homepageDomainPricing();
 
         $sections = HomepageSection::where('is_enabled', true)
             ->orderBy('sort_order')
@@ -48,6 +46,46 @@ class WelcomeController extends Controller
             : [];
 
         return view('welcome', compact('products', 'domainPricing', 'sections', 'sectionContent', 'currency', 'apps'));
+    }
+
+    /**
+     * The TLDs shown on the front page.
+     *
+     * The operator's list in Admin > Settings > Domains is the order: only
+     * endings that are enabled and sold are taken, and anything missing is
+     * filled from the catalogue (popular first, then the operator's order,
+     * then the extension). This used to read only `sort_order`, which most of
+     * the catalogue shares, so the front page showed a different set on every
+     * request.
+     */
+    private function homepageDomainPricing()
+    {
+        $suggested = DomainSuggestions::tlds();
+
+        $available = DomainPricing::where('enabled', true)
+            ->whereIn('extension', $suggested)
+            ->get()
+            ->keyBy('extension');
+
+        $tlds = collect($suggested)
+            ->map(fn ($tld) => $available->get($tld))
+            ->filter()
+            ->take(8)
+            ->values();
+
+        if ($tlds->count() < 8) {
+            $tlds = $tlds->concat(
+                DomainPricing::where('enabled', true)
+                    ->when($tlds->isNotEmpty(), fn ($q) => $q->whereNotIn('extension', $tlds->pluck('extension')->all()))
+                    ->orderByDesc('is_popular')
+                    ->orderBy('sort_order')
+                    ->orderBy('extension')
+                    ->take(8 - $tlds->count())
+                    ->get()
+            )->values();
+        }
+
+        return $tlds;
     }
 
     /**
