@@ -2,6 +2,87 @@
 
 All notable changes to PNLCS are documented here. Newest first.
 
+## 1.27.0 — 2026-11-12
+
+A stable release, offered to every installation. Plesk is managed per
+subscription instead of per customer and can sell reseller accounts, a server's
+existing accounts are imported in one pass, and the front page shows the domain
+endings the operator chose.
+
+Thank you [@vvezzola](https://github.com/vvezzola) (#426, #427, #428, #429,
+#430, #431) and [@hedon77](https://github.com/hedon77) (#433).
+
+Nothing here had time on the beta channel; it goes out as it was reviewed,
+through the same gates.
+
+### Added
+
+- **Existing Plesk subscriptions can be linked to a billing service**, so a
+  site already running on Plesk can be suspended, renewed and terminated from
+  PNLCS. The picker on the manual add-service form lists the server's
+  subscriptions with the customer or reseller that owns each one, and linking
+  changes nothing on Plesk.
+- **Setup → Servers → Sync accounts**: every account on a server next to the
+  service that bills it, and the ones without a service imported in batches of
+  up to 100. Each row opens with a guess at the client (an uploaded price list,
+  else a domain or service already on record, else the owner's email), the
+  product (the one sold with the account's plan) and the renewal (the price
+  list, else the product's price and the next anniversary of the account's
+  creation). Nothing on the server is changed. The optional price list is a CSV
+  with `domain, client_id|client_email, amount, billing_cycle, next_due_date`.
+- **Plesk reseller accounts can be sold and managed.** A product whose package
+  is a reseller plan (listed as `Reseller: <plan>`) creates a reseller rather
+  than a customer and a subscription; suspend, unsuspend, terminate, password
+  and plan changes address the reseller. A reseller cannot be moved to a
+  service plan, or a subscription to a reseller plan: that is a new account.
+- **The sync page offers the terms the product sells**, terms of months
+  included, so an account can be imported on the seven-month term its product
+  is sold for.
+
+### Changed
+
+- **Plesk acts on the subscription a service bills for, not on its customer.**
+  Suspending took every other site that customer owned down with it, and
+  terminating deleted them; the Plesk customer is now removed only once nothing
+  of theirs is left on the server. A service recorded before the subscription
+  id was kept behaves as it did.
+- **The invoice numbering lock is per database.** A MySQL named lock belongs to
+  the server, so two installations on one MySQL server waited on each other's
+  invoice numbering. Within one database numbering is serialised exactly as
+  before.
+
+### Fixed
+
+- **The front page showed arbitrary domain endings.** It read the catalogue's
+  `sort_order`, which most of the catalogue shares, so a different set came
+  back on every request instead of the endings chosen in Admin → Settings →
+  Domains. The front page and the domain search now read one resolver, so they
+  cannot disagree about what is promoted.
+
+### For theme and module authors
+
+- A server module may offer `listAccounts()`, `listAccountDetails()`,
+  `linkedPanelAccount()` and `linkAccount()`; where it does, the add-service
+  form and the sync page use them. All four are optional and asked for by name,
+  so a module without them behaves exactly as before.
+- `App\Support\DomainSuggestions` is where the promoted endings are read;
+  `DomainSearchController::DEFAULT_SUGGESTIONS` still answers, as an alias.
+- `InvoiceService::numberLock()` is the lock name to use rather than the
+  `NUMBER_LOCK` constant.
+
+### Views a theme may override that changed
+
+- `admin/config/servers` — the Sync accounts link.
+- `admin/config/server-sync` — new.
+
+### For anyone running the test suite
+
+- `php artisan test --parallel` works: each process gets its own database copy,
+  its own route cache and its own numbering lock. The installer's tests share
+  `storage/installed.lock`, so they are grouped `serial` and run in a second
+  pass — `--parallel --exclude-group=serial`, then `--group=serial`. About three
+  and a half times faster on four processes. CONTRIBUTING has the commands.
+
 ## 1.26.0 — 2026-11-11
 
 A stable release, offered to every installation. Staff can confirm a customer's
