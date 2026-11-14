@@ -4,6 +4,7 @@ namespace Modules\Servers\Plesk;
 
 use App\Models\Server;
 use App\Models\Service;
+use App\Support\ServerAddress;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Log;
 use Modules\Servers\AbstractServerModule;
@@ -61,10 +62,14 @@ class PleskModule extends AbstractServerModule
      * the server form asks for a username and a password while calling the key
      * "Optional". Sending only the key meant an operator who filled the form in
      * the ordinary way was never authenticated at all.
+     *
+     * A key is tied to the address it was issued for, so the call stays on the
+     * address family of the recorded IP (ServerAddress::familyOptions).
      */
     private function http(Server $server)
     {
         $request = Http::withoutVerifying()
+            ->withOptions(ServerAddress::familyOptions(trim((string) $server->ip_address)))
             ->withHeaders([
                 'Content-Type' => 'application/json',
                 'Accept' => 'application/json',
@@ -215,6 +220,7 @@ class PleskModule extends AbstractServerModule
             $url = "https://{$this->serverHost($server)}:{$port}/enterprise/control/agent.php";
 
             $response = Http::withoutVerifying()
+                ->withOptions(ServerAddress::familyOptions(trim((string) $server->ip_address)))
                 ->withHeaders($headers)
                 ->timeout(30)
                 ->withBody("<packet>{$operations}</packet>", 'text/xml')

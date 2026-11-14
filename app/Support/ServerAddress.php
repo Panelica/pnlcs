@@ -93,6 +93,30 @@ class ServerAddress
         return strtolower($parts['host'] ?? '').':'.$port.':'.$ip;
     }
 
+    /**
+     * The cURL options that keep a call on the address family of the IP a
+     * server is recorded with.
+     *
+     * A hostname with both an A and an AAAA record is called over IPv6 when
+     * this machine has it, whatever address the server record carries. A
+     * panel that ties its API key to the caller's address (Plesk) then sees
+     * one the key was never issued for, and refuses a key that is right.
+     *
+     * @return array{curl?: array<int, int>}
+     */
+    public static function familyOptions(string $ip): array
+    {
+        if (filter_var($ip, FILTER_VALIDATE_IP, FILTER_FLAG_IPV4)) {
+            return ['curl' => [CURLOPT_IPRESOLVE => CURL_IPRESOLVE_V4]];
+        }
+
+        if (filter_var($ip, FILTER_VALIDATE_IP, FILTER_FLAG_IPV6)) {
+            return ['curl' => [CURLOPT_IPRESOLVE => CURL_IPRESOLVE_V6]];
+        }
+
+        return [];
+    }
+
     /** @param  (Closure(string): array<int, string>)|null  $resolver */
     public static function resolveUsing(?Closure $resolver): void
     {
