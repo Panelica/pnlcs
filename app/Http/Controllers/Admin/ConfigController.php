@@ -404,6 +404,7 @@ class ConfigController extends Controller
         return view('admin.config.currencies', [
             'currencies' => Currency::all(),
             'customerChoice' => (string) Setting::get(CustomerCurrency::SETTING, '0') === '1',
+            'currencyByRegion' => (string) Setting::get(CustomerCurrency::REGION_SETTING, '0') === '1',
             'autoUpdateRates' => (string) Setting::get('currency_auto_update', '1') === '1',
             'clientsPerCurrency' => $this->clientsPerCurrency(),
         ]);
@@ -434,18 +435,21 @@ class ConfigController extends Controller
     }
 
     /**
-     * Whether customers choose their own currency, and whether the rates are
-     * fetched every day. Both are read where they act: CustomerCurrency and
+     * Whether customers choose their own currency, whether a visitor starts
+     * in the currency of their country, and whether the rates are fetched
+     * every day. Each is read where it acts: CustomerCurrency and
      * pnlcs:currency-update.
      */
     public function updateCurrencySettings(Request $request)
     {
         $request->validate([
             'customer_choice' => 'nullable|boolean',
+            'by_region' => 'nullable|boolean',
             'auto_update_rates' => 'nullable|boolean',
         ]);
 
         Setting::set(CustomerCurrency::SETTING, $request->boolean('customer_choice') ? '1' : '0', 'billing');
+        Setting::set(CustomerCurrency::REGION_SETTING, $request->boolean('by_region') ? '1' : '0', 'billing');
         Setting::set('currency_auto_update', $request->boolean('auto_update_rates') ? '1' : '0', 'billing');
 
         return back()->with('success', __('admin.currencies.settings_saved'));

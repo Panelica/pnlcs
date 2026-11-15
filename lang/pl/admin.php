@@ -1031,6 +1031,8 @@ return [
     'currencies.customer_choice' => 'Pozwól klientom wybrać walutę',
     'currencies.customer_choice_hint' => 'Odwiedzający wybierają walutę na górnym pasku i widzą ceny przeliczone po bieżącym kursie. Konto, które zakładają, zachowuje tę walutę, a każda ich faktura pokazuje ją z kursem z dnia wystawienia. Kwoty są nadal księgowane w walucie domyślnej, a płatności kartą są zwykle pobierane w tej walucie. Walutę klienta zmienia personel w profilu klienta.',
     'currencies.customer_choice_needs_two' => 'Dodaj drugą walutę, aby klienci mieli z czego wybierać.',
+    'currencies.by_region' => 'Pokazuj odwiedzającym walutę ich kraju',
+    'currencies.by_region_hint' => 'Przy pierwszej wizycie ceny są pokazywane w walucie kraju, z którego pochodzi odwiedzający, jeśli jest to jedna z Twoich walut; w przeciwnym razie w walucie domyślnej. Kraj jest odczytywany z nagłówka ustawianego przez CDN lub serwer proxy (Cloudflare go wysyła), a gdy go brak, z regionu podanego przez przeglądarkę. To tylko pierwsze przypuszczenie: odwiedzający nadal może wybrać inną walutę na górnym pasku. Działa, gdy włączona jest opcja „Pozwól klientom wybrać walutę”.',
     'currencies.auto_update_rates' => 'Aktualizuj kursy walut codziennie',
     'currencies.auto_update_rates_hint' => 'Pobierane każdego ranka względem waluty domyślnej. Kurs wpisany tutaj zostanie zastąpiony przy następnej aktualizacji.',
     'currencies.update_rates_now' => 'Aktualizuj kursy teraz',

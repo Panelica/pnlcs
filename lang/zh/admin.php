@@ -1031,6 +1031,8 @@ return [
     'currencies.customer_choice' => '允许客户选择自己的货币',
     'currencies.customer_choice_hint' => '访客可在顶部栏选择货币，价格按当前汇率换算显示。他们开立的账户会保留该货币，每张发票都以该货币显示，并固定开票当天的汇率。金额仍以默认货币记账，银行卡付款通常也以默认货币扣款。客户的货币由工作人员在客户资料中更改。',
     'currencies.customer_choice_needs_two' => '请再添加一种货币供客户选择。',
+    'currencies.by_region' => '让访客以其所在国家的货币开始浏览',
+    'currencies.by_region_hint' => '首次访问时，价格以访客所在国家的货币显示，前提是该货币在您的货币列表中；否则以默认货币显示。国家信息取自您的 CDN 或代理设置的请求头（Cloudflare 会发送），若没有则取自浏览器声明的地区。这只是初步推测：访客仍可在顶部栏选择其他货币。需开启“允许客户选择自己的货币”才会生效。',
     'currencies.auto_update_rates' => '每天更新汇率',
     'currencies.auto_update_rates_hint' => '每天早上以默认货币为基准获取。在此手动填写的汇率会在下次更新时被替换。',
     'currencies.update_rates_now' => '立即更新汇率',

@@ -1031,6 +1031,8 @@ return [
     'currencies.customer_choice' => 'Let customers choose their currency',
     'currencies.customer_choice_hint' => 'Visitors pick a currency from the top bar and see prices converted at the current rate. The account they open keeps that currency, and each of their invoices shows it with the rate of the day fixed on it. Amounts are still recorded in the default currency, and card payments are usually charged in it. Staff change a customer\'s currency on the client\'s profile.',
     'currencies.customer_choice_needs_two' => 'Add a second currency for customers to choose from.',
+    'currencies.by_region' => 'Start visitors in the currency of their country',
+    'currencies.by_region_hint' => 'On a first visit prices are shown in the currency of the country the visitor comes from, when it is one of your currencies; otherwise in the default currency. The country is read from the header your CDN or proxy sets (Cloudflare sends one), else from the region the browser states. It is a first guess only: the visitor can still pick another currency from the top bar. Works when "Let customers choose their currency" is on.',
     'currencies.auto_update_rates' => 'Update exchange rates every day',
     'currencies.auto_update_rates_hint' => 'Fetched each morning against the default currency. A rate typed here is replaced by the next update.',
     'currencies.update_rates_now' => 'Update rates now',

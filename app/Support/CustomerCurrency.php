@@ -22,7 +22,9 @@ use Throwable;
  * meaningful with a second currency defined.
  *
  * Who chooses: a visitor, for the session, from the top bar; the choice is
- * kept on the account they open. After that the account's currency is
+ * kept on the account they open. Until they choose, a visitor sees the shop
+ * currency - or, when the operator asks for it, the currency of the country
+ * they are visiting from (forRegion). After that the account's currency is
  * changed by staff, on the client's profile - a link a customer can be sent
  * to must not be able to change what their next invoice is billed in.
  */
@@ -30,6 +32,9 @@ class CustomerCurrency
 {
     /** The setting that switches the feature on. */
     public const SETTING = 'CustomerCurrencyChoice';
+
+    /** The setting that starts a visitor in the currency of their country. */
+    public const REGION_SETTING = 'CustomerCurrencyByRegion';
 
     /** Where a visitor's choice is kept for the session. */
     public const SESSION_KEY = 'display_currency_id';
@@ -109,25 +114,81 @@ class CustomerCurrency
     }
 
     /**
-     * The currency a new account starts in: the one the visitor picked in the
-     * top bar during this session, if the feature is on and it still exists.
+     * The currency a new account starts in: the one the visitor was shown
+     * prices in - picked in the top bar during this session, or the one of
+     * their country - if the feature is on and it still exists. The account
+     * is billed in what the order form showed.
      */
     public static function chosenForNewAccount(Request $request): ?int
     {
-        if (! self::enabled() || ! $request->hasSession()) {
+        if (! self::enabled()) {
             return null;
         }
 
-        $currency = Currency::find((int) $request->session()->get(self::SESSION_KEY));
+        return self::forVisitor($request)?->id;
+    }
 
-        return self::usable($currency) ? $currency->id : null;
+    /**
+     * The currency of the country a visitor comes from, when the operator
+     * starts visitors there and the shop has that currency with a rate.
+     *
+     * A first guess and nothing more: the country is read from the header the
+     * CDN or proxy in front of the shop sets, else from the region the browser
+     * states (pl-PL), and either can be wrong. So it never overrides a choice
+     * from the top bar, and nothing is stored - the visitor who picks another
+     * currency has simply chosen.
+     */
+    public static function forRegion(Request $request): ?Currency
+    {
+        try {
+            if ((string) Setting::get(self::REGION_SETTING, '0') !== '1') {
+                return null;
+            }
+        } catch (Throwable) {
+            return null;
+        }
+
+        $code = CountryCurrency::for(GeoLocale::country($request) ?? GeoLocale::countryFromBrowser($request));
+
+        if ($code === null) {
+            return null;
+        }
+
+        $currency = Currency::where('code', $code)->first();
+        $shop = Currency::getDefault();
+
+        // The shop currency is what a visitor sees anyway: not a guess worth
+        // carrying onto the account they open.
+        if (! $currency || ! $shop || $currency->id === $shop->id) {
+            return null;
+        }
+
+        return self::usable($currency) ? $currency : null;
+    }
+
+    /**
+     * What a visitor without an account is shown prices in, other than the
+     * shop currency: their own choice this session, else their country's.
+     */
+    private static function forVisitor(Request $request): ?Currency
+    {
+        if ($request->hasSession()) {
+            $chosen = Currency::find((int) $request->session()->get(self::SESSION_KEY));
+
+            if (self::usable($chosen)) {
+                return $chosen;
+            }
+        }
+
+        return self::forRegion($request);
     }
 
     /**
      * The currency the current visitor sees prices in.
      *
      * A logged-in customer: their account's currency. A visitor: the one
-     * picked this session. Anyone else, or with the feature off: the shop's.
+     * picked this session, else the one of their country where the operator
+     * starts visitors there. Anyone else, or with the feature off: the shop's.
      */
     public static function resolve(Request $request, ?Client $client): ?Currency
     {
@@ -141,15 +202,7 @@ class CustomerCurrency
             return ($client->currency_id ? self::forClient($client) : null) ?? $shop;
         }
 
-        if ($request->hasSession()) {
-            $chosen = Currency::find((int) $request->session()->get(self::SESSION_KEY));
-
-            if (self::usable($chosen)) {
-                return $chosen;
-            }
-        }
-
-        return $shop;
+        return self::forVisitor($request) ?? $shop;
     }
 
     /**

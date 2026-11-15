@@ -1021,6 +1021,8 @@ return [
     'currencies.customer_choice' => 'Müşteriler kendi para birimini seçebilsin',
     'currencies.customer_choice_hint' => 'Ziyaretçiler üst çubuktan bir para birimi seçer ve fiyatları güncel kurla çevrilmiş görür. Açtıkları hesap bu para birimini korur; her faturaları bu para biriminde, o günün kuru üzerine sabitlenmiş olarak gösterilir. Tutarlar yine varsayılan para biriminde kaydedilir ve kartla ödemeler çoğunlukla onun üzerinden çekilir. Bir müşterinin para birimini personel, müşteri profilinden değiştirir.',
     'currencies.customer_choice_needs_two' => 'Müşterilerin seçebilmesi için ikinci bir para birimi ekleyin.',
+    'currencies.by_region' => 'Ziyaretçiler ülkelerinin para birimiyle başlasın',
+    'currencies.by_region_hint' => 'İlk ziyarette fiyatlar, ziyaretçinin geldiği ülkenin para biriminde gösterilir; o para birimi sizde tanımlı değilse varsayılan para biriminde. Ülke, CDN ya da vekil sunucunuzun eklediği başlıktan (Cloudflare gönderir), yoksa tarayıcının bildirdiği bölgeden okunur. Bu yalnızca bir ilk tahmindir: ziyaretçi üst çubuktan başka bir para birimi seçebilir. "Müşteriler kendi para birimini seçebilsin" açıkken çalışır.',
     'currencies.auto_update_rates' => 'Döviz kurlarını her gün güncelle',
     'currencies.auto_update_rates_hint' => 'Her sabah varsayılan para birimine göre çekilir. Buraya elle yazılan kur bir sonraki güncellemede değişir.',
     'currencies.update_rates_now' => 'Kurları şimdi güncelle',
