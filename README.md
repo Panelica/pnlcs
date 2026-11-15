@@ -1532,7 +1532,7 @@ Client-by-client setup lives in [`mcp/README.md`](mcp/README.md).
 - Webhook routes are CSRF-exempt but validated by HMAC signatures
 - Eloquent ORM everywhere (no raw SQL concatenation)
 
-Please report security issues privately to **security@panelica.com** rather
+Please report security issues privately to **security@pnlcs.com** rather
 than opening a public GitHub issue; see [SECURITY.md](SECURITY.md).
 
 ---
@@ -1769,8 +1769,8 @@ Need help, have an idea, or want to show what you built?
 - 📖 **Documentation** — [docs.pnlcs.com](https://docs.pnlcs.com/), starting with the [installation guide](https://docs.pnlcs.com/install/)
 - 🐛 **Bug reports** — [GitHub Issues](https://github.com/Panelica/pnlcs/issues), with steps to reproduce
 - 🌐 **Website** — [pnlcs.com](https://pnlcs.com/)
-- 📧 **Email** — [info@panelica.com](mailto:info@panelica.com)
-- 🔒 **Security disclosures** — [security@panelica.com](mailto:security@panelica.com) *(please do not open public issues for security)*
+- 📧 **Email** — [info@pnlcs.com](mailto:info@pnlcs.com)
+- 🔒 **Security disclosures** — [security@pnlcs.com](mailto:security@pnlcs.com) *(please do not open public issues for security)*
 
 Questions get the fastest answer on the community, where other PNLCS users
 can help as well as the team. Since PNLCS is a side project for the Panelica

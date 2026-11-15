@@ -3,7 +3,7 @@
     $c = $content ?? collect();
     $bName = $brandName ?? 'PNLCS';
     $bUrl = $brandUrl ?? 'https://www.panelica.com';
-    $bEmail = $c->has('email') ? $c->get('email')->content_value : ($brandEmail ?? 'info@panelica.com');
+    $bEmail = $c->has('email') ? $c->get('email')->content_value : ($brandEmail ?? 'info@pnlcs.com');
     $bCopyright = $brandCopyright ?? $bName;
 @endphp
 <footer class="footer" style="padding: 48px 0 0;">

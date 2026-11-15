@@ -20,7 +20,7 @@ The current release is shown in the PNLCS admin footer and on the [Releases page
 
 ### Preferred channel
 
-**Email:** [security@panelica.com](mailto:security@panelica.com)
+**Email:** [security@pnlcs.com](mailto:security@pnlcs.com)
 
 Please include:
 
@@ -91,7 +91,7 @@ ship a fix first. Thank you — PNLCS is safer because of you.
 | 2026-10-22 | Ertuğrul Keyvan (ikahost) | A review of the source: no effective limit on passwords tried at the API and a different answer for an account with a second factor; the same mail-link host problem; and a theme upload, behind `manage_settings`, running code. Fixed in 1.15.0. |
 
 If you have reported something and would like to be listed, or listed
-differently, write to [security@panelica.com](mailto:security@panelica.com).
+differently, write to [security@pnlcs.com](mailto:security@pnlcs.com).
 
 ## Safe harbour
 
@@ -102,6 +102,6 @@ We will not pursue legal action against good-faith security researchers who:
 - Give us reasonable time to fix the issue before public disclosure
 - Do not exploit findings beyond what's necessary to demonstrate the issue
 
-When in doubt, ask first — [security@panelica.com](mailto:security@panelica.com) — and we'll work it out together.
+When in doubt, ask first — [security@pnlcs.com](mailto:security@pnlcs.com) — and we'll work it out together.
 
 Thanks for helping keep PNLCS and its users safe.

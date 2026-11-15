@@ -237,8 +237,8 @@ class HomepageSectionSeeder extends Seeder
                 'is_enabled' => true,
                 'content' => [
                     ['key' => 'description', 'value' => 'PNLCS is the billing & hosting management platform by Panelica. Domains, hosting, VPS, and SSL — all under one roof.', 'type' => 'text'],
-                    ['key' => 'email', 'value' => 'info@panelica.com', 'type' => 'text'],
-                    ['key' => 'support_email', 'value' => 'support@panelica.com', 'type' => 'text'],
+                    ['key' => 'email', 'value' => 'info@pnlcs.com', 'type' => 'text'],
+                    ['key' => 'support_email', 'value' => 'support@pnlcs.com', 'type' => 'text'],
                     ['key' => 'website', 'value' => 'panelica.com', 'type' => 'text'],
                 ],
             ],

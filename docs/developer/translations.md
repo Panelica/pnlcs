@@ -112,7 +112,7 @@ Either way works:
   `php artisan test --filter=Translation`.
 - **An export from your own install.** On **Setup → Languages → Translate →
   Export JSON**, translate the file, and send it to
-  [info@panelica.com](mailto:info@panelica.com) or attach it to a
+  [info@pnlcs.com](mailto:info@pnlcs.com) or attach it to a
   [GitHub issue](https://github.com/Panelica/pnlcs/issues). We review it,
   merge it and credit you by name, in the changelog and under
   **Translators** in the README.

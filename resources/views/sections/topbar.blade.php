@@ -3,7 +3,7 @@
     <div class="container">
         <div class="top-bar__inner">
             <div class="top-bar__left">
-                <a href="mailto:{{ $brandEmail ?? 'info@panelica.com' }}" class="top-bar__item"><i class="ri-mail-line"></i> {{ $brandEmail ?? 'info@panelica.com' }}</a>
+                <a href="mailto:{{ $brandEmail ?? 'info@pnlcs.com' }}" class="top-bar__item"><i class="ri-mail-line"></i> {{ $brandEmail ?? 'info@pnlcs.com' }}</a>
                 <div class="top-bar__divider"></div>
                 <a href="{{ url('/client/contact') }}" class="top-bar__item"><i class="ri-headphone-line"></i> {{ __('sections.topbar.contact') }}</a>
                 <div class="top-bar__divider"></div>
