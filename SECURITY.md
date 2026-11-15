@@ -8,8 +8,8 @@ If you find something, we want to hear about it.
 
 | Branch | Status |
 |---|---|
-| `main` (latest tagged release) | Receives security patches |
-| Last minor release before `main` | Best-effort backports for critical issues |
+| Latest stable release | Receives security patches |
+| The minor release before it | Best-effort backports for critical issues |
 | Older releases | Please upgrade |
 
 The current release is shown in the PNLCS admin footer and on the [Releases page](../../releases).
@@ -56,7 +56,7 @@ We follow coordinated disclosure: we'd like to ship a fix and notify operators b
 - Authentication, RBAC, session and token handling
 - Payment gateway integrations (Stripe, PayPal, Bank Transfer, Authorize.Net, etc.)
 - Registrar / domain adapters (Enom, Manual, etc.)
-- Server adapters (Panelica, cPanel, Plesk, DirectAdmin, Proxmox, Custom)
+- Server adapters (Panelica, cPanel, Plesk, DirectAdmin, Proxmox, Custom, etc.)
 - Templates and views shipped in the default themes
 - Default install / upgrade scripts published from this repository
 
