@@ -381,6 +381,25 @@ class InvoiceGenerationService
     }
 
     /**
+     * The setup fee lines a free-setup code waives: every one for an
+     * unrestricted code, those of the services it covers for a restricted one
+     * - the same services coveredItems() picks, so a code limited to one
+     * product per order waives one setup fee.
+     *
+     * @return Collection<array-key, mixed>
+     */
+    private function setupLines(Invoice $invoice, Promotion $promo): Collection
+    {
+        $setup = $invoice->items->where('type', 'Setup');
+
+        if (! $this->isRestricted($promo)) {
+            return $setup->values();
+        }
+
+        return $setup->whereIn('rel_id', $this->coveredItems($invoice, $promo)->pluck('rel_id')->all())->values();
+    }
+
+    /**
      * The groups a promo code is split into, each with the taxed flag its
      * line gets: one group per VAT the covered lines carry. The group without
      * a VAT is split into taxed and untaxed lines, as the group discount
@@ -576,7 +595,13 @@ class InvoiceGenerationService
             // percentage was taken off the WHOLE subtotal - a "50% off
             // product A" code on a mixed invoice discounted everything else
             // in the cart too.
-            $base = min($this->coveredAmount($invoice, $promo), $subtotal);
+            // A free-setup code waives the setup fee lines of what it covers
+            // and nothing else.
+            $lines = $promo->givesFreeSetup() ? $this->setupLines($invoice, $promo) : null;
+
+            $base = $lines !== null
+                ? (float) $lines->sum(fn ($item) => (float) $item->amount * (int) $item->qty)
+                : min($this->coveredAmount($invoice, $promo), $subtotal);
 
             if ($base <= 0) {
                 return false;
@@ -588,6 +613,7 @@ class InvoiceGenerationService
             $discount = match ($promo->type) {
                 'percentage' => round($base * ($promo->value / 100), 2),
                 'fixed', 'fixed_amount' => min((float) $promo->value, $base),
+                'free_setup' => round($base, 2),
                 default => 0.0,
             };
 
@@ -617,7 +643,7 @@ class InvoiceGenerationService
             // untaxed work off the taxable amount, down to below zero. A
             // percentage is worked out on each group; a fixed amount is shared
             // by each group's net.
-            $groups = $this->promoGroups($this->coveredItems($invoice, $promo), $hasTaxable)
+            $groups = $this->promoGroups($lines ?? $this->coveredItems($invoice, $promo), $hasTaxable)
                 ->map(fn ($group) => $group + ['net' => (float) $group['lines']->sum(fn ($item) => (float) $item->amount * (int) $item->qty)])
                 ->filter(fn ($group) => $group['net'] > 0)
                 ->values();
