@@ -341,7 +341,7 @@ class InvoiceGenerationService
 
     private function isRestricted(Promotion $promo): bool
     {
-        return $promo->coveredProductIds() !== [] || $promo->billingCycles() !== [];
+        return $promo->coveredProductIds() !== [] || $promo->billingCycles() !== [] || $promo->productLimit() > 0;
     }
 
     /**
@@ -366,10 +366,18 @@ class InvoiceGenerationService
 
         // A code limited to some billing periods discounts only the lines on
         // one of them: a monthly service ordered with a yearly code pays in full.
-        return $serviceItems
+        $eligible = $serviceItems
             ->filter(fn ($item) => ($service = $services[$item->rel_id] ?? null)
                 && ($covered === [] || in_array((int) $service->product_id, $covered, true))
                 && $promo->coversCycle($service->billing_cycle));
+
+        // A code limited to so many products per order: the same choice the
+        // cart made (Promotion::pickLimited), so the invoice bills what the
+        // cart quoted.
+        return collect($promo->pickLimited(
+            $eligible->values()->all(),
+            fn ($item) => (float) $item->amount * (int) $item->qty,
+        ))->values();
     }
 
     /**

@@ -600,17 +600,24 @@ class CartService
                 // 50 off and billed 5 off.
                 // Likewise a code limited to some billing periods: a month taken
                 // with a code meant for a year is charged in full.
+                // And a code limited to so many products per order: of the
+                // eligible ones, the highest-priced are the ones discounted.
                 $covered = $promo->coveredProductIds();
 
-                if ($covered !== [] || $promo->billingCycles() !== []) {
+                if ($covered !== [] || $promo->billingCycles() !== [] || $promo->productLimit() > 0) {
                     $sides = ['taxable' => 0.0, 'untaxed' => 0.0];
+                    $eligible = [];
 
                     foreach ($items as $index => $item) {
                         if (($item['type'] ?? 'product') !== 'domain'
                             && ($covered === [] || in_array((int) ($item['product_id'] ?? 0), $covered, true))
                             && $promo->coversCycle($item['billing_cycle'] ?? null)) {
-                            $sides[($taxFlags['items'][$index] ?? true) ? 'taxable' : 'untaxed'] += (float) ($item['price'] ?? 0);
+                            $eligible[$index] = $item;
                         }
+                    }
+
+                    foreach ($promo->pickLimited($eligible, fn ($item) => (float) ($item['price'] ?? 0)) as $index => $item) {
+                        $sides[($taxFlags['items'][$index] ?? true) ? 'taxable' : 'untaxed'] += (float) ($item['price'] ?? 0);
                     }
 
                     $discountable = min(array_sum($sides), $discountable);
@@ -819,7 +826,8 @@ class CartService
             return false;
         }
 
-        if ($promo->billingCycles() === []) {
+        // A limit counts products, so the basket has to hold one.
+        if ($promo->billingCycles() === [] && $promo->productLimit() === 0) {
             return true;
         }
 
