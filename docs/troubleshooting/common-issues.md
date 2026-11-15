@@ -207,7 +207,7 @@ The password is hashed when it is saved.
 
 ## Still stuck?
 
-- Search or ask on the [community forum](https://forum.panelica.com).
+- Search or ask on the [community](https://community.pnlcs.com/).
 - Open a [GitHub issue](https://github.com/Panelica/pnlcs/issues) with the
   exact error from `storage/logs/` and the steps to reproduce it.
 - See also the [FAQ](faq.md).

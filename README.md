@@ -70,7 +70,7 @@ with other control panels too — so we built one.
 - Payment gateways: Stripe, PayPal, Authorize.Net, iyzico, Mollie, Razorpay,
   Tpay and bank transfer
 - Domain registrars: Enom, Namecheap, ResellerClub, OpenProvider,
-  DomainNameAPI and HRD
+  DomainNameAPI, HRD and OVH
 - Multi-language UI (30 locales, admin-editable translations)
 
 Bug reports, typos and translation improvements are always welcome. We read
@@ -123,7 +123,7 @@ Panelica is simply where PNLCS feels most at home.
 *Admin dashboard with revenue, orders, and ticket overview*
 
 ![Language Manager](docs/screenshots/admin-languages.png)
-*Built-in translation editor — 30 locales, 2,232 translation keys, AI-assisted bulk translate*
+*Built-in translation editor — 30 locales, over 8,000 translation keys, AI-assisted bulk translate*
 
 ![Appearance & Themes](docs/screenshots/admin-appearance.png)
 *WordPress-style theme system with 16 built-in themes, logo/favicon upload, dark mode toggle, and homepage builder*
@@ -149,7 +149,7 @@ options built in one step. [Full detail below](#selling-vps-on-proxmox-ve)*
 
 ![One-click apps on the homepage](docs/screenshots/homepage-apps.png)
 *The app showcase: 98 applications a customer can install into their hosting,
-with the logos shipped in the repository. Heading, copy, button and how many
+95 of them with a logo shipped in the repository. Heading, copy, button and how many
 apps to show are all editable from the admin Homepage screen*
 
 ### Client Portal — Virtual Servers
@@ -207,7 +207,7 @@ marked before it is chosen, not after it fails*
 - **Orders & invoices** — manual create, bulk actions, mass mail, PDF export
 - **Products & bundles** — configurable options, addons, pricing matrices
 - **Ticket system** — internal notes, escalation rules, spam filter
-- **Reports** — revenue, conversion funnel, MRR, churn, affiliate stats
+- **Reports** — income, forecasts, tax liability, customer retention and churn, tickets, affiliates (27 built-in reports)
 - **Bulk operations** — mass email, bulk invoice, bulk service status update
 - **Calendar** — events, reminders, scheduled tasks
 - **Quotes & projects** — WHMCS-style pre-sales flow
@@ -246,7 +246,7 @@ marked before it is chosen, not after it fails*
 
 ### 💳 Billing & Automation
 
-- **Recurring billing** — monthly, quarterly, semi-annually, annually, biennially
+- **Recurring billing** — monthly, quarterly, semi-annually, annually, biennially, triennially
 - **Auto-suspend** unpaid services after configurable grace period
 - **Late fees**, promotions, coupons, tax rules by country and state
 - **Overage billing** — disk / bandwidth metering, opt-in per product
@@ -458,7 +458,7 @@ service and manages it from then on.
 |-----------|---------|
 | PHP       | **8.4** (the locked Symfony 8 dependencies require it — 8.3 installs, then answers every request with a 500) |
 | Database  | MySQL 8.0 or MariaDB 10.6+ |
-| Node.js   | 18+ (20 LTS recommended) — only needed to build the frontend assets |
+| Node.js   | 20.19+ or 22.12+ — only needed to build the frontend assets |
 | Composer  | 2.x |
 | Web server | Nginx or Apache with PHP-FPM |
 | Tools     | `git`, `unzip`, `curl`, `cron` |
@@ -670,7 +670,7 @@ sudo systemctl enable --now php-fpm mysqld nginx
 php -v          # PHP 8.4.x — 8.3 will 500 at runtime
 php -m | grep -E '^(bcmath|curl|dom|fileinfo|gd|intl|mbstring|openssl|pdo_mysql|tokenizer|xml|zip)$' | wc -l   # 12
 mysql --version # MySQL 8.0 / MariaDB 10.6 or newer
-node -v         # v18 or newer
+node -v         # v20.19 or newer
 composer -V     # Composer version 2.x
 ```
 
@@ -795,7 +795,7 @@ output shows.
 
 The wizard's seeding provides everything an installation starts with: four
 starter currencies (USD, EUR, GBP, TRY), ticket departments and statuses,
-25 email templates, 30 languages, the full translation set, the knowledge
+33 email templates, 30 languages, the full translation set, the knowledge
 base, and default homepage sections.
 
 *Headless installs only:* if you are scripting an installation with no
@@ -1027,159 +1027,69 @@ exact shape our own production installs use:
 
 ## Updating
 
-PNLCS updates in place — latest code, database migrations, and rebuilt frontend
-assets — without touching your data.
+PNLCS is updated from **signed releases**, never from the code under
+development. An update keeps everything that belongs to your installation —
+`.env`, `storage/`, the database's data, your own theme, modules and hook
+files, the email templates and translations you edited. It stops and asks
+when one of your changes clashes with the new version, and puts every file
+and the database back by itself if anything goes wrong.
+
+There are two channels, chosen on **Setup → Updates**: **Stable** (the
+default) and **Beta**, which gets new releases about a week earlier. PNLCS
+looks for a newer release once a day and tells you; nothing is installed
+until an administrator asks for it.
+
+### From the admin area
+
+1. **Setup → Updates → Check this update.** The release is downloaded, its
+   signature is verified, and it is compared with your installation. Nothing
+   is changed yet: you see what will be updated and which of your changes are
+   merged or kept.
+2. If you changed a file the new version changes in the same place, choose
+   for each one: the new version, yours, or the merged text.
+3. **Update now.** The site goes into maintenance for the few seconds it
+   takes, a snapshot of the database is taken, the files are written, the
+   migrations run and the new version is checked. If any step fails,
+   everything is put back and the site returns on the version it had.
+
+### From the command line
+
+Run as the web server user (the owner of the PNLCS files):
+
+```bash
+php artisan pnlcs:update --check     # compare, change nothing
+php artisan pnlcs:update             # update to the newest release on your channel
+php artisan pnlcs:update-rollback    # put back an update that was cut off
+```
 
 ### Docker
 
-One command pulls the latest release into a running container:
-
 ```bash
-docker exec pnlcs /usr/local/bin/update.sh
+docker exec pnlcs /usr/local/bin/update.sh            # update
+docker exec pnlcs /usr/local/bin/update.sh --check    # compare only
 ```
 
-It runs `git reset --hard origin/main` → `composer install` → `php artisan migrate`
-→ `npm run build` → cache rebuild → php-fpm reload. Your database and uploaded
-files live on the `pnlcs_app` volume and are left untouched.
+`update.sh` runs the same updater, then reloads PHP. Your database and
+uploaded files live on the volumes and are left untouched. Set `AUTO_UPDATE=1`
+on the container to apply the newest release on every start.
 
-Set `AUTO_UPDATE=1` on the container to pull the latest code automatically on
-every restart.
+It updates PNLCS, **not the image**: nginx, PHP and the entrypoint come from
+the image, and a fix to any of them arrives by pulling the tag again and
+recreating the container with the same volumes. Images before **1.5** reset
+the code to the development branch on every update and discarded changes made
+inside the container; pull `panelica/pnlcs-runtime:1.5` and recreate the
+container before you update.
 
-#### `500 — Composer detected issues in your platform: PHP >= 8.4.0`
+### Installations cloned with git
 
-The web server's PHP-FPM is older than the PHP that ran `composer install`.
-The dependencies are locked against PHP 8.4, so the page dies before Laravel
-even boots - and because it dies that early, `storage/logs` stays empty.
-Point the site (or pool) at PHP 8.4: on a panel, change the domain's PHP
-version; on raw nginx, fix the `fastcgi_pass` socket.
+An installation cloned with git is compared with the commit it was cloned at,
+so your changes are kept just the same, and from its first update on it is a
+release installation. Keep using the updater, not `git pull`: `main` is the
+code under development, not a release.
 
-#### `fatal: detected dubious ownership in repository`
-
-If `update.sh` stops with:
-
-```
-fatal: detected dubious ownership in repository at '/var/www/pnlcs'
-```
-
-Git is refusing to run because the code directory is owned by a different user
-than the one running the update (a normal effect of the `pnlcs_app` volume).
-Mark the directory as trusted once — the exception is permanent, so later
-updates run cleanly:
-
-```bash
-docker exec pnlcs git config --global --add safe.directory /var/www/pnlcs
-docker exec pnlcs /usr/local/bin/update.sh
-```
-
-Already inside the container shell (`/var/www/pnlcs #`)? Run it without
-`docker exec`:
-
-```bash
-git config --global --add safe.directory /var/www/pnlcs
-/usr/local/bin/update.sh
-```
-
-> The update resets the working tree to `origin/main`, so any manual edits made
-> **inside** the container are discarded — all code is served from this
-> repository. Keep customisations in your own fork or theme, not in the running
-> container.
-
-### Self-hosted (without Docker)
-
-If you installed PNLCS directly on a server (see
-[Self-Hosted Installation](#self-hosted-installation-without-docker) above),
-you update it **in place** — new code, migrations and rebuilt assets, your data
-untouched. Run everything from the PNLCS directory **as the web server user**,
-with the same `pn` helper as the installation:
-
-```bash
-cd /var/www/pnlcs
-pn() { sudo -u www-data HOME=/tmp/pnlcs-home COMPOSER_HOME=/tmp/pnlcs-home/composer "$@"; }   # AlmaLinux/Rocky: -u apache
-```
-
-**1. Back up and pause the app.**
-```bash
-pn php artisan down                                   # maintenance page for visitors
-pn php artisan pnlcs:db-backup                        # database snapshot → storage/app/backups/db/
-```
-
-**2. Pull the latest code.**
-```bash
-pn git pull origin main
-```
-
-**3. Update PHP dependencies.** (AlmaLinux/Rocky: `pn /usr/local/bin/composer …`)
-```bash
-pn composer install --no-dev --optimize-autoloader --no-interaction
-```
-
-**4. Apply new database migrations.**
-```bash
-pn php artisan migrate --force
-```
-
-**5. Rebuild the frontend assets.**
-```bash
-pn npm ci
-pn npm run build
-```
-
-**6. Rebuild the cached config, routes and views.**
-```bash
-pn php artisan optimize
-```
-
-**7. Reload PHP so the new code goes live.**
-```bash
-sudo systemctl reload php8.4-fpm      # AlmaLinux/Rocky: sudo systemctl reload php-fpm
-```
-Do not skip this one. PHP's opcode cache can keep serving the previous code
-for a while after the files change; on one of our own installs that showed up
-as `Route [...] not defined` and a 500 on the dashboard until PHP-FPM was
-reloaded.
-
-**8. Bring the app back up.**
-```bash
-pn php artisan up
-```
-
-If you run a permanent queue worker (installation step 14), restart it too:
-`pn php artisan queue:restart`.
-
-We ran this exact sequence on a Debian 13 install: maintenance mode on,
-pull, composer, migrations, `npm ci`, build, cache, reload, back live — no
-errors, site answering 200 afterwards.
-
-**Errors here almost always mean the tree is not owned by the web user.**
-`fatal: detected dubious ownership in repository` from `git`, or `EACCES` from
-`npm`, means some files belong to `root` — typically from an older
-installation that ran commands with plain `sudo`. Fix it once and re-run:
-
-```bash
-sudo chown -R www-data:www-data /var/www/pnlcs     # AlmaLinux/Rocky: apache:apache
-```
-
-### Inside a hosting-panel account (Panelica, cPanel, …)
-
-The same in-place update, but with the account's own tools instead of root —
-no `sudo`, no `systemctl`. Run everything from the project directory with the
-panel's PHP binary (on Panelica that is `php84`):
-
-```bash
-cd ~/example.com/pnlcs
-php84 artisan down                                        # maintenance page
-git pull origin main
-php84 /usr/local/bin/composer install --no-dev --optimize-autoloader
-php84 artisan migrate --force                             # applies new migrations
-npm ci && npm run build                                   # the account's Node
-php84 artisan optimize                                    # rebuild cached config/routes/views
-php84 artisan up
-```
-
-There is no PHP-reload step you run yourself: FPM picks the new code up on the
-next request, or you restart PHP for the domain from the panel. If MySQL is on
-a socket, the `DB_SOCKET` line from installation stays in `.env` and needs
-nothing here. Your data, uploads and settings are untouched.
+Conflicts, cut-off updates, ZIP installations and bringing an installation
+older than 1.3 up to date by hand are covered in
+[docs/install/updating.md](docs/install/updating.md).
 
 ---
 
@@ -1289,7 +1199,7 @@ messages are not written to the log either.
 
 **Setup → General Settings → Email Verification**
 
-- Toggle **Require email verification** on
+- Tick **New customers must confirm their email address**
 - New signups will receive a verification link before they can order
 
 ### 12. Test the Full Flow End-to-End
@@ -1309,7 +1219,7 @@ provider** integrations under the `modules/` directory. Add control-panel
 servers (cPanel, Plesk, DirectAdmin, HestiaCP, aaPanel, Proxmox, Vultr, Panelica),
 configure payment gateways (Stripe, PayPal, iyzico, Authorize.Net, Razorpay,
 Mollie, Tpay, bank transfer), and connect domain registrars (Enom, Namecheap,
-ResellerClub, OpenProvider, HRD, DomainNameAPI) — and add your own modules without touching
+ResellerClub, OpenProvider, HRD, DomainNameAPI, OVH) — and add your own modules without touching
 core code (see [Writing your own module](#writing-your-own-module)).
 
 > 💡 **Choosing a panel to sell on?** The **[Panelica](https://panelica.com)**
@@ -1318,7 +1228,8 @@ core code (see [Writing your own module](#writing-your-own-module)).
 > CloudLinux) and universal migration from cPanel, Plesk, DirectAdmin, and
 > CyberPanel.
 
-This is every module in `modules/`:
+These are the server, gateway, registrar and SSL modules in `modules/`
+(addons and reports live there too):
 
 | Module        | Type      |
 |---------------|-----------|
@@ -1330,6 +1241,7 @@ This is every module in `modules/`:
 | HestiaCP      | Server    |
 | aaPanel       | Server    |
 | Vultr         | Server    |
+| Panelica licences | Server |
 | Custom        | Server    |
 | Stripe        | Gateway   |
 | iyzico        | Gateway   |
@@ -1345,6 +1257,7 @@ This is every module in `modules/`:
 | OpenProvider  | Registrar |
 | DomainNameAPI | Registrar |
 | HRD           | Registrar |
+| OVH           | Registrar |
 | Manual        | Registrar |
 | GoGetSSL      | SSL       |
 
@@ -1407,6 +1320,7 @@ above is `Modules\Gateways\AcmePay\AcmePayModule`.
 | `name` | yes | Unique key, stored on invoices, products and settings. Lower-case, no spaces. |
 | `type` | yes | `gateway`, `server`, `registrar` or `ssl` |
 | `class` | yes | Fully qualified class name of the module |
+| `provider` | no | Fully qualified class of a Laravel service provider in the module's folder, for its own routes, views, migrations and scheduled tasks |
 | `version`, `display_name`, `description`, `author` | no | Informational |
 
 Two rules are enforced when the manifest is read, so a broken module cannot
@@ -1469,12 +1383,10 @@ Field types: `text`, `password` (never echoed back into the page), `textarea`,
 folder, namespace and class, write the manifest, and open **Setup → Modules**
 — your module appears there marked **Third-party**.
 
-**Current limitation — gateway webhooks.** Payment-confirmation webhooks are
-routed to the built-in gateways by name (`/gateway/stripe/webhook`,
-`/gateway/paypal/webhook`, …). A third-party gateway's `processWebhook()` has
-no public URL yet, so a gateway that confirms payments only through webhooks
-cannot be completed as a drop-in module today. Redirect-and-return gateways
-and server, registrar and SSL modules are not affected.
+**Gateway callbacks.** A gateway without a route of its own receives its
+provider's confirmations at `/gateway/<name>/callback` (GET or POST, no CSRF
+token). For its own pages, webhooks or tables, name a service provider in the
+manifest (`provider`). See [docs/developer/modules.md](docs/developer/modules.md).
 
 **Addons** (`modules/Addons/<Name>/<Name>Module.php`, implementing
 `App\Contracts\AddonModuleInterface`) need no manifest: any addon folder is
@@ -1580,10 +1492,10 @@ Checkout must run over **HTTPS**.
 | **Stripe** | Publishable Key, Secret Key, Webhook Signing Secret |
 | **PayPal** | PayPal Email, Client ID, Client Secret, Sandbox on/off |
 | **Mollie** | Mollie API Key, Test Mode on/off |
-| **Razorpay** | Key ID, Key Secret |
+| **Razorpay** | Key ID, Key Secret, Webhook Secret, Test Mode on/off |
 | **Authorize.Net** | API Login ID, Transaction Key |
 | **iyzico** (Turkey) | API key, Secret key, Sandbox on/off, instalments offered |
-| **Tpay** (Poland) | Open API Client ID + Secret, security code |
+| **Tpay** (Poland) | Open API Client ID + Secret, security code, Sandbox on/off |
 | **Bank Transfer** | Your bank/account details — shown to the client, confirmed by hand |
 
 ### Webhooks
@@ -1596,7 +1508,7 @@ https://example.com/gateway/<gateway>/webhook
 ```
 
 for example `…/gateway/stripe/webhook` or `…/gateway/paypal/webhook` (also
-`paypal`, `authorize`, `mollie`, `razorpay`, `tpay`). For Stripe, copy the
+`authorize`, `mollie`, `razorpay`, `tpay`; iyzico needs none). For Stripe, copy the
 signing secret the dashboard shows for that endpoint into the gateway's
 **Webhook Signing Secret** field — without it, incoming webhooks are rejected.
 Bank Transfer has no webhook; you mark those invoices paid yourself.
@@ -1721,9 +1633,9 @@ and every action — suspend, terminate, password — uses that ID. It does *not
 rely on usernames matching, so names can differ freely.
 
 **How do I update to the latest version?**
-Docker: `docker exec pnlcs /usr/local/bin/update.sh`. Self-hosted or inside a
-panel account: see [Updating](#updating). Your data is left untouched either
-way.
+**Setup → Updates** in the admin area, or `php artisan pnlcs:update` as the
+web server user. Docker: `docker exec pnlcs /usr/local/bin/update.sh`. See
+[Updating](#updating). Your data is left untouched either way.
 
 ---
 
@@ -1733,10 +1645,9 @@ Issues and pull requests are welcome.
 
 Ways to help:
 
-1. **Test a module** against a real provider account — the
-   [module table](#modules--servers-payment-gateways--domain-registrars) shows
-   which ones have only been tested with faked responses — and file an issue
-   with what you found.
+1. **Test a module** against a real provider account — see the
+   [module table](#modules--servers-payment-gateways--domain-registrars) — and
+   file an issue with what you found.
 2. **Report a bug** with reproduction steps — screenshots help a lot.
 3. **Answer a question** on the [community](https://community.pnlcs.com/c/help) and
    help other people running PNLCS.

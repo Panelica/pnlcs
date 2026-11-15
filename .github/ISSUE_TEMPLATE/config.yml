@@ -10,7 +10,7 @@ contact_links:
     url: https://github.com/Panelica/pnlcs/discussions
     about: Open-ended ideas, design proposals, or showing off what you built with PNLCS.
   - name: Community forum
-    url: https://forum.panelica.com
+    url: https://community.pnlcs.com/
     about: Peer-to-peer help, tips, and general discussion.
   - name: Report a security vulnerability (private)
     url: https://github.com/Panelica/pnlcs/security/advisories/new

@@ -37,7 +37,7 @@ pnlcs/
 ├── public/               # Web entry point
 ├── resources/            # Views (Blade), CSS, JS sources
 ├── routes/               # web.php, api.php, console.php
-├── tests/                # PHPUnit tests
+├── tests/                # Pest tests
 ├── themes/               # Shipped themes (one folder each)
 └── ...
 ```
@@ -51,9 +51,9 @@ A high-level architecture overview lives in `docs/`. Read those before adding ne
 ### Prerequisites
 
 - PHP 8.4+ (CLI)
-- MySQL 8 (or MariaDB 10.11+)
-- Redis 7 (sessions / cache / queues)
-- Node.js 22+ and npm 10+
+- MySQL 8 (or MariaDB 10.6+)
+- Node.js 20.19+ or 22.12+, and npm 10+
+- Redis 7, optional (sessions / cache / queues; the defaults use files)
 - Composer 2.7+
 
 ### Clone and install
@@ -166,7 +166,7 @@ Do not hand-edit machine-translated files unless you're a fluent speaker.
 PNLCS supports plug-in modules in `modules/`. New ones welcome — reference the existing ones for the expected interface:
 
 - **Payment gateways** (`modules/Gateways/`): Stripe, PayPal, BankTransfer, AuthorizeNet, Iyzico, Mollie, Razorpay, Tpay
-- **Domain registrars** (`modules/Registrars/`): Enom, Namecheap, OpenProvider, ResellerClub, DomainNameApi, HRD, Manual
+- **Domain registrars** (`modules/Registrars/`): Enom, Namecheap, OpenProvider, ResellerClub, DomainNameApi, HRD, OVH, Manual
 - **Server modules** (`modules/Servers/`): Panelica, PanelicaLicense, cPanel, Plesk, DirectAdmin, HestiaCP, aaPanel, Proxmox, Vultr, Custom
 - **SSL** (`modules/Ssl/`): GoGetSSL
 - **Addons** (`modules/Addons/`): CompanyLookup, Ksef, ProjectManagement, StaffBoard
