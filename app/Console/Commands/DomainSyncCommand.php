@@ -22,10 +22,17 @@ use Illuminate\Support\Facades\Log;
  * printed "(Module integration required)" and changed nothing, so a domain
  * renewed or expired at the registry was never reflected in the panel.
  *
- * The registry is authoritative for expiry_date and status. next_due_date is
- * deliberately NOT touched: billing owns it (InvoiceGenerationCommand scans
- * domains.next_due_date), and overwriting it here would silently re-bill or
- * skip renewals.
+ * The registry is authoritative for expiry_date and status. next_due_date
+ * belongs to billing (InvoiceGenerationCommand scans domains.next_due_date),
+ * and a due date that billing or an operator set apart from the expiry is
+ * never touched: overwriting it here would silently re-bill or skip renewals.
+ *
+ * One case is not that. An order and every renewal write the two dates as
+ * one - the domain falls due the day it expires - and for a transfer both are
+ * only a guess, today plus the years ordered, until the registry is asked.
+ * While the due date is still the expiry date, a corrected expiry takes the
+ * due date with it (diff()). Left behind, a transfer the registry added no
+ * time to was invoiced months after the domain had expired.
  */
 class DomainSyncCommand extends Command
 {
@@ -290,6 +297,13 @@ class DomainSyncCommand extends Command
         $expiry = $result['expiry_date'] ?? null;
         if ($expiry && optional($domain->expiry_date)->toDateString() !== $expiry) {
             $changes['expiry_date'] = $expiry;
+
+            // The due date was following the expiry date, so it keeps
+            // following it. One set apart from it stays where it is.
+            if ($domain->expiry_date && $domain->next_due_date
+                && $domain->next_due_date->toDateString() === $domain->expiry_date->toDateString()) {
+                $changes['next_due_date'] = $expiry;
+            }
         }
 
         $status = $result['status'] ?? null;
