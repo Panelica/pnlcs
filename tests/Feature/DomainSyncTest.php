@@ -192,6 +192,62 @@ test('billing dates are never overwritten by a registry sync', function () {
     expect($domain->fresh()->next_due_date->toDateString())->toBe('2026-02-15');
 });
 
+test('a due date that was following the expiry date follows the registry\'s correction', function () {
+    // A .co.uk transferred in on 20 November 2026: the order wrote both dates
+    // as that day plus a year. The registry added no time; it expires on
+    // 15 June 2027, five months before the invoice would have been raised.
+    Http::fake(['*namecheap*' => Http::response(namecheapListXml('sync-example.com', '06/15/2027'), 200)]);
+    $domain = syncDomainFor('Namecheap', ['type' => 'Transfer', 'expiry_date' => '2027-11-20', 'next_due_date' => '2027-11-20']);
+
+    $this->artisan('pnlcs:domain-sync')->assertSuccessful();
+
+    expect($domain->fresh()->expiry_date->toDateString())->toBe('2027-06-15')
+        ->and($domain->fresh()->next_due_date->toDateString())->toBe('2027-06-15');
+});
+
+test('the corrected due date is what the renewal invoice is raised from', function () {
+    Http::fake(['*namecheap*' => Http::response(namecheapListXml('sync-example.com', '06/15/2027'), 200)]);
+    $domain = syncDomainFor('Namecheap', ['type' => 'Transfer', 'expiry_date' => '2027-11-20', 'next_due_date' => '2027-11-20',
+        'payment_method' => 'banktransfer']);
+    $this->artisan('pnlcs:domain-sync')->assertSuccessful();
+
+    $this->travelTo(Carbon::parse('2027-06-05 09:00:00'));
+    \Illuminate\Support\Facades\Mail::fake();
+    app(\App\Services\InvoiceGenerationService::class)->generateDueInvoices();
+
+    expect(\App\Models\InvoiceItem::where('type', 'Domain')->where('rel_id', $domain->id)->exists())->toBeTrue();
+});
+
+test('a registry that gives a transfer more time moves the due date later with it', function () {
+    Http::fake(['*namecheap*' => Http::response(namecheapListXml('sync-example.com', '06/15/2028'), 200)]);
+    $domain = syncDomainFor('Namecheap', ['type' => 'Transfer', 'expiry_date' => '2027-11-20', 'next_due_date' => '2027-11-20']);
+
+    $this->artisan('pnlcs:domain-sync')->assertSuccessful();
+
+    expect($domain->fresh()->next_due_date->toDateString())->toBe('2028-06-15');
+});
+
+test('a domain with no due date is not given one by the sync', function () {
+    Http::fake(['*namecheap*' => Http::response(namecheapListXml('sync-example.com', '06/02/2027'), 200)]);
+    $domain = syncDomainFor('Namecheap');
+
+    $this->artisan('pnlcs:domain-sync')->assertSuccessful();
+
+    expect($domain->fresh()->next_due_date)->toBeNull();
+});
+
+test('a dry run reports the due date it would move and writes neither date', function () {
+    Http::fake(['*namecheap*' => Http::response(namecheapListXml('sync-example.com', '06/15/2027'), 200)]);
+    $domain = syncDomainFor('Namecheap', ['expiry_date' => '2027-11-20', 'next_due_date' => '2027-11-20']);
+
+    $this->artisan('pnlcs:domain-sync', ['--dry-run' => true])
+        ->expectsOutputToContain('next_due_date')
+        ->assertSuccessful();
+
+    expect($domain->fresh()->next_due_date->toDateString())->toBe('2027-11-20')
+        ->and($domain->fresh()->expiry_date->toDateString())->toBe('2027-11-20');
+});
+
 test('an unchanged domain is not rewritten', function () {
     // A date still ahead of us: a domain whose expiry has passed is moved along
     // the lifecycle, which is a change and belongs to its own test.
