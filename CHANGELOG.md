@@ -2,6 +2,120 @@
 
 All notable changes to PNLCS are documented here. Newest first.
 
+## 1.28.0 — 2026-11-16
+
+A stable release, offered to every installation. A visitor can start in the
+currency of their country, an operator can keep a copy of every email the shop
+sends, a promotion code can be limited to so many products per order, and the
+invoice number takes the width the operator wants. Four fixes besides, two of
+them about dates and money that read wrong.
+
+Thank you [@ertugrulkeyvan](https://github.com/ertugrulkeyvan) (#435, #436,
+#437, #438, #440, #441, #442, #443) and [@vvezzola](https://github.com/vvezzola)
+(#434), and [@syfFerdinand](https://github.com/syfFerdinand) (#432) and
+[@Wolfcom](https://github.com/Wolfcom) (#439) for the two requests this release
+answers.
+
+Nothing here had time on the beta channel; it goes out as it was reviewed,
+through the same gates.
+
+### Added
+
+- **A visitor can start in the currency of their country** (#432). A second
+  switch on Setup → Currencies, off by default. The country comes from the
+  header a CDN or proxy sets, else the region the browser states — no GeoIP
+  database and no outside call — and it is read only when the shop has that
+  currency with a rate. It is a first guess and nothing more: a choice from the
+  top bar always wins, nothing is written to the session, and an account opened
+  after the guess is billed in the currency the order form showed.
+- **Keep a copy of outgoing email**, shop-wide (Setup → General Settings →
+  Notifications) or per template. Several addresses, separated by commas or
+  semicolons, refused on save if one is a typo. A password reset, an email
+  verification and container access details are copied to nobody, by either
+  field, as before.
+- **A promotion code can limit how many products one order has discounted**
+  (#439). `0` means no limit, which is every code that exists today. Of the
+  products the code covers, the highest-priced are the ones discounted, the
+  earlier line on a tie — so it does not depend on the order things went into
+  the basket, and the invoice bills what the cart quoted. A limit cannot be set
+  on a recurring code: which products were discounted is not kept from one
+  invoice to the next.
+- **`{num:4}` sets how many digits an invoice number is padded to**, any width
+  from 1 to 9. Plain `{num}` is still six, so no existing scheme changes.
+  Changing the width continues the same series, and a series that outgrows its
+  width is written in full rather than cut short into a number already issued.
+
+### Fixed
+
+- **A renewal invoice named the wrong period.** A monthly service due on 27
+  November was invoiced as `2026/10/27 - 2026/11/27` — the month the previous
+  invoice had already paid for. The line now names the period being bought,
+  which starts on the due date, worked out with the same call that moves the
+  due date when the invoice is paid.
+- **A domain's due date follows a corrected expiry while it was following it.**
+  A transfer writes both dates as a guess until the registry is asked; the
+  daily sync corrected the expiry and left the due date, so a domain the
+  registry added no time to was invoiced months after it had expired. A due
+  date billing or an operator set apart from the expiry is still never touched.
+- **A Plesk server is called on the address family of its recorded IP.** Plesk
+  ties an API key to the caller's address, so a hostname with an AAAA record
+  was reached over IPv6 and a correct key was refused with a 401.
+- **The front page showed arbitrary domain endings.** It ordered the catalogue
+  by `sort_order`, which most of it shares, instead of the endings chosen in
+  Admin → Settings → Domains. The front page and the domain search now read one
+  resolver.
+
+### Changed
+
+- **Contact addresses are at pnlcs.com** (`info@`, `security@`, `conduct@`,
+  `support@`), including the example addresses a fresh storefront shows until
+  the operator enters their own. All four were checked against the mail server
+  before this went out.
+- **PNLCS is maintained by the PNLCS team**, which began at Panelica and
+  integrates natively with it. The company named where a legal name belongs is
+  Panelica Teknoloji ve Yazılım Tic. Ltd. Şti.
+- **The README and the guides say what the code does today.** The update
+  section described `git reset --hard origin/main`, which contradicted
+  RELEASING.md's "no installation is ever updated from `main`"; it now follows
+  `docs/install/updating.md`. Module and registrar lists corrected, stale
+  limitations removed.
+
+### Database changes
+
+- **`promotions.max_products`** (unsigned small integer, default `0`). Additive,
+  guarded, safe to run twice, with a working `down()`. `0` is no limit, so every
+  existing promotion behaves exactly as before.
+
+### For theme and module authors
+
+- `App\Support\CountryCurrency::for()` answers a country's currency;
+  `CustomerCurrency::forRegion()` is the guess itself.
+- `App\Rules\EmailList` validates a comma- or semicolon-separated address list.
+- `Promotion::pickLimited()` chooses which eligible lines a limited code
+  discounts; the cart and the invoice both call it.
+- `App\Support\ServerAddress::familyOptions()` returns the cURL options that
+  keep a call on the address family of a recorded IP.
+- `App\Support\DomainSuggestions` is where the promoted domain endings are
+  read; `DomainSearchController::DEFAULT_SUGGESTIONS` still answers as an alias.
+- `InvoiceService::NUM_PLACEHOLDER` and `NUM_DIGITS` describe the number
+  placeholder.
+
+### Views a theme may override that changed
+
+- `sections/topbar`, `sections/footer` and `themes/flavor/views/sections/footer`
+  — the example contact addresses.
+- `admin/config/currencies` — the new switch.
+- `admin/config/email-templates` and `admin/settings/general` — the copy-to
+  fields and the invoice number hint.
+- `admin/config/promotions` — the products-per-order field.
+
+### For anyone running the test suite
+
+- `php artisan test --parallel` works, in two passes: `--parallel
+  --exclude-group=serial`, then `--group=serial` for the installer's tests,
+  which share `storage/installed.lock`. About three and a half times faster on
+  four processes. CONTRIBUTING has the commands.
+
 ## 1.27.0 — 2026-11-12
 
 A stable release, offered to every installation. Plesk is managed per
