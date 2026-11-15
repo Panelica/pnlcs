@@ -4,7 +4,7 @@ site_url: https://docs.pnlcs.com/
 repo_url: https://github.com/Panelica/pnlcs
 repo_name: Panelica/pnlcs
 edit_uri: edit/main/docs/
-copyright: Built and maintained by the Panelica team · MIT Licensed
+copyright: Built and maintained by the PNLCS team · MIT Licensed
 
 theme:
   name: material

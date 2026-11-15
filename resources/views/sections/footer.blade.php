@@ -9,8 +9,8 @@
     // White-label fallbacks
     $bName = $brandName ?? 'PNLCS';
     $bUrl = $brandUrl ?? 'https://www.panelica.com';
-    $bEmail = $footerEmail ?? ($brandEmail ?? 'info@panelica.com');
-    $bSupportEmail = $footerSupportEmail ?? 'support@panelica.com';
+    $bEmail = $footerEmail ?? ($brandEmail ?? 'info@pnlcs.com');
+    $bSupportEmail = $footerSupportEmail ?? 'support@pnlcs.com';
     $bWebsite = $footerWebsite ?? 'panelica.com';
     $bCopyright = $brandCopyright ?? $bName;
     $bDesc = $footerDesc ?? ($bName . ' ' . __('sections.footer.description'));

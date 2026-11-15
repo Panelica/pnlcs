@@ -32,7 +32,7 @@ This Code of Conduct applies to:
 
 If you see a problem, or experience one, contact us:
 
-**Email:** [conduct@panelica.com](mailto:conduct@panelica.com)
+**Email:** [conduct@pnlcs.com](mailto:conduct@pnlcs.com)
 
 Reports are read by the maintainer team and treated confidentially. We won't share your identity with the person reported without your consent unless required by law.
 

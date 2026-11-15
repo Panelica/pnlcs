@@ -85,6 +85,6 @@ These need no setting; they are here so you know what is already covered.
 ## Reporting a vulnerability
 
 Please do not open a public issue. Write to
-[security@panelica.com](mailto:security@panelica.com); the
+[security@pnlcs.com](mailto:security@pnlcs.com); the
 [security policy](https://github.com/Panelica/pnlcs/blob/main/SECURITY.md)
 explains what happens next.

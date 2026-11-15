@@ -53,10 +53,11 @@ You should already have PNLCS **installed** and be able to reach
 
 - **Community** — [community.pnlcs.com](https://community.pnlcs.com/)
 - **Bug reports & feature requests** — [GitHub Issues](https://github.com/Panelica/pnlcs/issues)
-- **Email** — [info@panelica.com](mailto:info@panelica.com)
+- **Email** — [info@pnlcs.com](mailto:info@pnlcs.com)
 
 ---
 
-PNLCS is built and maintained by the team behind
+PNLCS is built and maintained by the PNLCS team. It began at
 **[Panelica](https://panelica.com)**, a modern hosting control panel and a
-cPanel / Plesk alternative that needs no CloudLinux.
+cPanel / Plesk alternative that needs no CloudLinux, and integrates natively
+with it.
