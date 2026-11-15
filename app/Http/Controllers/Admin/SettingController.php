@@ -81,7 +81,7 @@ class SettingController extends Controller
         'Address', 'CompanyCity', 'CompanyName',
         'Country', 'DateFormat', 'DefaultLanguage', 'DefaultPaymentMethod', 'Domain', 'CompanyWebsite',
         'DefaultNameserver1', 'DefaultNameserver2', 'DefaultNameserver3', 'DefaultNameserver4', 'DefaultNameserver5',
-        'Email', 'EmailFromName',
+        'Email', 'EmailFromName', 'MailCopyTo',
         'InvoiceNumberFormat', 'InvoiceNumberYearlyReset', 'InvoiceDueDays', 'InvoiceDaysBeforeDue', 'ConsolidatedBillingDay', 'InvoiceRenewalsSeparately',
         // The invoice document template: the built-in view or an uploaded one.
         // The tax page's two switches (#305).
@@ -157,6 +157,7 @@ class SettingController extends Controller
         $request->validate([
             'Email' => 'sometimes|nullable|email|max:255',
             'SystemEmailAddress' => 'sometimes|nullable|email|max:255',
+            'MailCopyTo' => ['sometimes', 'nullable', 'string', 'max:255', new \App\Rules\EmailList],
             'AbuseEmail' => 'sometimes|nullable|email|max:255',
             'DpoEmail' => 'sometimes|nullable|email|max:255',
             'Timezone' => 'sometimes|nullable|timezone:all',
