@@ -57,6 +57,7 @@ You should already have PNLCS **installed** and be able to reach
 
 ---
 
-PNLCS is built and maintained by the team behind
+PNLCS is built and maintained by the PNLCS team. It began at
 **[Panelica](https://panelica.com)**, a modern hosting control panel and a
-cPanel / Plesk alternative that needs no CloudLinux.
+cPanel / Plesk alternative that needs no CloudLinux, and integrates natively
+with it.

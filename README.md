@@ -56,10 +56,11 @@ and module ecosystem (servers, gateways, registrars, SSL providers) are
 deliberately familiar. The difference is that PNLCS is **MIT-licensed**,
 **self-hosted**, and free to fork, study, and extend.
 
-PNLCS is built and maintained by the team behind the **Panelica** server
-management panel, and our own hosting sales run on it. We wanted an open,
+PNLCS is built and maintained by the **PNLCS team**. It began at
+**Panelica**, the server management panel, whose team wanted an open,
 self-hosted billing system that integrates natively with Panelica and works
-with other control panels too — so we built one.
+with other control panels too. Hosting companies, our own included, run
+their sales on it.
 
 **What it does today:**
 
@@ -80,9 +81,9 @@ every issue; reproduction steps or a patch help us move fast.
 
 ## Built for Panelica — The Modern Hosting Control Panel
 
-PNLCS is developed and maintained by the team behind
-**[Panelica](https://panelica.com)**, a modern server management panel for web
-hosting — a fresh alternative to cPanel, Plesk, and CyberPanel.
+PNLCS was first built for **[Panelica](https://panelica.com)**, a modern
+server management panel for web hosting — a fresh alternative to cPanel,
+Plesk, and CyberPanel.
 
 **Why Panelica?**
 
@@ -1748,8 +1749,8 @@ Ways to help:
 
 Please keep in mind:
 
-- This is a side project for the Panelica team. We'll get to issues as
-  quickly as we can but same-day responses are rare.
+- The PNLCS team is small. We'll get to issues as quickly as we can but
+  same-day responses are rare.
 - PRs that include tests are prioritized.
 - Please match the existing coding style (Laravel Pint + conventional
   commits).
@@ -1773,16 +1774,16 @@ Need help, have an idea, or want to show what you built?
 - 🔒 **Security disclosures** — [security@pnlcs.com](mailto:security@pnlcs.com) *(please do not open public issues for security)*
 
 Questions get the fastest answer on the community, where other PNLCS users
-can help as well as the team. Since PNLCS is a side project for the Panelica
-team, your patience with email is appreciated.
+can help as well as the team. The PNLCS team is small, so your patience
+with email is appreciated.
 
 ---
 
 ## Credits
 
 - **[Panelica](https://panelica.com)** — the modern hosting control panel and
-  a **cPanel / Plesk alternative that needs no CloudLinux**; its team builds
-  and maintains PNLCS
+  a **cPanel / Plesk alternative that needs no CloudLinux**; PNLCS began
+  there and integrates natively with it
 - **Laravel** by Taylor Otwell and the Laravel community
 - **WHMCS** — for inspiring much of the data model and workflow
 - Every contributor who opens an issue or a pull request
