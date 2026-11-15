@@ -30,6 +30,13 @@
                 <div style="font-size:12px;color:#c43c35;margin:4px 0 0 22px;">{{ __('admin.currencies.customer_choice_needs_two') }}</div>
                 @endif
             </div>
+            <div class="form-group">
+                <label style="font-size:13px;display:flex;align-items:flex-start;gap:8px;cursor:pointer;">
+                    <input type="hidden" name="by_region" value="0">
+                    <input type="checkbox" name="by_region" value="1" @checked($currencyByRegion) style="margin-top:3px;">
+                    <span><strong>{{ __('admin.currencies.by_region') }}</strong><br><span style="color:#777;">{{ __('admin.currencies.by_region_hint') }}</span></span>
+                </label>
+            </div>
             <div class="form-group" style="margin-bottom:0;">
                 <label style="font-size:13px;display:flex;align-items:flex-start;gap:8px;cursor:pointer;">
                     <input type="hidden" name="auto_update_rates" value="0">

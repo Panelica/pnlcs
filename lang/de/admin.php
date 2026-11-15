@@ -1031,6 +1031,8 @@ return [
     'currencies.customer_choice' => 'Kunden ihre Währung wählen lassen',
     'currencies.customer_choice_hint' => 'Besucher wählen oben in der Leiste eine Währung und sehen die Preise zum aktuellen Kurs umgerechnet. Das Konto, das sie eröffnen, behält diese Währung, und jede ihrer Rechnungen zeigt sie mit dem festgeschriebenen Tageskurs. Die Beträge werden weiterhin in der Standardwährung verbucht, und Kartenzahlungen werden meist in dieser belastet. Die Währung eines Kunden ändern Mitarbeiter im Kundenprofil.',
     'currencies.customer_choice_needs_two' => 'Fügen Sie eine zweite Währung hinzu, aus der Kunden wählen können.',
+    'currencies.by_region' => 'Besucher in der Währung ihres Landes starten lassen',
+    'currencies.by_region_hint' => 'Beim ersten Besuch werden die Preise in der Währung des Landes angezeigt, aus dem der Besucher kommt, sofern sie zu Ihren Währungen gehört; sonst in der Standardwährung. Das Land wird aus dem Header gelesen, den Ihr CDN oder Proxy setzt (Cloudflare sendet einen), andernfalls aus der Region, die der Browser angibt. Es ist nur eine erste Vermutung: Der Besucher kann in der oberen Leiste weiterhin eine andere Währung wählen. Funktioniert, wenn „Kunden ihre Währung wählen lassen“ aktiviert ist.',
     'currencies.auto_update_rates' => 'Wechselkurse täglich aktualisieren',
     'currencies.auto_update_rates_hint' => 'Jeden Morgen gegen die Standardwährung abgerufen. Ein hier eingetragener Kurs wird bei der nächsten Aktualisierung ersetzt.',
     'currencies.update_rates_now' => 'Kurse jetzt aktualisieren',
