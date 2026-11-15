@@ -1520,7 +1520,7 @@ class ConfigController extends Controller
     // Email Templates
     public function updateEmailTemplate(Request $request, EmailTemplate $template)
     {
-        $validated = $request->validate(['type' => 'nullable|string', 'name' => 'nullable|string', 'subject' => 'nullable|string', 'message' => 'nullable|string', 'from_name' => 'nullable|string', 'from_email' => 'nullable|email', 'disabled' => 'boolean']);
+        $validated = $request->validate(['type' => 'nullable|string', 'name' => 'nullable|string', 'subject' => 'nullable|string', 'message' => 'nullable|string', 'from_name' => 'nullable|string', 'from_email' => 'nullable|email', 'copy_to' => ['nullable', 'string', 'max:255', new \App\Rules\EmailList], 'disabled' => 'boolean']);
 
         // Only a changed body makes the template the operator's own, which is
         // what lets their wording replace the built-in email. The form always

@@ -65,6 +65,11 @@
             <textarea name="message" rows="10" class="form-control" style="font-family:monospace;font-size:12px;">{{ $tpl->message }}</textarea>
         </div>
         <div class="form-group">
+            <label class="form-label">{{ __('admin.email_templates.copy_to') }}</label>
+            <input type="text" name="copy_to" value="{{ $tpl->copy_to }}" class="form-control">
+            <div style="font-size:12px;color:#777;margin-top:4px;">{{ __('admin.email_templates.copy_to_hint') }}</div>
+        </div>
+        <div class="form-group">
             <label style="display:flex;align-items:center;gap:8px;cursor:pointer;">
                 <input type="hidden" name="disabled" value="0">
                 <input type="checkbox" name="disabled" value="1" @checked($tpl->disabled)>

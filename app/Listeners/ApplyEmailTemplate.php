@@ -2,6 +2,7 @@
 
 namespace App\Listeners;
 
+use App\Models\Setting;
 use App\Services\EmailTemplateService;
 use Illuminate\Mail\Events\MessageSending;
 use Illuminate\Support\Facades\Log;
@@ -52,6 +53,9 @@ class ApplyEmailTemplate
         'ConfirmationCodeMail',
     ];
 
+    /** The setting holding the addresses every email is copied to. */
+    public const COPY_SETTING = 'MailCopyTo';
+
     public function __construct(private EmailTemplateService $templates) {}
 
     /** Returns null to allow, false to cancel — the dispatch halts on anything else. */
@@ -76,6 +80,14 @@ class ApplyEmailTemplate
         $template = $this->templates->forMailable($mailable, $locale);
 
         if (! $template) {
+            // An email no template stands behind is still one the operator
+            // asked to see a copy of.
+            if (! in_array(class_basename($mailable), self::NEVER_COPIED, true)) {
+                foreach ($this->copies($event, null) as $address) {
+                    $event->message->addBcc($address);
+                }
+            }
+
             return null;
         }
 
@@ -125,7 +137,7 @@ class ApplyEmailTemplate
         // flagged for general email, and a password reset is a general
         // template, so copying these would hand the reset link to colleagues.
         if (! in_array(class_basename($mailable), self::NEVER_COPIED, true)) {
-            foreach ($this->copyTo($template->copy_to) as $address) {
+            foreach ($this->copies($event, $template->copy_to) as $address) {
                 $event->message->addBcc($address);
             }
 
@@ -218,6 +230,30 @@ class ApplyEmailTemplate
         }
 
         return array_values(array_unique($addresses));
+    }
+
+    /**
+     * Who gets a blind copy of this email: the addresses the operator copies
+     * every email to (Setup > General Settings > Mail), then the template's
+     * own. Each once, and not an address the email is already going to - a
+     * staff notice to billing@ is not sent to billing@ twice.
+     *
+     * @return array<int, string>
+     */
+    private function copies(MessageSending $event, ?string $templateCopyTo): array
+    {
+        try {
+            $everything = $this->copyTo((string) Setting::get(self::COPY_SETTING, ''));
+        } catch (\Throwable) {
+            $everything = [];
+        }
+
+        $to = array_map(fn (Address $address) => strtolower($address->getAddress()), $event->message->getTo());
+
+        return array_values(array_filter(
+            array_unique(array_merge($everything, $this->copyTo($templateCopyTo))),
+            fn (string $address) => ! in_array(strtolower($address), $to, true)
+        ));
     }
 
     /**
