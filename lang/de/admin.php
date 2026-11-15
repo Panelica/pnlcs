@@ -2772,7 +2772,7 @@ return [
         'invoice_number_last' => 'Letzte Rechnung',
         'invoice_number_preview' => 'Vorschau',
         'invoice_number_reset_year' => 'Nummerierung jedes Jahr zurücksetzen',
-        'invoice_number_tokens' => 'Variablen: {year} {yy} {month} {day} {num} – die Sequenznummer stammt von der letzten Rechnung in der Datenbank.',
+        'invoice_number_tokens' => 'Variablen: {year} {yy} {month} {day} {num} – die Sequenznummer stammt von der letzten Rechnung in der Datenbank. {num} hat sechs Stellen; für vier Stellen {num:4} schreiben.',
         'localization' => 'Lokalisierung',
         'logo' => 'Logo',
         'mail_configuration' => 'Mail-Konfiguration',
