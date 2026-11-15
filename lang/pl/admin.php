@@ -2770,7 +2770,7 @@ return [
         'invoice_number_last' => 'Ostatnia faktura',
         'invoice_number_preview' => 'Podgląd',
         'invoice_number_reset_year' => 'Resetuj numerację co roku',
-        'invoice_number_tokens' => 'Zmienne: {year} {yy} {month} {day} {num} — numer sekwencyjny wyliczany z ostatniej faktury w bazie.',
+        'invoice_number_tokens' => 'Zmienne: {year} {yy} {month} {day} {num} — numer sekwencyjny wyliczany z ostatniej faktury w bazie. {num} ma sześć cyfr; dla czterech wpisz {num:4}.',
         'localization' => 'Lokalizacja',
         'logo' => 'Logo',
         'mail_configuration' => 'Konfiguracja poczty',

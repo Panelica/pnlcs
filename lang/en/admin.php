@@ -2770,7 +2770,7 @@ return [
         'invoice_number_last' => 'Last invoice',
         'invoice_number_preview' => 'Preview',
         'invoice_number_reset_year' => 'Reset numbering each year',
-        'invoice_number_tokens' => 'Variables: {year} {yy} {month} {day} {num} — the sequence number comes from the last invoice in the database.',
+        'invoice_number_tokens' => 'Variables: {year} {yy} {month} {day} {num} — the sequence number comes from the last invoice in the database. {num} has six digits; write {num:4} for four.',
         'localization' => 'Localization',
         'logo' => 'Logo',
         'mail_configuration' => 'Mail Configuration',

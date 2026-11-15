@@ -2770,7 +2770,7 @@ return [
         'invoice_number_last' => '最后一张账单',
         'invoice_number_preview' => '预览',
         'invoice_number_reset_year' => '每年重置编号',
-        'invoice_number_tokens' => '变量：{year} {yy} {month} {day} {num} — 序号取自数据库中最后一张账单。',
+        'invoice_number_tokens' => '变量：{year} {yy} {month} {day} {num} — 序号取自数据库中最后一张账单。{num} 为六位数字；写 {num:4} 则为四位。',
         'localization' => '本地化',
         'logo' => '徽标',
         'mail_configuration' => '邮件配置',

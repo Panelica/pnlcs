@@ -427,11 +427,18 @@ class InvoiceService
         return $invoice;
     }
 
+    /** How many digits {num} is padded to when the format names no width. */
+    public const NUM_DIGITS = 6;
+
+    /** {num}, or {num:4} with the number of digits to pad it to (1 to 9). */
+    public const NUM_PLACEHOLDER = '/\{num(?::([1-9]))?\}/';
+
     /**
      * Generate a unique sequential invoice number from the configurable
      * format setting. The format accepts {year}, {yy}, {month}, {day} and
      * {num} placeholders; {num} is the next number in the series derived
-     * from the last invoice stored in the database.
+     * from the last invoice stored in the database. {num} is padded to six
+     * digits; {num:4} pads it to four (any width from 1 to 9).
      */
     public function generateInvoiceNumber(?string $type = null): string
     {
@@ -474,6 +481,10 @@ class InvoiceService
     {
         $type = $type ?: $this->defaultType();
         $format ??= $this->numberFormatFor($type);
+
+        // A width on the placeholder only changes how the number is written,
+        // not where it sits or which series it continues.
+        $format = preg_replace(self::NUM_PLACEHOLDER, '{num}', (string) $format);
 
         // Without {num} the number has nowhere to grow: fall back to the
         // row id, which still keeps them unique.
@@ -524,9 +535,17 @@ class InvoiceService
     {
         $now = now();
 
-        return str_replace(
-            ['{year}', '{yy}', '{month}', '{day}', '{num}'],
-            [$now->format('Y'), $now->format('y'), $now->format('m'), $now->format('d'), str_pad($sequence, 6, '0', STR_PAD_LEFT)],
+        $format = str_replace(
+            ['{year}', '{yy}', '{month}', '{day}'],
+            [$now->format('Y'), $now->format('y'), $now->format('m'), $now->format('d')],
+            $format
+        );
+
+        // The width only pads: a series that has outgrown it is written in
+        // full, so a number is never cut short into one already issued.
+        return preg_replace_callback(
+            self::NUM_PLACEHOLDER,
+            fn (array $m) => str_pad((string) $sequence, (int) ($m[1] ?? self::NUM_DIGITS), '0', STR_PAD_LEFT),
             $format
         );
     }
