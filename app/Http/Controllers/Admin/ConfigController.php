@@ -753,6 +753,13 @@ class ConfigController extends Controller
             'cycles' => 'nullable|integer|min:0|max:1000',
             'billing_cycles' => 'nullable|array',
             'billing_cycles.*' => 'in:'.implode(',', array_keys(Service::CYCLE_MONTHS)),
+            // Which products were discounted is not kept from one invoice to
+            // the next, so a limit cannot be carried into renewals.
+            'max_products' => ['nullable', 'integer', 'min:0', 'max:1000', function ($attribute, $value, $fail) use ($request) {
+                if ((int) $value > 0 && $request->boolean('recurring')) {
+                    $fail(__('admin.promotions.max_products_recurring'));
+                }
+            }],
             'notes' => 'nullable|string',
             'applies_to' => 'nullable|array',
             'applies_to.*' => 'integer|exists:products,id',
@@ -764,6 +771,7 @@ class ConfigController extends Controller
         ]);
         $v['recurring'] = $request->boolean('recurring');
         $v['cycles'] = (int) ($v['cycles'] ?? 0);
+        $v['max_products'] = (int) ($v['max_products'] ?? 0);
         // None ticked: every billing period, as before.
         $v['billing_cycles'] = implode(',', array_unique($request->input('billing_cycles', []))) ?: null;
         $v['apply_once'] = $request->boolean('apply_once');
@@ -793,10 +801,18 @@ class ConfigController extends Controller
             'cycles' => 'nullable|integer|min:0|max:1000',
             'billing_cycles' => 'nullable|array',
             'billing_cycles.*' => 'in:'.implode(',', array_keys(Service::CYCLE_MONTHS)),
+            // Which products were discounted is not kept from one invoice to
+            // the next, so a limit cannot be carried into renewals.
+            'max_products' => ['nullable', 'integer', 'min:0', 'max:1000', function ($attribute, $value, $fail) use ($request) {
+                if ((int) $value > 0 && $request->boolean('recurring')) {
+                    $fail(__('admin.promotions.max_products_recurring'));
+                }
+            }],
             'notes' => 'nullable|string',
         ]);
         $v['recurring'] = $request->boolean('recurring');
         $v['cycles'] = (int) ($v['cycles'] ?? 0);
+        $v['max_products'] = (int) ($v['max_products'] ?? 0);
         // None ticked: every billing period, as before.
         $v['billing_cycles'] = implode(',', array_unique($request->input('billing_cycles', []))) ?: null;
         $promotion->update($v);

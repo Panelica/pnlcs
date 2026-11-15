@@ -9,7 +9,7 @@ class Promotion extends Model
 {
     use HasFactory;
 
-    protected $fillable = ['code', 'type', 'recurring', 'value', 'cycles', 'billing_cycles', 'applies_to', 'requires', 'start_date', 'expiration_date', 'max_uses', 'uses', 'lifetime_promo', 'apply_once', 'new_signups_only', 'existing_client', 'upgrades', 'notes'];
+    protected $fillable = ['code', 'type', 'recurring', 'value', 'cycles', 'billing_cycles', 'max_products', 'applies_to', 'requires', 'start_date', 'expiration_date', 'max_uses', 'uses', 'lifetime_promo', 'apply_once', 'new_signups_only', 'existing_client', 'upgrades', 'notes'];
 
     protected function casts(): array
     {
@@ -91,6 +91,48 @@ class Promotion extends Model
             array_map(fn ($c) => self::cycleKey($c), explode(',', $raw)),
             array_keys(Service::CYCLE_MONTHS),
         ));
+    }
+
+    /**
+     * How many products one order may have discounted, or 0 for no limit.
+     *
+     * With a limit the code discounts products only - a domain is not one -
+     * and when more are eligible than it allows, the highest-priced ones are
+     * the ones discounted (pickLimited), so the result does not depend on the
+     * order things were added to the basket.
+     */
+    public function productLimit(): int
+    {
+        return max(0, (int) $this->max_products);
+    }
+
+    /**
+     * The lines a limited code discounts, out of the eligible ones: the
+     * highest-priced first, the earlier line on a tie. The cart and the
+     * invoice both choose here, so they cannot choose differently.
+     *
+     * @template T
+     *
+     * @param  array<int|string, T>  $eligible  the eligible lines, in basket order
+     * @param  callable(T): float  $price  what a line costs
+     * @return array<int|string, T> the chosen lines, keys kept
+     */
+    public function pickLimited(array $eligible, callable $price): array
+    {
+        $limit = $this->productLimit();
+
+        if ($limit === 0 || count($eligible) <= $limit) {
+            return $eligible;
+        }
+
+        $order = array_keys($eligible);
+        $position = array_flip($order);
+
+        usort($order, fn ($a, $b) => [$price($eligible[$b]), $position[$a]] <=> [$price($eligible[$a]), $position[$b]]);
+
+        $chosen = array_flip(array_slice($order, 0, $limit));
+
+        return array_filter($eligible, fn ($key) => isset($chosen[$key]), ARRAY_FILTER_USE_KEY);
     }
 
     /** Whether a line billed over this period may carry the code. */
