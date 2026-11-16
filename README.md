@@ -240,7 +240,7 @@ marked before it is chosen, not after it fails*
 - **RBAC** with over 45 fine-grained permissions
 - **2FA (TOTP)** for both admin and client portals
 - **Rate-limited** login, 2FA verify, password reset, email resend
-- **IP whitelisting** for admin area (optional)
+- **IP allow-list per API credential** — addresses and CIDR ranges a key may be used from (optional)
 - **Session timeout** and **force logout** support
 - **Activity log** — every admin action recorded
 - **Banned IPs & emails** at the application level
