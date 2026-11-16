@@ -267,6 +267,11 @@ class PleskModule extends AbstractServerModule
      * Plesk rejects the whole packet and every subscription reads as the
      * administrator's.
      *
+     * A panel with no customers, or no resellers, answers that half with one
+     * result that is ok and carries nothing: no id, no data. It is not an
+     * owner, and reading it as one stopped the whole list. The same holds for
+     * every list read here, so each takes only the results that carry data.
+     *
      * @return array<string, array{login: string, name: string, email: string}>
      */
     private function owners(Server $server): array
@@ -275,7 +280,7 @@ class PleskModule extends AbstractServerModule
             .'<reseller><get><filter><all/></filter><dataset><gen-info/></dataset></get></reseller>');
 
         $owners = [];
-        foreach ($xml ? ($xml->xpath('//get/result[status="ok"]') ?: []) : [] as $result) {
+        foreach ($xml ? ($xml->xpath('//get/result[status="ok"][data]') ?: []) : [] as $result) {
             $info = $result->data->gen_info ?? $result->data->{'gen-info'};
             $owners[(string) $result->id] = [
                 'login' => (string) $info->login,
@@ -306,7 +311,7 @@ class PleskModule extends AbstractServerModule
         $owners = $this->owners($server);
         $accounts = [];
 
-        foreach ($xml->xpath('//webspace/get/result[status="ok"]') ?: [] as $result) {
+        foreach ($xml->xpath('//webspace/get/result[status="ok"][data]') ?: [] as $result) {
             $info = $result->data->gen_info;
             $owner = $owners[(string) $info->{'owner-id'}] ?? null;
 
@@ -339,11 +344,11 @@ class PleskModule extends AbstractServerModule
         $xml = $this->xmlApi($server, '<webspace><get><filter/><dataset><gen_info/><subscriptions/></dataset></get></webspace>'
             .'<service-plan><get><filter/></get></service-plan>');
 
-        $results = $xml ? ($xml->xpath('//webspace/get/result[status="ok"]') ?: []) : [];
+        $results = $xml ? ($xml->xpath('//webspace/get/result[status="ok"][data]') ?: []) : [];
         if ($results === []) {
             // A panel that does not take the subscriptions dataset still lists them, without their plan.
             $xml = $this->xmlApi($server, '<webspace><get><filter/><dataset><gen_info/></dataset></get></webspace>');
-            $results = $xml ? ($xml->xpath('//webspace/get/result[status="ok"]') ?: []) : [];
+            $results = $xml ? ($xml->xpath('//webspace/get/result[status="ok"][data]') ?: []) : [];
         }
 
         $plans = [];
@@ -384,7 +389,7 @@ class PleskModule extends AbstractServerModule
     private function resellerAccounts(Server $server): array
     {
         $xml = $this->xmlApi($server, '<reseller><get><filter><all/></filter><dataset><gen-info/><subscriptions/></dataset></get></reseller>');
-        $results = $xml ? ($xml->xpath('//reseller/get/result[status="ok"]') ?: []) : [];
+        $results = $xml ? ($xml->xpath('//reseller/get/result[status="ok"][data]') ?: []) : [];
         $plans = $results === [] ? [] : $this->resellerPlans($server);
 
         $accounts = [];
@@ -798,7 +803,7 @@ class PleskModule extends AbstractServerModule
         if ($clientId) {
             $owner = (int) $clientId;
             $left = $this->xmlApi($server, "<webspace><get><filter><owner-id>{$owner}</owner-id></filter><dataset><gen_info/></dataset></get></webspace>");
-            $remaining = $left ? count($left->xpath('//webspace/get/result[status="ok"]') ?: []) : null;
+            $remaining = $left ? count($left->xpath('//webspace/get/result[status="ok"][data]') ?: []) : null;
 
             if ($remaining === 0) {
                 $resp = $this->http($server)->delete("{$this->baseUrl($server)}/clients/{$clientId}");

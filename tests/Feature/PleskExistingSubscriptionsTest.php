@@ -120,6 +120,24 @@ it('names the reseller that owns a subscription', function () {
     Http::assertSent(fn (Request $request) => str_contains($request->body(), '<reseller><get><filter><all/></filter><dataset><gen-info/>'));
 });
 
+it('lists the subscriptions of a panel that has no customers and no resellers', function () {
+    // Plesk answers an empty list with one result that is ok and carries nothing.
+    fakePleskAgent([
+        'webspace-get' => webspaceResult(12, 'rossi.it', 1),
+        'customer-get' => '<result><status>ok</status></result>',
+        'reseller-get' => '<result><status>ok</status></result>',
+    ]);
+
+    $accounts = $this->actingAs(existingSubsAdmin(), 'admin')
+        ->get(route('admin.clients.server-accounts', existingSubsServer()))
+        ->assertOk()
+        ->json('accounts');
+
+    expect($accounts)->toBe([
+        ['id' => '12', 'username' => 'rossi.it', 'email' => '', 'status' => 'active'],
+    ]);
+});
+
 it('links a recorded service to the subscription and its owner', function () {
     fakePleskAgent([
         'webspace-get' => webspaceResult(12, 'rossi.it', 5),
@@ -223,6 +241,19 @@ it('removes the plesk customer with their last subscription', function () {
     fakePleskAgent([
         'webspace-del' => '<result><status>ok</status><id>12</id></result>',
         'webspace-get' => '',
+    ]);
+    Http::fake(['https://plesk.test:8443/api/v2/clients/5' => Http::response(null, 204)]);
+    $service = existingSubsService(existingSubsServer(), ['plesk_domain_id' => '12', 'plesk_client_id' => '5']);
+
+    expect((new PleskModule)->terminate($service)['success'])->toBeTrue();
+    Http::assertSent(fn (Request $request) => $request->method() === 'DELETE'
+        && $request->url() === 'https://plesk.test:8443/api/v2/clients/5');
+});
+
+it('removes the plesk customer when plesk answers an empty list for what is left', function () {
+    fakePleskAgent([
+        'webspace-del' => '<result><status>ok</status><id>12</id></result>',
+        'webspace-get' => '<result><status>ok</status></result>',
     ]);
     Http::fake(['https://plesk.test:8443/api/v2/clients/5' => Http::response(null, 204)]);
     $service = existingSubsService(existingSubsServer(), ['plesk_domain_id' => '12', 'plesk_client_id' => '5']);
