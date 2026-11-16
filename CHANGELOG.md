@@ -2,6 +2,78 @@
 
 All notable changes to PNLCS are documented here. Newest first.
 
+## 1.29.0 — 2026-11-16
+
+A stable release, offered to every installation. An order placed by staff now
+charges the setup fee the shop charges, a "free setup" promotion code finally
+waives something, and three fixes besides. No migration.
+
+Thank you [@ertugrulkeyvan](https://github.com/ertugrulkeyvan) (#444, #445,
+#446, #447) and [@vvezzola](https://github.com/vvezzola) (#448).
+
+Nothing here had time on the beta channel; it goes out as it was reviewed,
+through the same gates.
+
+### Added
+
+- **An order placed by staff charges the product's setup fee.** A plan sold at
+  "10 a month plus 25 setup" was billed 35 when the customer ordered it and 10
+  when staff placed the same order for them. The fee is a line of its own on
+  the first invoice, taxed as the product is and never repeated on a renewal,
+  and a box on the form — ticked by default — leaves it off for a sale where it
+  was waived. It is added to a price staff set themselves too.
+
+  The API's `AddOrder` still places an order without the fee: adding it there
+  changes what existing integrations are billed, so it wants a parameter and a
+  decision on the default rather than a quiet change.
+
+### Fixed
+
+- **A "free setup" promotion code waives the setup fee — and the cart and the
+  invoice now agree about every code type.** The promotions form offers five
+  types; two were worked out. The invoice gave nothing for the other three,
+  while the cart treated every type but a percentage as a fixed amount of the
+  code's value: a free-setup code worth 5 was quoted as 5 off and the invoice
+  then charged in full. A free-setup code now waives the setup fees of the
+  lines it covers, in the cart and on the invoice alike, following the code's
+  own limits (particular products, billing periods, and the per-order product
+  limit from 1.28.0), with the waived fee written as the same discount line any
+  other code gets so its tax goes with it. A type neither side works out is
+  quoted as nothing rather than as money off.
+
+  `price_override` and `override_recurring` are still read by nothing. They are
+  offered by the form and give zero on both sides; whether they should work or
+  stop being offered is a decision, not a silent gap.
+- **The System Health box read free space from the filesystem root**, which
+  `open_basedir` hides on shared and panel-managed hosts, so it said 0 GB on a
+  disk with room to spare. It reads the installation's own disk, and says N/A
+  rather than 0 when even that cannot be read.
+- **A Plesk panel with no customers, or no resellers, could not be listed.**
+  Plesk answers an empty list with one result that is "ok" and carries nothing;
+  reading it as an account stopped the whole list with
+  `Attempt to read property "login" on null`. Every list read from the XML API
+  now takes only the results that carry data.
+
+  The same shape had a second effect, fixed with it: when the last subscription
+  of a customer was terminated, an empty answer counted as one remaining
+  subscription, so the Plesk customer was always kept with the message that
+  others remained. That deletion path now works as 1.27.0 intended — an
+  operator used to the customer being left behind will see it removed.
+- **The README promised an IP allow-list for the admin area.** There is no such
+  restriction; the allow-list that exists is per API credential, the addresses
+  and ranges a key may be used from.
+
+### For theme and module authors
+
+- `Promotion::givesFreeSetup()` says whether a code waives the setup fee rather
+  than taking something off the price.
+- `HealthWidget::freeDiskGb($path)` returns the free space on a path's disk, or
+  null when it cannot be read.
+
+### Views a theme may override that changed
+
+- `admin/orders/create` — the setup-fee box.
+
 ## 1.28.0 — 2026-11-16
 
 A stable release, offered to every installation. A visitor can start in the
