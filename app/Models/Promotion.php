@@ -135,6 +135,15 @@ class Promotion extends Model
         return array_filter($eligible, fn ($key) => isset($chosen[$key]), ARRAY_FILTER_USE_KEY);
     }
 
+    /**
+     * Whether the code waives the one-time setup fee rather than taking
+     * something off the price.
+     */
+    public function givesFreeSetup(): bool
+    {
+        return $this->type === 'free_setup';
+    }
+
     /** Whether a line billed over this period may carry the code. */
     public function coversCycle(?string $cycle): bool
     {

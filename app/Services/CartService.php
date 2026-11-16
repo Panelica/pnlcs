@@ -593,6 +593,7 @@ class CartService
             if ($promo && $this->promoFits($cart, $promo)) {
                 $discountable = $taxable + $untaxed;
                 $sides = ['taxable' => $taxable, 'untaxed' => $untaxed];
+                $chosen = null;
 
                 // A code limited to some products comes off those lines only,
                 // exactly as the invoice writes it. The cart used to take the
@@ -616,16 +617,37 @@ class CartService
                         }
                     }
 
-                    foreach ($promo->pickLimited($eligible, fn ($item) => (float) ($item['price'] ?? 0)) as $index => $item) {
+                    $chosen = $promo->pickLimited($eligible, fn ($item) => (float) ($item['price'] ?? 0));
+
+                    foreach ($chosen as $index => $item) {
                         $sides[($taxFlags['items'][$index] ?? true) ? 'taxable' : 'untaxed'] += (float) ($item['price'] ?? 0);
                     }
 
                     $discountable = min(array_sum($sides), $discountable);
                 }
 
-                $promoDiscount = $promo->type === 'percentage'
-                    ? round($discountable * ((float) $promo->value / 100), 2)
-                    : min((float) $promo->value, $discountable);
+                // A free-setup code takes off the setup fees of the lines it
+                // covers and nothing else, as the invoice writes it.
+                if ($promo->givesFreeSetup()) {
+                    $sides = ['taxable' => 0.0, 'untaxed' => 0.0];
+
+                    foreach ($chosen ?? $items as $index => $item) {
+                        $sides[($taxFlags['items'][$index] ?? true) ? 'taxable' : 'untaxed'] += round((float) ($item['setup_fee'] ?? 0), 2);
+                    }
+
+                    $discountable = array_sum($sides);
+                }
+
+                // The types the invoice gives a discount for, and no other: any
+                // type but a percentage used to be quoted here as a fixed
+                // amount of its value, so a code the invoice gives nothing for
+                // was shown in the cart as money off.
+                $promoDiscount = match ($promo->type) {
+                    'percentage' => round($discountable * ((float) $promo->value / 100), 2),
+                    'fixed', 'fixed_amount' => min((float) $promo->value, $discountable),
+                    'free_setup' => round($discountable, 2),
+                    default => 0.0,
+                };
 
                 // The invoice writes the promotion as a taxed and an untaxed
                 // line, each the share of the work it covers, so each side
