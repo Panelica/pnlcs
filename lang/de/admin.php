@@ -2031,6 +2031,7 @@ return [
         'new_price_hint' => 'Leer lassen für den Produktpreis in der Währung des Kunden.',
         'new_domain' => 'Domain oder Hostname',
         'new_accept' => 'Bestellung jetzt annehmen und den Dienst einrichten. Die Rechnung bleibt offen, bis sie bezahlt ist.',
+        'new_setup_fee' => 'Die Einrichtungsgebühr des Produkts berechnen, falls es eine hat.',
         'new_submit' => 'Bestellung anlegen',
         'new_placed' => 'Bestellung :number angelegt.',
         'new_client_unknown' => 'Kein Kunde mit dieser Nummer oder E-Mail.',

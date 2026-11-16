@@ -2005,6 +2005,7 @@ return [
         'new_price_hint' => 'Lascia vuoto per il prezzo del prodotto nella valuta del cliente.',
         'new_domain' => 'Dominio o nome host',
         'new_accept' => 'Accetta subito l\'ordine e attiva il suo servizio. La fattura resta non pagata finché non viene saldata.',
+        'new_setup_fee' => 'Addebita il costo di attivazione del prodotto, se previsto.',
         'new_submit' => 'Invia ordine',
         'new_placed' => 'Ordine :number inviato.',
         'new_client_unknown' => 'Nessun cliente con quel numero o quella email.',

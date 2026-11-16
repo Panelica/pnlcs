@@ -2031,6 +2031,7 @@ return [
         'new_price_hint' => '留空则使用该产品在客户货币下的价格。',
         'new_domain' => '域名或主机名',
         'new_accept' => '立即接受订单并开通服务。发票在付款前保持未付状态。',
+        'new_setup_fee' => '收取该产品的安装费(如有)。',
         'new_submit' => '创建订单',
         'new_placed' => '订单 :number 已创建。',
         'new_client_unknown' => '没有该编号或邮箱的客户。',
