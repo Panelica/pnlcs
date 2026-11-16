@@ -2003,6 +2003,7 @@ return [
 		'new_price_hint' => 'Dejar vacío para el precio del producto en la moneda del cliente.',
 		'new_domain' => 'Dominio o nombre de host',
 		'new_accept' => 'Acepte el pedido ahora y configure su servicio. La factura seguirá impaga hasta que se pague.',
+		'new_setup_fee' => 'Cobrar la cuota de instalación del producto, si la tiene.',
 		'new_submit' => 'Realizar pedido',
 		'new_placed' => 'Orden :number realizado.',
 		'new_client_unknown' => 'Ningún cliente con ese número o correo electrónico.',

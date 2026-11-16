@@ -2031,6 +2031,7 @@ return [
         'new_price_hint' => "Leave empty for the product's price in the customer's currency.",
         'new_domain' => 'Domain or hostname',
         'new_accept' => 'Accept the order now and set up its service. The invoice stays unpaid until it is paid.',
+        'new_setup_fee' => 'Charge the product\'s setup fee, if it has one.',
         'new_submit' => 'Place order',
         'new_placed' => 'Order :number placed.',
         'new_client_unknown' => 'No customer with that number or email.',

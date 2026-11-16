@@ -77,6 +77,13 @@
                 </div>
             </div>
             <div class="form-group">
+                <input type="hidden" name="setup_fee" value="0">
+                <label style="display:flex;gap:8px;align-items:flex-start;font-weight:400;">
+                    <input type="checkbox" name="setup_fee" value="1" @checked((bool) old('setup_fee', true)) style="margin-top:3px;">
+                    <span>{{ __('admin.orders.new_setup_fee') }}</span>
+                </label>
+            </div>
+            <div class="form-group">
                 <input type="hidden" name="accept" value="0">
                 <label style="display:flex;gap:8px;align-items:flex-start;font-weight:400;">
                     <input type="checkbox" name="accept" value="1" @checked($acceptOld) style="margin-top:3px;">

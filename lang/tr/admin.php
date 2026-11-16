@@ -2012,6 +2012,7 @@ return [
         'new_price_hint' => 'Boş bırakırsanız ürünün müşterinin para birimindeki fiyatı kullanılır.',
         'new_domain' => 'Alan adı ya da sunucu adı',
         'new_accept' => 'Siparişi şimdi onayla ve hizmeti kur. Fatura ödenene kadar ödenmemiş kalır.',
+        'new_setup_fee' => 'Ürünün kurulum ücreti varsa onu da al.',
         'new_submit' => 'Siparişi oluştur',
         'new_placed' => ':number numaralı sipariş oluşturuldu.',
         'new_client_unknown' => 'Bu numara ya da e-postayla bir müşteri yok.',

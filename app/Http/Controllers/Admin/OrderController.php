@@ -67,6 +67,7 @@ class OrderController extends Controller
             }],
             'promo_code' => 'nullable|string|max:255',
             'accept' => 'nullable|boolean',
+            'setup_fee' => 'nullable|boolean',
         ]);
 
         $client = $this->findClient($v['client']);
@@ -92,6 +93,11 @@ class OrderController extends Controller
             'domain' => trim((string) ($v['domain'] ?? '')),
             'billing_cycle' => $v['billing_cycle'],
             'amount' => (float) $price,
+            // The product's one-time setup fee, as the shop charges it. The
+            // order was raised without it, so a plan sold at "100 a year plus
+            // 50 setup" was billed 100 when staff placed it. Staff can leave
+            // it off: a sale agreed on the phone often waives it.
+            'setup_fee' => $request->boolean('setup_fee', true) ? $product->setupFeeFor($v['billing_cycle']) : 0.0,
         ]], (string) $v['payment_method'], $v['promo_code'] ?? null);
 
         \App\Models\ActivityLog::log('Order '.$order->order_num.' placed by staff', auth('admin')->user()?->username, $client->id, $order->invoice_id);

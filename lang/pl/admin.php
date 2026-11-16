@@ -2031,6 +2031,7 @@ return [
         'new_price_hint' => 'Zostaw puste, aby użyć ceny produktu w walucie klienta.',
         'new_domain' => 'Domena lub nazwa hosta',
         'new_accept' => 'Przyjmij zamówienie teraz i uruchom usługę. Faktura pozostaje nieopłacona do czasu zapłaty.',
+        'new_setup_fee' => 'Nalicz opłatę instalacyjną produktu, jeśli ją ma.',
         'new_submit' => 'Złóż zamówienie',
         'new_placed' => 'Zamówienie :number złożone.',
         'new_client_unknown' => 'Brak klienta o tym numerze lub adresie e-mail.',
