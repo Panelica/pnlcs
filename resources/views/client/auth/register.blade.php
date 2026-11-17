@@ -6,12 +6,13 @@
     <title>{{ __('client.auth.register_title') }} - {{ company_name() }}</title>
     @include('partials.seo-meta', ['title' => __('client.auth.register_title').' - '.company_name()])
     @vite(['resources/css/app.css'])
+    @include('client.auth.partials.theme-head')
     <style>
         * { box-sizing: border-box; }
         body { font-family: 'Inter', sans-serif; font-size: 13px; background: #f6f6f6; color: #333; margin: 0; min-height: 100vh; display: flex; flex-direction: column; justify-content: center; align-items: center; padding: 20px; }
         .register-box { width: 100%; max-width: 480px; }
         .login-logo { text-align: center; margin-bottom: 24px; }
-        .login-logo h1 { font-size: 26px; font-weight: 700; color: #1a4d80; margin: 0 0 6px; }
+        .login-logo h1 { font-size: 26px; font-weight: 700; color: var(--theme-primary, #1a4d80); margin: 0 0 6px; }
         .login-logo p { font-size: 13px; color: #777; margin: 0; }
         .card { background: #fff; border: 1px solid #ddd; border-radius: 6px; box-shadow: 0 2px 8px rgba(0,0,0,0.06); }
         .card-body { padding: 28px; }
@@ -22,12 +23,12 @@
         select.form-control { height: 34px; }
         .form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
         .btn { display: inline-flex; align-items: center; justify-content: center; padding: 7px 16px; border-radius: 4px; font-size: 13px; font-weight: 500; cursor: pointer; border: 1px solid transparent; text-decoration: none; width: 100%; }
-        .btn-primary { background: #337ab7; color: #fff; border-color: #2e6da4; }
+        .btn-primary { background: var(--theme-accent, #337ab7); color: #fff; border-color: var(--theme-accent-dark, #2e6da4); }
         .btn-primary:hover { background: #286090; }
         .alert { padding: 9px 12px; border-radius: 4px; font-size: 13px; margin-bottom: 14px; background: #f2dede; border: 1px solid #ebccd1; color: #a94442; }
         .alert li { margin: 2px 0; }
         .login-link { text-align: center; margin-top: 16px; font-size: 13px; color: #777; }
-        .login-link a { color: #337ab7; font-weight: 500; text-decoration: none; }
+        .login-link a { color: var(--theme-accent, #337ab7); font-weight: 500; text-decoration: none; }
         .field-note { font-size: 12px; color: #999; margin-top: 3px; }
     </style>
     {!! hook_output('ClientAreaHeadOutput', ['user' => auth()->user()]) !!}
@@ -36,7 +37,11 @@
 <body>
 <div class="register-box">
     <div class="login-logo">
-        <h1>{{ company_name() }}</h1>
+        @if(!empty($customLogo))
+            <img src="{{ $customLogo }}" alt="{{ company_name() }}" style="max-height:48px; margin-bottom:8px;">
+        @else
+            <h1>{{ company_name() }}</h1>
+        @endif
         <p>{{ __('client.auth.create_your_account') }}</p>
     </div>
     <div class="card">
@@ -126,7 +131,7 @@
 
                                 return $url === ''
                                     ? e($label)
-                                    : '<a href="'.e($url).'" target="_blank" rel="noopener" style="color:#337ab7;text-decoration:underline;">'.e($label).'</a>';
+                                    : '<a href="'.e($url).'" target="_blank" rel="noopener" style="color:var(--theme-accent,#337ab7);text-decoration:underline;">'.e($label).'</a>';
                             };
                         @endphp
                         <span>{{ __('client.auth.i_agree_to') }} {!! $legalLink((string) \App\Models\Setting::get('TOSUrl', ''), __('client.auth.terms_of_service')) !!} {{ __('client.auth.and') }} {!! $legalLink((string) \App\Models\Setting::get('PrivacyUrl', ''), __('client.auth.privacy_policy')) !!}.</span>
