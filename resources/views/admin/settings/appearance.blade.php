@@ -70,7 +70,7 @@
                 @endif
                 <form action="{{ route('admin.settings.appearance.logo') }}" method="POST" enctype="multipart/form-data">
                     @csrf
-                    <input type="file" name="logo" accept="image/png,image/jpeg,image/svg+xml,image/webp" class="form-control" style="margin-bottom:8px;">
+                    <input type="file" name="logo" accept="image/png,image/jpeg,image/webp" class="form-control" style="margin-bottom:8px;">
                     <button type="submit" class="btn btn-sm btn-primary"><i class="fas fa-upload"></i> {{ __('admin.appearance.upload_logo') }}</button>
                     <span style="font-size:11px; color:#999; margin-left:6px;">{{ __('admin.appearance.logo_formats') }}</span>
                 </form>
@@ -93,7 +93,7 @@
                 @endif
                 <form action="{{ route('admin.settings.appearance.favicon') }}" method="POST" enctype="multipart/form-data">
                     @csrf
-                    <input type="file" name="favicon" accept="image/png,image/x-icon,image/svg+xml" class="form-control" style="margin-bottom:8px;">
+                    <input type="file" name="favicon" accept="image/png,image/x-icon,.ico" class="form-control" style="margin-bottom:8px;">
                     <button type="submit" class="btn btn-sm btn-primary"><i class="fas fa-upload"></i> {{ __('admin.appearance.upload_favicon') }}</button>
                     <span style="font-size:11px; color:#999; margin-left:6px;">{{ __('admin.appearance.favicon_formats') }}</span>
                 </form>
