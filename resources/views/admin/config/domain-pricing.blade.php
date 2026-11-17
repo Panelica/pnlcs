@@ -116,6 +116,7 @@
                     <div class="form-group"><label class="form-label">{{ __('admin.domain_pricing.transfer_price', ['currency' => $currencySymbol]) }}</label><input type="number" name="transfer_price" id="tld-trans" step="0.01" required class="form-control"></div>
                     <div class="form-group"><label class="form-label">{{ __('admin.domain_pricing.renew_price', ['currency' => $currencySymbol]) }}</label><input type="number" name="renew_price" id="tld-ren" step="0.01" required class="form-control"></div>
                     <div class="form-group"><label class="form-label"><input type="checkbox" name="is_popular" id="tld-popular" value="1"> {{ __('admin.domain_pricing.is_popular') }}</label></div>
+                    <div class="form-group"><label class="form-label"><input type="hidden" name="epp_code" value="0"><input type="checkbox" name="epp_code" id="tld-epp" value="1" checked> {{ __('admin.domain_pricing.epp_code') }}</label></div>
                     <div class="form-group"><label class="form-label">{{ __('admin.domain_pricing.category') }}</label><select name="category" id="tld-cat" class="form-control"><option value="generic">{{ __('client.domain_pricing.generic') }}</option><option value="local">{{ __('client.domain_pricing.local_tlds') }}</option><option value="country">{{ __('client.domain_pricing.country_tab') }}</option><option value="new" selected>{{ __('client.domain_pricing.new_tlds') }}</option></select></div>
                     <div class="form-group"><label class="form-label">{{ __("admin.domain_pricing.restore_price") }}</label><input type="number" name="restore_price" id="tld-restore" step="0.01" min="0" value="0" class="form-control"></div>
                     <div class="form-group"><label class="form-label">{{ __("admin.domain_pricing.privacy_price") }}</label><input type="number" name="privacy_price" id="tld-privacy" step="0.01" min="0" class="form-control"><p style="font-size:11px;color:#999;margin-top:4px;">{{ __("admin.domain_pricing.privacy_price_hint") }}</p></div>
@@ -156,6 +157,7 @@ function openAddTLD() {
     document.getElementById('tld-reg2').value = '';
     document.getElementById('tld-sort').value = 0;
     document.getElementById('tld-enabled').checked = true;
+    document.getElementById('tld-epp').checked = true;
     document.getElementById('modal-tld').style.display = 'flex';
 }
 function openEditTLD(d) {
@@ -177,6 +179,7 @@ function openEditTLD(d) {
     document.getElementById('tld-reg2').value = d.auto_registrar || '';
     document.getElementById('tld-sort').value = d.sort_order || 0;
     document.getElementById('tld-enabled').checked = !!d.enabled;
+    document.getElementById('tld-epp').checked = d.epp_code === undefined || d.epp_code === null ? true : !!d.epp_code;
     document.getElementById('modal-tld').style.display = 'flex';
 }
 @if($errors->any())

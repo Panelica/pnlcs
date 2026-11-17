@@ -1132,6 +1132,7 @@ class ConfigController extends Controller
         ]);
         $v['enabled'] = $request->boolean('enabled');
         $v['is_popular'] = $request->boolean('is_popular');
+        $v['epp_code'] = $request->has('epp_code') ? $request->boolean('epp_code') : true;
         DomainPricing::create($v);
 
         return back()->with('success', __('messages.success.tld_created'));
@@ -2225,6 +2226,9 @@ class ConfigController extends Controller
         ]);
         $v['enabled'] = $request->boolean('enabled');
         $v['is_popular'] = $request->boolean('is_popular');
+        if ($request->has('epp_code')) {
+            $v['epp_code'] = $request->boolean('epp_code');
+        }
         $domainPricing->update($v);
 
         return back()->with('success', __('messages.success.tld_updated'));

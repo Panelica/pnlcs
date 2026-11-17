@@ -1176,6 +1176,7 @@ return [
     'domain_pricing.restore_price' => 'Opłata za przywrócenie',
     'domain_pricing.category' => 'Kategoria',
     'domain_pricing.is_popular' => 'Popularne',
+    'domain_pricing.epp_code' => 'Transfer wymaga kodu EPP/Auth',
     'domain_pricing.extension' => 'Rozszerzenie',
     'domain_pricing.grace' => 'Karencja',
     'domain_pricing.grace_period' => 'Okres karencji (dni)',

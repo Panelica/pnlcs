@@ -1147,6 +1147,7 @@ return [
     'domain_pricing.restore_price' => 'Плата за відновлення',
     'domain_pricing.category' => 'Категорія',
     'domain_pricing.is_popular' => 'Популярний',
+    'domain_pricing.epp_code' => 'Для перенесення потрібен код EPP/Auth',
     'domain_pricing.extension' => 'Розширення',
     'domain_pricing.grace' => 'Пільговий період',
     'domain_pricing.grace_period' => 'Пільговий період (дні)',

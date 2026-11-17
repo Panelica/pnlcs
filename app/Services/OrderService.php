@@ -1133,7 +1133,7 @@ class OrderService
 
         $eppCode = trim((string) ($domain->epp_code ?? ''));
 
-        if ($eppCode === '') {
+        if ($eppCode === '' && DomainPricing::transferNeedsAuthCode((string) $domain->domain)) {
             Log::info("Domain #{$domain->id} ({$domain->domain}) is a transfer without an EPP code: it has to be started by hand.");
             $domain->update(['status' => DomainStatus::Active->value]);
 

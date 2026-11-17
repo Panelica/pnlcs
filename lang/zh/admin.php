@@ -1176,6 +1176,7 @@ return [
     'domain_pricing.restore_price' => '赎回费用',
     'domain_pricing.category' => '类别',
     'domain_pricing.is_popular' => '热门',
+    'domain_pricing.epp_code' => '转移需要 EPP/授权码',
     'domain_pricing.extension' => '扩展',
     'domain_pricing.grace' => '宽限期',
     'domain_pricing.grace_period' => '宽限期（天）',

@@ -1176,6 +1176,7 @@ return [
     'domain_pricing.restore_price' => 'Wiederherstellungsgebühr',
     'domain_pricing.category' => 'Kategorie',
     'domain_pricing.is_popular' => 'Beliebt',
+    'domain_pricing.epp_code' => 'Transfer erfordert einen EPP/Auth-Code',
     'domain_pricing.extension' => 'Erweiterung',
     'domain_pricing.grace' => 'Gnade',
     'domain_pricing.grace_period' => 'Kulanzfrist (Tage)',
