@@ -1,6 +1,13 @@
 <?php
 
 return [
+    // Shown on the invoice after any gateway sends the customer back
+    // with ?payment=success|failed|orphan.
+    'payment_return' => [
+        'paid' => 'Pago recibido. Gracias.',
+        'failed' => 'El pago no se ha completado. Puede intentarlo de nuevo o elegir otro método de pago.',
+        'invoice_missing' => 'No encontramos la factura de este pago. Póngase en contacto con soporte.',
+    ],
     'banktransfer.no_accounts' => 'Aún no se han establecido datos bancarios para las transferencias. Por favor contáctenos.',
     'registrar_balance' =>
     [

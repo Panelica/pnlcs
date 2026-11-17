@@ -61,6 +61,13 @@ return [
     'email.test_body' => 'Це тестовий лист від PNLCS для перевірки правильності налаштувань пошти.',
     'email.test_sent' => 'Тестовий лист успішно надіслано на :address.',
     'email.test_subject' => 'Тестовий лист PNLCS',
+    // Shown on the invoice after any gateway sends the customer back
+    // with ?payment=success|failed|orphan.
+    'payment_return' => [
+        'paid' => 'Платіж отримано. Дякуємо.',
+        'failed' => 'Платіж не пройшов. Ви можете спробувати ще раз або вибрати інший спосіб оплати.',
+        'invoice_missing' => 'Ми не знайшли рахунок для цього платежу. Зверніться до служби підтримки.',
+    ],
     'error' => [
         'note_update_failed' => 'Не вдалося зберегти нотатку.',
         'withdrawal_not_possible' => 'Цю виплату неможливо здійснити. Мінімальна сума виплати — :minimum, і вона не може перевищувати ваш баланс.',

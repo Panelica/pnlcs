@@ -71,6 +71,13 @@ L\'accesso API potrebbe non funzionare. Finché il saldo non si può leggere, no
     'email.test_body' => 'Questa è un\'email di prova inviata da PNLCS per verificare che la configurazione della posta funzioni correttamente.',
     'email.test_sent' => 'Email di prova inviata con successo a :address.',
     'email.test_subject' => 'Email di prova PNLCS',
+    // Shown on the invoice after any gateway sends the customer back
+    // with ?payment=success|failed|orphan.
+    'payment_return' => [
+        'paid' => 'Pagamento ricevuto. Grazie.',
+        'failed' => 'Il pagamento non è andato a buon fine. Puoi riprovare o scegliere un altro metodo di pagamento.',
+        'invoice_missing' => 'Non abbiamo trovato la fattura di questo pagamento. Contatta l\'assistenza.',
+    ],
     'error' => [
         'note_update_failed' => 'Impossibile salvare la nota.',
         'withdrawal_not_possible' => 'Questo prelievo non può essere effettuato. L\'importo minimo che possiamo pagare è :minimum e non può superare il tuo saldo.',

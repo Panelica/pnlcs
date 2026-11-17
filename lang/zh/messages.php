@@ -71,6 +71,13 @@ API 访问可能已中断。在无法读取余额期间，也无法发出余额�
     'email.test_body' => '这是 PNLCS 发送的测试邮件，用于验证邮件配置是否正常。',
     'email.test_sent' => '测试邮件已成功发送至 :address。',
     'email.test_subject' => 'PNLCS 测试邮件',
+    // Shown on the invoice after any gateway sends the customer back
+    // with ?payment=success|failed|orphan.
+    'payment_return' => [
+        'paid' => '已收到付款，谢谢。',
+        'failed' => '付款未成功。您可以重试或选择其他付款方式。',
+        'invoice_missing' => '找不到此付款对应的账单，请联系客服。',
+    ],
     'error' => [
         'note_update_failed' => '备注保存失败。',
         'withdrawal_not_possible' => '无法完成提现。最低提现金额为 :minimum，且提现金额不能超过可用余额。',

@@ -69,6 +69,13 @@ Der API-Zugriff ist möglicherweise unterbrochen. Während der Kontostand nicht 
     'email.test_body' => 'Dies ist eine Test-E-Mail, die von PNLCS gesendet wurde, um zu überprüfen, ob Ihre E-Mail-Konfiguration ordnungsgemäß funktioniert.',
     'email.test_sent' => 'Test-E-Mail erfolgreich an :address. gesendet',
     'email.test_subject' => 'PNLCS-Test-E-Mail',
+    // Shown on the invoice after any gateway sends the customer back
+    // with ?payment=success|failed|orphan.
+    'payment_return' => [
+        'paid' => 'Zahlung erhalten. Vielen Dank.',
+        'failed' => 'Die Zahlung ist nicht durchgegangen. Sie können es erneut versuchen oder eine andere Zahlungsart wählen.',
+        'invoice_missing' => 'Die Rechnung zu dieser Zahlung wurde nicht gefunden. Bitte wenden Sie sich an den Support.',
+    ],
     'error' => [
         'note_update_failed' => 'Notiz konnte nicht gespeichert werden.',
         'withdrawal_not_possible' => 'Dieser Rückzug konnte nicht erfolgen. Der kleinste Betrag, den wir auszahlen können, ist :minimum und kann nicht höher sein als Ihr Guthaben.',
