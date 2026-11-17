@@ -135,7 +135,15 @@ class ResellerClubRegistrar implements RegistrarModuleInterface, SyncsDomainData
 
         $response = $this->call('domains/details.json', ['order-id' => $orderId, 'options' => 'NsDetails']);
 
-        return $response['ns1'] ?? json_decode($domain->nameservers ?? '[]', true);
+        // The nameservers come back as separate ns1, ns2, ... keys.
+        $nameservers = [];
+        for ($i = 1; $i <= 13; $i++) {
+            if (! empty($response['ns'.$i]) && is_string($response['ns'.$i])) {
+                $nameservers[] = strtolower($response['ns'.$i]);
+            }
+        }
+
+        return $nameservers ?: (json_decode($domain->nameservers ?? '[]', true) ?: []);
     }
 
     public function saveNameservers(Domain $domain, array $nameservers): bool
@@ -231,7 +239,12 @@ class ResellerClubRegistrar implements RegistrarModuleInterface, SyncsDomainData
                 return ['status' => 'ERROR', 'message' => "HTTP {$response->status()}"];
             }
 
-            return $response->json() ?? [];
+            $json = $response->json();
+
+            // Most commands answer with an object, but some answer with a bare
+            // value: domains/orderid.json returns the order id as a plain
+            // integer. Wrap it so the array return type holds.
+            return is_array($json) ? $json : ($json === null ? [] : ['value' => $json]);
         } catch (\Throwable $e) {
             Log::error("ResellerClub API error: {$e->getMessage()}");
 
@@ -241,18 +254,11 @@ class ResellerClubRegistrar implements RegistrarModuleInterface, SyncsDomainData
 
     protected function getOrderId(string $domain): ?string
     {
+        // Documented response: the order id as a bare integer.
         $response = $this->call('domains/orderid.json', ['domain-name' => $domain]);
+        $id = $response['value'] ?? $response[0] ?? null;
 
-        if (is_numeric($response[0] ?? null)) {
-            return (string) $response[0];
-        }
-
-        // Response might be a direct number
-        if (is_numeric($response)) {
-            return (string) $response;
-        }
-
-        return null;
+        return is_numeric($id) ? (string) $id : null;
     }
 
     protected function getOrCreateCustomer(array $params): ?string
