@@ -6,6 +6,7 @@ use App\Contracts\RegistrarModuleInterface;
 use App\Contracts\SyncsDomainData;
 use App\Models\Domain;
 use App\Models\RegistrarSettings;
+use App\Support\RegistrantContact;
 use Carbon\Carbon;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Log;
@@ -45,6 +46,11 @@ class ResellerClubRegistrar implements RegistrarModuleInterface, SyncsDomainData
 
     public function register(Domain $domain, int $years, array $params = []): array
     {
+        $missing = RegistrantContact::missing($params);
+        if ($missing !== []) {
+            return ['success' => false, 'message' => RegistrantContact::message($missing)];
+        }
+
         // First, get/create customer
         $customerId = $this->getOrCreateCustomer($params);
         if (! $customerId) {
@@ -278,15 +284,15 @@ class ResellerClubRegistrar implements RegistrarModuleInterface, SyncsDomainData
         $response = $this->call('customers/signup.json', [
             'username' => $email,
             'passwd' => bin2hex(random_bytes(8)),
-            'name' => ($params['firstname'] ?? 'Admin').' '.($params['lastname'] ?? ''),
+            'name' => ($params['firstname'] ?? '').' '.($params['lastname'] ?? ''),
             'company' => $params['company'] ?? 'N/A',
-            'address-line-1' => $params['address'] ?? '123 Main St',
-            'city' => $params['city'] ?? 'Anytown',
-            'state' => $params['state'] ?? 'CA',
-            'country' => $params['country'] ?? 'US',
-            'zipcode' => $params['postcode'] ?? '90210',
+            'address-line-1' => $params['address'] ?? '',
+            'city' => $params['city'] ?? '',
+            'state' => $params['state'] ?? '',
+            'country' => $params['country'] ?? '',
+            'zipcode' => $params['postcode'] ?? '',
             'phone-cc' => '1',
-            'phone' => $params['phone'] ?? '5555555555',
+            'phone' => $params['phone'] ?? '',
             'lang-pref' => 'en',
         ], 'POST');
 

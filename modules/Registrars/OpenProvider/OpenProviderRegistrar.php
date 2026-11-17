@@ -6,6 +6,7 @@ use App\Contracts\RegistrarModuleInterface;
 use App\Contracts\SyncsDomainData;
 use App\Models\Domain;
 use App\Models\RegistrarSettings;
+use App\Support\RegistrantContact;
 use Carbon\Carbon;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Log;
@@ -328,12 +329,26 @@ class OpenProviderRegistrar implements RegistrarModuleInterface, SyncsDomainData
             return $stored;
         }
 
-        [$countryCode, $subscriber] = $this->splitPhone($params['phone'] ?? $client->phone_number ?? '');
+        $contact = [
+            'firstname' => $params['firstname'] ?? $client->first_name,
+            'lastname' => $params['lastname'] ?? $client->last_name,
+            'email' => $params['email'] ?? $client->email,
+            'phone' => $params['phone'] ?? $client->phone_number,
+            'address' => $params['address'] ?? $client->address1,
+            'city' => $params['city'] ?? $client->city,
+            'country' => $params['country'] ?? $client->country,
+        ];
+        $missing = RegistrantContact::missing($contact);
+        if ($missing !== []) {
+            throw new \RuntimeException(RegistrantContact::message($missing));
+        }
+
+        [$countryCode, $subscriber] = $this->splitPhone((string) $contact['phone']);
 
         $data = $this->call('post', '/customers', [
             'name' => [
-                'first_name' => $params['firstname'] ?? $client->first_name ?? 'Admin',
-                'last_name' => $params['lastname'] ?? $client->last_name ?? 'Admin',
+                'first_name' => $contact['firstname'],
+                'last_name' => $contact['lastname'],
             ],
             'company_name' => $client->company_name ?: null,
             'email' => $params['email'] ?? $client->email,
@@ -343,12 +358,12 @@ class OpenProviderRegistrar implements RegistrarModuleInterface, SyncsDomainData
                 'subscriber_number' => $subscriber,
             ],
             'address' => [
-                'street' => $params['address'] ?? $client->address1 ?? 'Unknown',
+                'street' => $contact['address'],
                 'number' => '1',
-                'zipcode' => $params['postcode'] ?? $client->postcode ?? '00000',
-                'city' => $params['city'] ?? $client->city ?? 'Unknown',
+                'zipcode' => $params['postcode'] ?? $client->postcode ?? '',
+                'city' => $contact['city'],
                 'state' => $params['state'] ?? $client->state ?? '',
-                'country' => strtoupper($params['country'] ?? $client->country ?? 'US'),
+                'country' => strtoupper((string) $contact['country']),
             ],
         ]);
 
