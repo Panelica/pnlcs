@@ -9,6 +9,7 @@ use App\Models\Domain;
 use App\Models\DomainPricing;
 use App\Models\RegistrarSettings;
 use App\Models\Setting;
+use App\Services\DomainSyncChanges;
 use App\Services\Module\ModuleRegistry;
 use App\Services\RdapRegistrationDate;
 use Carbon\Carbon;
@@ -31,7 +32,7 @@ use Illuminate\Support\Facades\Log;
  * one - the domain falls due the day it expires - and for a transfer both are
  * only a guess, today plus the years ordered, until the registry is asked.
  * While the due date is still the expiry date, a corrected expiry takes the
- * due date with it (diff()). Left behind, a transfer the registry added no
+ * due date with it (DomainSyncChanges). Left behind, a transfer the registry added no
  * time to was invoiced months after the domain had expired.
  */
 class DomainSyncCommand extends Command
@@ -147,7 +148,7 @@ class DomainSyncCommand extends Command
                 continue;
             }
 
-            $changes = $this->diff($domain, $result);
+            $changes = DomainSyncChanges::between($domain, $result);
             if (! $changes) {
                 continue;
             }
@@ -275,61 +276,6 @@ class DomainSyncCommand extends Command
         }
 
         return $moved;
-    }
-
-    /**
-     * Only report genuine differences so an unchanged domain is never written.
-     *
-     * @param  array<string, mixed>  $result
-     * @return array<string, mixed>
-     */
-    private function diff(Domain $domain, array $result): array
-    {
-        $changes = [];
-
-        // The registrar's own creation date fills a blank one first; RDAP is
-        // only the fallback in the pass below, and never overwrites.
-        $registration = $result['registration_date'] ?? null;
-        if ($registration && ! $domain->registration_date) {
-            $changes['registration_date'] = $registration;
-        }
-
-        $expiry = $result['expiry_date'] ?? null;
-        if ($expiry && optional($domain->expiry_date)->toDateString() !== $expiry) {
-            $changes['expiry_date'] = $expiry;
-
-            // The due date was following the expiry date, so it keeps
-            // following it. One set apart from it stays where it is.
-            if ($domain->expiry_date && $domain->next_due_date
-                && $domain->next_due_date->toDateString() === $domain->expiry_date->toDateString()) {
-                $changes['next_due_date'] = $expiry;
-            }
-        }
-
-        $status = $result['status'] ?? null;
-        if ($status && strtolower((string) $domain->status) !== strtolower($status)) {
-            $changes['status'] = $status;
-        }
-
-        $privacy = $result['id_protection'] ?? null;
-        if (is_bool($privacy) && (bool) $domain->id_protection !== $privacy) {
-            $changes['id_protection'] = $privacy;
-        }
-
-        $nameservers = $result['nameservers'] ?? [];
-        if ($nameservers) {
-            $encoded = json_encode(array_values($nameservers));
-            if ($domain->nameservers !== $encoded) {
-                $changes['nameservers'] = $encoded;
-            }
-        }
-
-        $contactId = $result['registrar_contact_id'] ?? null;
-        if ($contactId && (string) $domain->registrar_contact_id !== (string) $contactId) {
-            $changes['registrar_contact_id'] = (string) $contactId;
-        }
-
-        return $changes;
     }
 
     private function describe(mixed $value): string
