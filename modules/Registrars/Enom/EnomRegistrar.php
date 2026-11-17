@@ -6,6 +6,7 @@ use App\Contracts\RegistrarModuleInterface;
 use App\Contracts\SyncsDomainData;
 use App\Models\Domain;
 use App\Models\RegistrarSettings;
+use App\Support\RegistrantContact;
 use Carbon\Carbon;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Log;
@@ -54,6 +55,11 @@ class EnomRegistrar implements RegistrarModuleInterface, SyncsDomainData
 
     public function register(Domain $domain, int $years, array $params = []): array
     {
+        $missing = RegistrantContact::missing($params);
+        if ($missing !== []) {
+            return ['success' => false, 'message' => RegistrantContact::message($missing)];
+        }
+
         $parts = $this->splitDomain($domain->domain);
         $response = $this->call('Purchase', [
             'SLD' => $parts['sld'],
@@ -61,16 +67,16 @@ class EnomRegistrar implements RegistrarModuleInterface, SyncsDomainData
             'NumYears' => $years,
             'NS1' => $params['ns1'] ?? '',
             'NS2' => $params['ns2'] ?? '',
-            'RegistrantFirstName' => $params['firstname'] ?? 'Admin',
-            'RegistrantLastName' => $params['lastname'] ?? 'Admin',
+            'RegistrantFirstName' => $params['firstname'] ?? '',
+            'RegistrantLastName' => $params['lastname'] ?? '',
             'RegistrantEmailAddress' => $params['email'] ?? '',
-            'RegistrantPhone' => $params['phone'] ?? '+1.5555555555',
-            'RegistrantAddress1' => $params['address'] ?? '123 Main St',
-            'RegistrantCity' => $params['city'] ?? 'Anytown',
+            'RegistrantPhone' => $params['phone'] ?? '',
+            'RegistrantAddress1' => $params['address'] ?? '',
+            'RegistrantCity' => $params['city'] ?? '',
             'RegistrantStateProvinceChoice' => 'S',
-            'RegistrantStateProvince' => $params['state'] ?? 'CA',
-            'RegistrantPostalCode' => $params['postcode'] ?? '90210',
-            'RegistrantCountry' => $params['country'] ?? 'US',
+            'RegistrantStateProvince' => $params['state'] ?? '',
+            'RegistrantPostalCode' => $params['postcode'] ?? '',
+            'RegistrantCountry' => $params['country'] ?? '',
         ]);
 
         if (($response['ErrCount'] ?? '1') === '0') {

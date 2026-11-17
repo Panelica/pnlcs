@@ -6,6 +6,7 @@ use App\Contracts\RegistrarModuleInterface;
 use App\Contracts\SyncsDomainData;
 use App\Models\Domain;
 use App\Models\RegistrarSettings;
+use App\Support\RegistrantContact;
 use Carbon\Carbon;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Log;
@@ -49,47 +50,52 @@ class NamecheapRegistrar implements RegistrarModuleInterface, SyncsDomainData
 
     public function register(Domain $domain, int $years, array $params = []): array
     {
+        $missing = RegistrantContact::missing($params);
+        if ($missing !== []) {
+            return ['success' => false, 'message' => RegistrantContact::message($missing)];
+        }
+
         $parts = $this->splitDomain($domain->domain);
 
         $response = $this->call('namecheap.domains.create', [
             'DomainName' => $domain->domain,
             'Years' => $years,
-            'RegistrantFirstName' => $params['firstname'] ?? 'Admin',
-            'RegistrantLastName' => $params['lastname'] ?? 'Admin',
-            'RegistrantAddress1' => $params['address'] ?? '123 Main St',
-            'RegistrantCity' => $params['city'] ?? 'Anytown',
-            'RegistrantStateProvince' => $params['state'] ?? 'CA',
-            'RegistrantPostalCode' => $params['postcode'] ?? '90210',
-            'RegistrantCountry' => $params['country'] ?? 'US',
-            'RegistrantPhone' => $params['phone'] ?? '+1.5555555555',
+            'RegistrantFirstName' => $params['firstname'] ?? '',
+            'RegistrantLastName' => $params['lastname'] ?? '',
+            'RegistrantAddress1' => $params['address'] ?? '',
+            'RegistrantCity' => $params['city'] ?? '',
+            'RegistrantStateProvince' => $params['state'] ?? '',
+            'RegistrantPostalCode' => $params['postcode'] ?? '',
+            'RegistrantCountry' => $params['country'] ?? '',
+            'RegistrantPhone' => $params['phone'] ?? '',
             'RegistrantEmailAddress' => $params['email'] ?? '',
             // Tech/Admin/AuxBilling = same as Registrant
-            'TechFirstName' => $params['firstname'] ?? 'Admin',
-            'TechLastName' => $params['lastname'] ?? 'Admin',
-            'TechAddress1' => $params['address'] ?? '123 Main St',
-            'TechCity' => $params['city'] ?? 'Anytown',
-            'TechStateProvince' => $params['state'] ?? 'CA',
-            'TechPostalCode' => $params['postcode'] ?? '90210',
-            'TechCountry' => $params['country'] ?? 'US',
-            'TechPhone' => $params['phone'] ?? '+1.5555555555',
+            'TechFirstName' => $params['firstname'] ?? '',
+            'TechLastName' => $params['lastname'] ?? '',
+            'TechAddress1' => $params['address'] ?? '',
+            'TechCity' => $params['city'] ?? '',
+            'TechStateProvince' => $params['state'] ?? '',
+            'TechPostalCode' => $params['postcode'] ?? '',
+            'TechCountry' => $params['country'] ?? '',
+            'TechPhone' => $params['phone'] ?? '',
             'TechEmailAddress' => $params['email'] ?? '',
-            'AdminFirstName' => $params['firstname'] ?? 'Admin',
-            'AdminLastName' => $params['lastname'] ?? 'Admin',
-            'AdminAddress1' => $params['address'] ?? '123 Main St',
-            'AdminCity' => $params['city'] ?? 'Anytown',
-            'AdminStateProvince' => $params['state'] ?? 'CA',
-            'AdminPostalCode' => $params['postcode'] ?? '90210',
-            'AdminCountry' => $params['country'] ?? 'US',
-            'AdminPhone' => $params['phone'] ?? '+1.5555555555',
+            'AdminFirstName' => $params['firstname'] ?? '',
+            'AdminLastName' => $params['lastname'] ?? '',
+            'AdminAddress1' => $params['address'] ?? '',
+            'AdminCity' => $params['city'] ?? '',
+            'AdminStateProvince' => $params['state'] ?? '',
+            'AdminPostalCode' => $params['postcode'] ?? '',
+            'AdminCountry' => $params['country'] ?? '',
+            'AdminPhone' => $params['phone'] ?? '',
             'AdminEmailAddress' => $params['email'] ?? '',
-            'AuxBillingFirstName' => $params['firstname'] ?? 'Admin',
-            'AuxBillingLastName' => $params['lastname'] ?? 'Admin',
-            'AuxBillingAddress1' => $params['address'] ?? '123 Main St',
-            'AuxBillingCity' => $params['city'] ?? 'Anytown',
-            'AuxBillingStateProvince' => $params['state'] ?? 'CA',
-            'AuxBillingPostalCode' => $params['postcode'] ?? '90210',
-            'AuxBillingCountry' => $params['country'] ?? 'US',
-            'AuxBillingPhone' => $params['phone'] ?? '+1.5555555555',
+            'AuxBillingFirstName' => $params['firstname'] ?? '',
+            'AuxBillingLastName' => $params['lastname'] ?? '',
+            'AuxBillingAddress1' => $params['address'] ?? '',
+            'AuxBillingCity' => $params['city'] ?? '',
+            'AuxBillingStateProvince' => $params['state'] ?? '',
+            'AuxBillingPostalCode' => $params['postcode'] ?? '',
+            'AuxBillingCountry' => $params['country'] ?? '',
+            'AuxBillingPhone' => $params['phone'] ?? '',
             'AuxBillingEmailAddress' => $params['email'] ?? '',
             'Nameservers' => implode(',', array_filter([$params['ns1'] ?? '', $params['ns2'] ?? ''])),
         ]);
