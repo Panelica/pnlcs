@@ -57,19 +57,31 @@ class ResellerClubRegistrar implements RegistrarModuleInterface, SyncsDomainData
             return ['success' => false, 'message' => 'Failed to create/find customer at ResellerClub.'];
         }
 
-        $ns = array_filter([$params['ns1'] ?? 'ns1.example.com', $params['ns2'] ?? 'ns2.example.com']);
+        // ns is required for a registration; a placeholder would leave the
+        // domain pointing nowhere, so no nameservers means no registration.
+        $ns = $this->nameserversFrom($params['nameservers'] ?? [$params['ns1'] ?? null, $params['ns2'] ?? null]);
+        if ($ns === []) {
+            return ['success' => false, 'message' => 'No nameservers to register the domain with. Set default nameservers or the hosting server\'s.'];
+        }
+
+        $contacts = $this->contactsFor($domain->domain, $customerId, $params['contact_id'] ?? null);
+        if (! $contacts) {
+            return ['success' => false, 'message' => 'ResellerClub returned no default contact for the customer.'];
+        }
 
         $response = $this->call('domains/register.json', [
             'domain-name' => $domain->domain,
             'years' => $years,
             'ns' => $ns,
             'customer-id' => $customerId,
-            'reg-contact-id' => $params['contact_id'] ?? $this->getDefaultContact($customerId),
-            'admin-contact-id' => $params['contact_id'] ?? $this->getDefaultContact($customerId),
-            'tech-contact-id' => $params['contact_id'] ?? $this->getDefaultContact($customerId),
-            'billing-contact-id' => $params['contact_id'] ?? $this->getDefaultContact($customerId),
+            'reg-contact-id' => $contacts['reg'],
+            'admin-contact-id' => $contacts['admin'],
+            'tech-contact-id' => $contacts['tech'],
+            'billing-contact-id' => $contacts['billing'],
             'invoice-option' => 'NoInvoice',
             'protect-privacy' => 'false',
+            // Required by the API; renewals are this panel's job.
+            'auto-renew' => 'false',
         ], 'POST');
 
         if (isset($response['status']) && $response['status'] === 'ERROR') {
@@ -90,14 +102,55 @@ class ResellerClubRegistrar implements RegistrarModuleInterface, SyncsDomainData
         return ['success' => true, 'message' => 'Domain registered via ResellerClub.'];
     }
 
+    /**
+     * domains/transfer.json requires the customer, the four contacts and
+     * auto-renew (KB answer 758); ns and the auth code are optional.
+     */
     public function transfer(Domain $domain, string $eppCode): array
     {
-        $response = $this->call('domains/transfer.json', [
+        $client = $domain->client;
+        $params = array_filter([
+            'firstname' => $client?->first_name, 'lastname' => $client?->last_name, 'email' => $client?->email,
+            'phone' => $client?->phone_number, 'address' => $client?->address1, 'city' => $client?->city,
+            'state' => $client?->state, 'postcode' => $client?->postcode, 'country' => $client?->country,
+            'company' => $client?->company_name,
+        ]);
+
+        $missing = RegistrantContact::missing($params);
+        if ($missing !== []) {
+            return ['success' => false, 'message' => RegistrantContact::message($missing)];
+        }
+
+        $customerId = $this->getOrCreateCustomer($params);
+        if (! $customerId) {
+            return ['success' => false, 'message' => 'Failed to create/find customer at ResellerClub.'];
+        }
+
+        $contacts = $this->contactsFor($domain->domain, $customerId);
+        if (! $contacts) {
+            return ['success' => false, 'message' => 'ResellerClub returned no default contact for the customer.'];
+        }
+
+        $request = [
             'domain-name' => $domain->domain,
-            'auth-code' => $eppCode,
-            'ns' => ['ns1.example.com', 'ns2.example.com'],
+            'customer-id' => $customerId,
+            'reg-contact-id' => $contacts['reg'],
+            'admin-contact-id' => $contacts['admin'],
+            'tech-contact-id' => $contacts['tech'],
+            'billing-contact-id' => $contacts['billing'],
             'invoice-option' => 'NoInvoice',
-        ], 'POST');
+            'auto-renew' => 'false',
+        ];
+        if (trim($eppCode) !== '') {
+            $request['auth-code'] = $eppCode;
+        }
+        // Without nameservers of our own the domain keeps the ones it has.
+        $ns = $this->nameserversFrom(json_decode((string) $domain->nameservers, true) ?: []);
+        if ($ns !== []) {
+            $request['ns'] = $ns;
+        }
+
+        $response = $this->call('domains/transfer.json', $request, 'POST');
 
         if (isset($response['status']) && $response['status'] === 'ERROR') {
             return ['success' => false, 'message' => $response['message'] ?? 'Transfer failed'];
@@ -281,6 +334,8 @@ class ResellerClubRegistrar implements RegistrarModuleInterface, SyncsDomainData
         }
 
         // Create new customer
+        [$phoneCc, $phone] = $this->splitPhone((string) ($params['phone'] ?? ''));
+
         $response = $this->call('customers/signup.json', [
             'username' => $email,
             'passwd' => bin2hex(random_bytes(8)),
@@ -291,19 +346,94 @@ class ResellerClubRegistrar implements RegistrarModuleInterface, SyncsDomainData
             'state' => $params['state'] ?? '',
             'country' => $params['country'] ?? '',
             'zipcode' => $params['postcode'] ?? '',
-            'phone-cc' => '1',
-            'phone' => $params['phone'] ?? '',
+            'phone-cc' => $phoneCc,
+            'phone' => $phone,
             'lang-pref' => 'en',
         ], 'POST');
 
-        return isset($response['customerid']) ? (string) $response['customerid'] : null;
+        // The new customer's id comes back as a bare integer, like orderid.json.
+        $id = $response['value'] ?? $response['customerid'] ?? null;
+
+        return is_numeric($id) ? (string) $id : null;
     }
 
-    protected function getDefaultContact(string $customerId): string
+    /**
+     * The four contact ids for a domain: the customer's default contacts
+     * (contacts/default.json, a POST per KB answer 794, answering per type
+     * with registrantContactDetails, adminContactDetails, ... each carrying
+     * entity.entityid), or the one id the caller passed for all four. A
+     * customer id is never a contact id, so nothing found means null.
+     *
+     * Some registries have no admin, tech or billing contact; the API wants
+     * -1 for those (KB answer 758).
+     *
+     * @return array{reg: string, admin: string, tech: string, billing: string}|null
+     */
+    protected function contactsFor(string $domain, string $customerId, ?string $contactId = null): ?array
     {
-        $response = $this->call('contacts/default.json', ['customer-id' => $customerId, 'type' => 'Contact']);
+        $tld = strtolower((string) substr(strrchr($domain, '.') ?: '', 1));
 
-        return (string) ($response['Contact']['contactid'] ?? $customerId);
+        if ($contactId) {
+            $ids = ['reg' => $contactId, 'admin' => $contactId, 'tech' => $contactId, 'billing' => $contactId];
+        } else {
+            $type = $tld === 'uk' ? 'UkContact' : 'Contact';
+            $response = $this->call('contacts/default.json', ['customer-id' => $customerId, 'type' => $type], 'POST');
+            $set = is_array($response[$type] ?? null) ? $response[$type] : $response;
+
+            $id = function (string $role) use ($set): ?string {
+                $details = $set[$role] ?? null;
+                $value = is_array($details) ? ($details['entity.entityid'] ?? $details['entityid'] ?? $details['contactid'] ?? null) : null;
+
+                return is_numeric($value) ? (string) $value : null;
+            };
+
+            $reg = $id('registrantContactDetails');
+            if (! $reg) {
+                return null;
+            }
+            $ids = [
+                'reg' => $reg,
+                'admin' => $id('adminContactDetails') ?? $reg,
+                'tech' => $id('techContactDetails') ?? $reg,
+                'billing' => $id('billingContactDetails') ?? $reg,
+            ];
+        }
+
+        if (in_array($tld, ['uk', 'ru', 'eu'], true)) {
+            $ids['admin'] = '-1';
+        }
+        if (in_array($tld, ['uk', 'ru'], true)) {
+            $ids['tech'] = '-1';
+        }
+        if (in_array($tld, ['uk', 'ru', 'at', 'berlin', 'ca', 'nl', 'nz'], true)) {
+            $ids['billing'] = '-1';
+        }
+
+        return $ids;
+    }
+
+    /** @return list<string> */
+    protected function nameserversFrom(mixed $list): array
+    {
+        return array_values(array_filter(array_map(
+            fn ($ns) => strtolower(trim((string) $ns)),
+            is_array($list) ? $list : []
+        )));
+    }
+
+    /**
+     * "+44.2079460000" or "+44 20 7946 0000" into the country code and the
+     * number the signup call takes separately.
+     *
+     * @return array{0: string, 1: string}
+     */
+    protected function splitPhone(string $phone): array
+    {
+        if (preg_match('/^\+(\d{1,3})[.\s-]*(.+)$/', trim($phone), $m)) {
+            return [$m[1], preg_replace('/\D/', '', $m[2])];
+        }
+
+        return ['1', preg_replace('/\D/', '', $phone)];
     }
 
     protected function splitDomain(string $domain): array
