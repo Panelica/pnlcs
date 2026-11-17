@@ -9,9 +9,9 @@ use App\Models\Domain;
 use App\Models\RegistrarSettings;
 use App\Services\DomainRegistrarActions;
 use App\Services\DomainService;
+use App\Services\DomainSyncChanges;
 use App\Services\Module\ModuleRegistry;
 use App\Services\RdapRegistrationDate;
-use Carbon\Carbon;
 use Illuminate\Http\Request;
 
 class DomainController extends Controller
@@ -255,41 +255,19 @@ class DomainController extends Controller
             return back()->with('error', $result['message'] ?? __('admin.domains.sync_failed'));
         }
 
-        $changes = [
+        // The same rule as the nightly domains:sync: the registry's expiry
+        // and status, and a due date that only follows the expiry while it
+        // was following it. This button used to put the due date 14 days
+        // before every expiry it read, overriding a due date billing had set.
+        $changes = DomainSyncChanges::between($domain, $result) + [
             'last_sync_at' => now(),
             'last_sync_status' => 'ok',
         ];
 
-        if (! empty($result['expiry_date'])) {
-            $changes['expiry_date'] = $result['expiry_date'];
-
-            // The renewal invoice is generated two weeks before the domain
-            // actually expires, so the client still has time to pay it.
-            try {
-                $changes['next_due_date'] = Carbon::parse($result['expiry_date'])
-                    ->subDays(14)
-                    ->toDateString();
-            } catch (\Throwable) {
-                // Keep the previous due date if the registrar's date is odd.
-            }
-        }
-        if (! empty($result['status'])) {
-            $changes['status'] = $result['status'];
-        }
-        if (! empty($result['nameservers'])) {
-            $changes['nameservers'] = json_encode(array_values($result['nameservers']));
-        }
-        if (is_bool($result['id_protection'] ?? null)) {
-            $changes['id_protection'] = $result['id_protection'];
-        }
-
         // Fill a missing registration date: the registrar's own view first
         // (free), RDAP as the fallback for TLDs the registrar does not date.
-        if (! $domain->registration_date) {
-            $date = $result['registration_date'] ?? null;
-            if (! $date) {
-                $date = app(RdapRegistrationDate::class)->forMissing($domain);
-            }
+        if (! $domain->registration_date && empty($changes['registration_date'])) {
+            $date = app(RdapRegistrationDate::class)->forMissing($domain);
             if ($date) {
                 $changes['registration_date'] = $date;
             }
