@@ -650,7 +650,7 @@ class ConfigController extends Controller
             ])
             ->values();
 
-        return view('admin.config.tax', ['groups' => $groups, 'taxEnabled' => $taxEnabled, 'taxInclusive' => $taxInclusive]);
+        return view('admin.config.tax', ['groups' => $groups, 'taxEnabled' => $taxEnabled, 'taxInclusive' => $taxInclusive, 'taxNotice' => \App\Support\TaxNotice::text()]);
     }
 
     public function storeTax(Request $request)

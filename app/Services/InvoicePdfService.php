@@ -356,6 +356,7 @@ class InvoicePdfService
             'notes' => $invoice->notes ? nl2br(e($invoice->notes)) : '',
             'items' => $this->itemsHtml($invoice),
             'vat_summary' => $this->vatSummaryHtml($invoice),
+            'tax_notice' => \App\Support\TaxNotice::forInvoice($invoice) ?? '',
             'company_bank_accounts' => $this->bankAccountsHtml(),
         ];
 

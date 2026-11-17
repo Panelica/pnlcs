@@ -3072,6 +3072,8 @@ return [
     'tax.charge_tax_hint' => 'Disattivato: nessuna imposta viene aggiunta a ordini, fatture o preventivi, qualunque regola ci sia qui sotto. Le regole vengono conservate.',
     'tax.prices_include_tax' => 'I prezzi includono le imposte',
     'tax.prices_include_tax_hint' => 'Attivo: il prezzo che il cliente vede è quello che paga; la fattura mostra l\'imposta contenuta (prezzo × aliquota / (100 + aliquota)). Disattivato: l\'imposta viene aggiunta al prezzo.',
+    'tax.exemption_notice' => 'Nota sui documenti senza imposta',
+    'tax.exemption_notice_hint' => 'Mostrata sulle fatture senza imposta e nel carrello quando non si aggiunge imposta: ad esempio la dicitura richiesta dalla legge per il regime dei piccoli imprenditori («Umsatzsteuerfrei gemäß § 19 UStG.»). Lascia vuoto per non mostrare nulla.',
     'tax.yes' => 'Sì',
     'custom_fields.add_field' => 'Aggiungi campo personalizzato',
     'custom_fields.admin_only' => 'Solo amministratori',

@@ -3113,6 +3113,8 @@ return [
     'tax.charge_tax_hint' => '关闭：无论下方规则如何，任何订单、账单或报价都不加税。规则会保留。',
     'tax.prices_include_tax' => '价格含税',
     'tax.prices_include_tax_hint' => '开启：客户看到的价格即支付金额；账单显示其中包含的税额（价格 × 税率 / (100 + 税率)）。关闭：税额另加。',
+    'tax.exemption_notice' => '无税单据上的说明',
+    'tax.exemption_notice_hint' => '显示在不含税的发票上，以及未加税的购物车中，例如小规模免税所需的法定说明（“Umsatzsteuerfrei gemäß § 19 UStG.”）。留空则不显示。',
     'tax.yes' => '是',
     'custom_fields.add_field' => '添加自定义字段',
     'custom_fields.admin_only' => '仅管理员可见',

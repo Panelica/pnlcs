@@ -22,6 +22,9 @@
                 <strong>{{ __('admin.tax.prices_include_tax') }}</strong>
             </label>
             <div style="font-size:12px;color:#777;margin:-2px 0 4px 22px;">{{ __('admin.tax.prices_include_tax_hint') }}</div>
+            <label for="TaxExemptionNotice" style="font-size:13px;margin-top:6px;"><strong>{{ __('admin.tax.exemption_notice') }}</strong></label>
+            <textarea id="TaxExemptionNotice" name="TaxExemptionNotice" rows="2" maxlength="500" class="form-control" style="max-width:640px;">{{ old('TaxExemptionNotice', $taxNotice ?? '') }}</textarea>
+            <div style="font-size:12px;color:#777;margin:0 0 4px;">{{ __('admin.tax.exemption_notice_hint') }}</div>
             <div><button type="submit" class="btn btn-primary btn-sm">{{ __('common.actions.save_changes') }}</button></div>
         </form>
     </div>

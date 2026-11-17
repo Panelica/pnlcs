@@ -3054,6 +3054,8 @@ return [
 	'tax.charge_tax_hint' => 'Desactivado: no se añade impuesto a ningún pedido, factura u oferta, sean cuales sean las reglas de abajo. Las reglas se conservan.',
 	'tax.prices_include_tax' => 'Los precios incluyen impuestos',
 	'tax.prices_include_tax_hint' => 'Activado: el precio que ve el cliente es lo que paga; la factura muestra el impuesto contenido (precio × tipo / (100 + tipo)). Desactivado: el impuesto se suma.',
+	'tax.exemption_notice' => 'Nota en documentos sin impuestos',
+	'tax.exemption_notice_hint' => 'Se muestra en las facturas sin impuestos y en el carrito cuando no se añade impuesto: por ejemplo, la frase que exige la ley para una exención de pequeña empresa («Umsatzsteuerfrei gemäß § 19 UStG.»). Déjalo vacío para no mostrar nada.',
 	'tax.yes' => 'Sí',
 	'custom_fields.add_field' => 'Agregar campo personalizado',
 	'custom_fields.admin_only' => 'Sólo administrador',
