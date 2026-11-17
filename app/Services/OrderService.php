@@ -1140,6 +1140,8 @@ class OrderService
             return;
         }
 
+        $statusBefore = $domain->status;
+
         try {
             $result = $registrar->transfer($domain, $eppCode);
         } catch (\Throwable $e) {
@@ -1148,8 +1150,16 @@ class OrderService
         }
 
         if ($result['success'] ?? false) {
+            // Most modules record the pending transfer on the domain
+            // themselves rather than returning it; that status stands until
+            // the registrar sync sees the transfer complete. Only a module
+            // that says nothing about the status leaves the domain active.
+            $statusNow = $domain->fresh()?->status;
+            $status = $result['status']
+                ?? ($statusNow !== null && $statusNow !== $statusBefore ? $statusNow : DomainStatus::Active->value);
+
             $domain->update([
-                'status' => $result['status'] ?? DomainStatus::Active->value,
+                'status' => $status,
                 // The code has been consumed; do not keep it lying around.
                 'epp_code' => null,
             ]);
