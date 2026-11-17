@@ -1166,6 +1166,7 @@ return [
     'domain_pricing.restore_price' => 'Geri alma ücreti',
     'domain_pricing.category' => 'Kategori',
     'domain_pricing.is_popular' => 'Popüler',
+    'domain_pricing.epp_code' => 'Transfer için EPP/yetki kodu gerekir',
     'domain_pricing.extension' => 'Uzantı',
     'domain_pricing.grace' => 'Ek Süre',
     'domain_pricing.grace_period' => 'Ek Süre (gün)',

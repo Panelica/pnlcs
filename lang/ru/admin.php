@@ -1145,6 +1145,7 @@ return [
     'domain_pricing.restore_price' => 'Стоимость восстановления',
     'domain_pricing.category' => 'Категория',
     'domain_pricing.is_popular' => 'Популярная',
+    'domain_pricing.epp_code' => 'Для переноса нужен код EPP/Auth',
     'domain_pricing.extension' => 'Зона',
     'domain_pricing.grace' => 'Льготный период',
     'domain_pricing.grace_period' => 'Льготный период (дней)',

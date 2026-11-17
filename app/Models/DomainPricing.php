@@ -25,4 +25,18 @@ class DomainPricing extends Model {
             "privacy_price"   => "float",
         ];
     }
+
+    /**
+     * Whether a transfer of this domain needs an EPP/auth code. Some
+     * registries move a name without one (.uk uses a registrar tag instead),
+     * set per extension with the epp_code flag. An unknown extension asks for
+     * the code, as every transfer did before.
+     */
+    public static function transferNeedsAuthCode(string $domain): bool
+    {
+        $extension = '.'.implode('.', array_slice(explode('.', strtolower(trim($domain))), 1));
+        $flag = static::where('extension', $extension)->value('epp_code');
+
+        return $flag === null ? true : (bool) $flag;
+    }
 }

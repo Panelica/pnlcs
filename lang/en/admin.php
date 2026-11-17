@@ -1176,6 +1176,7 @@ return [
     'domain_pricing.restore_price' => 'Restore fee',
     'domain_pricing.category' => 'Category',
     'domain_pricing.is_popular' => 'Popular',
+    'domain_pricing.epp_code' => 'Transfer needs an EPP/auth code',
     'domain_pricing.extension' => 'Extension',
     'domain_pricing.grace' => 'Grace',
     'domain_pricing.grace_period' => 'Grace Period (days)',

@@ -1159,6 +1159,7 @@ return [
     'domain_pricing.restore_price' => 'Costo di ripristino',
     'domain_pricing.category' => 'Categoria',
     'domain_pricing.is_popular' => 'Popolare',
+    'domain_pricing.epp_code' => 'Il trasferimento richiede un codice EPP/Auth',
     'domain_pricing.extension' => 'Estensione',
     'domain_pricing.grace' => 'Tolleranza',
     'domain_pricing.grace_period' => 'Periodo di tolleranza (giorni)',

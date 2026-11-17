@@ -9,6 +9,7 @@ use App\Models\Cart;
 use App\Models\Client;
 use App\Models\Currency;
 use App\Models\Domain;
+use App\Models\DomainPricing;
 use App\Models\GatewaySettings;
 use App\Models\Product;
 use App\Models\ProductGroup;
@@ -180,7 +181,8 @@ class CartController extends Controller
         $buysDomain = $product->show_domain_options && $domain !== null
             && in_array($domainOption, ['register', 'transfer'], true);
         if ($buysDomain) {
-            if ($domainOption === 'transfer' && trim((string) $request->input('epp_code')) === '') {
+            if ($domainOption === 'transfer' && trim((string) $request->input('epp_code')) === ''
+                && DomainPricing::transferNeedsAuthCode($domain)) {
                 throw ValidationException::withMessages(['epp_code' => __('client.cart.epp_code_required')]);
             }
             $quote = $this->cartService->quoteDomain($domain, $domainOption);
@@ -258,10 +260,14 @@ class CartController extends Controller
             'domain' => 'required|string|max:253',
             'type' => 'required|string|in:register,transfer',
             'years' => 'integer|min:1|max:10',
-            'epp_code' => 'required_if:type,transfer|nullable|string|max:255',
+            'epp_code' => 'nullable|string|max:255',
         ]);
 
         $domain = Domain::normalise($request->domain);
+        if ($request->type === 'transfer' && trim((string) $request->input('epp_code')) === ''
+            && DomainPricing::transferNeedsAuthCode($domain)) {
+            throw ValidationException::withMessages(['epp_code' => __('client.cart.epp_code_required')]);
+        }
         $type = $request->type;
         $years = (int) ($request->years ?? 1);
         $eppCode = $request->input('epp_code');

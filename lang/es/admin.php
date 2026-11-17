@@ -1170,6 +1170,7 @@ return [
 	'domain_pricing.restore_price' => 'Tarifa de restauración',
 	'domain_pricing.category' => 'Categoría',
 	'domain_pricing.is_popular' => 'Popular',
+	'domain_pricing.epp_code' => 'La transferencia requiere un código EPP/Auth',
 	'domain_pricing.extension' => 'Extensión',
 	'domain_pricing.grace' => 'Gracia',
 	'domain_pricing.grace_period' => 'Período de gracia (días)',

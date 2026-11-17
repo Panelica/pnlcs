@@ -40,7 +40,7 @@
 
                 <div class="form-group" style="margin-top:16px;">
                     <label class="form-label" for="epp_code">{{ __('client.domains.epp_code') }}</label>
-                    <input type="text" id="epp_code" name="epp_code" value="{{ old('epp_code') }}" required
+                    <input type="text" id="epp_code" name="epp_code" value="{{ old('epp_code') }}"
                            class="form-control" autocomplete="off" style="font-family:monospace;">
                     <div class="text-muted text-sm" style="margin-top:4px;">{{ __('client.domains.epp_code_transfer_hint') }}</div>
                     @error('epp_code')<div class="text-danger text-sm" style="margin-top:4px;">{{ $message }}</div>@enderror
