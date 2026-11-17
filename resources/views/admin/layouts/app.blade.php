@@ -13,6 +13,11 @@
     @if(!empty($themeCssVars))
     <style id="theme-vars">{!! $themeCssVars !!}</style>
     @endif
+    {{-- Admin views and widgets style themselves with --pn-* names (report
+         headings, muted text, borders). Nothing defined them, so a report's
+         white heading text sat on no background. They follow the theme's
+         tokens, with the starter colours when a token is not set. --}}
+    <style id="pn-vars">:root{--pn-primary:var(--theme-primary,#1a4d80);--pn-heading:var(--theme-heading-color,#1e293b);--pn-text:var(--theme-text-color,#333333);--pn-muted:var(--theme-muted-color,#64748b);--pn-border:var(--theme-border-color,#e2e8f0);--pn-link:var(--theme-link-color,#2563eb);--pn-badge-bg:var(--theme-badge-bg,#e8f0fb);--pn-danger:var(--theme-danger,#ef4444);--pn-body-bg:var(--theme-body-bg,#f6f6f6)}</style>
     <style>
         .sidebar.collapsed { width: 0 !important; min-height: 0; overflow: hidden; padding: 0; border: 0; }
         .sidebar.collapsed + .contentarea { margin-left: 0 !important; border-left: none; }
