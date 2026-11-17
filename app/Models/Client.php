@@ -186,13 +186,6 @@ class Client extends Model
     }
 
     /**
-     * The address invoices and other billing mail goes to.
-     *
-     * The sign-in address belongs to the account owner and is often a
-     * personal mailbox; billing is frequently someone else. When a billing
-     * address is set it wins, otherwise the account address is used.
-     */
-    /**
      * The language text kept on the customer's own records is written in:
      * payment and refund descriptions, notes on their invoices. Their own
      * choice, else the shop's default, never the language of whoever was
@@ -203,6 +196,13 @@ class Client extends Model
         return $this->language ?: (string) Setting::get('DefaultLanguage', config('app.locale', 'en'));
     }
 
+    /**
+     * The address invoices and other billing mail goes to.
+     *
+     * The sign-in address belongs to the account owner and is often a
+     * personal mailbox; billing is frequently someone else. When a billing
+     * address is set it wins, otherwise the account address is used.
+     */
     public function billingEmail(): string
     {
         return $this->billing_email ?: $this->email;
