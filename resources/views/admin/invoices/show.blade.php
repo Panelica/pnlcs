@@ -226,7 +226,12 @@
                     <td>{{ $tx->date?->format(date_fmt()) }}</td>
                     <td>{{ payment_method_label((string) $tx->gateway) }}</td>
                     <td style="font-family:monospace;font-size:12px;">{{ $tx->transaction_id ?? '&mdash;' }}</td>
+                    @if((float) $tx->amount_out > 0)
+                    {{-- A refund moves money out; amount_in is 0 on it. --}}
+                    <td style="text-align:right;color:#d9534f;font-weight:600;">-{{ money_fmt($tx->amount_out) }}</td>
+                    @else
                     <td style="text-align:right;color:#5cb85c;font-weight:600;">+{{ money_fmt($tx->amount_in) }}</td>
+                    @endif
                 </tr>
                 @endforeach
                 </tbody>
@@ -252,7 +257,7 @@
                     <tr><td style="padding:4px 0;color:#777;width:40%;">{{ __('admin.invoices.name') }}</td><td style="padding:4px 0;"><a href="{{ $invoice->client ? route("admin.clients.show", $invoice->client) : "#" }}" style="color:#337ab7;font-weight:600;">{{ $invoice->client?->display_name ?? "Deleted Client" }}</a></td></tr>
                     <tr><td style="padding:4px 0;color:#777;">{{ __('common.form.email') }}</td><td style="padding:4px 0;">{{ $invoice->buyer('email') ?? '-' }}</td></tr>
                     @if($invoice->buyer('address1'))
-                    <tr><td style="padding:4px 0;color:#777;">{{ __('admin.invoices.name') }}</td><td style="padding:4px 0;">{{ $invoice->buyer('address1') }}<br>{{ $invoice->buyer('city') }}, {{ $invoice->buyer('state') }} {{ $invoice->buyer('postcode') }}<br>{{ $invoice->buyer('country') }}</td></tr>
+                    <tr><td style="padding:4px 0;color:#777;">{{ __('common.form.address') }}</td><td style="padding:4px 0;">{{ $invoice->buyer('address1') }}<br>{{ $invoice->buyer('city') }}, {{ $invoice->buyer('state') }} {{ $invoice->buyer('postcode') }}<br>{{ $invoice->buyer('country') }}</td></tr>
                     @endif
                     {{-- Alici kimligi: fatura elle kesilirken portala girilecek
                          olan tam da bu uc satir. Fatura kesildigi andaki hali

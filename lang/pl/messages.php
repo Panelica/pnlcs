@@ -71,6 +71,13 @@ Dostęp do API może być uszkodzony. Dopóki saldo jest nieczytelne, ostrzeżen
     'email.test_body' => 'To jest testowa wiadomość e-mail wysłana z PNLCS w celu weryfikacji poprawności konfiguracji poczty.',
     'email.test_sent' => 'Testowa wiadomość e-mail została wysłana pomyślnie na adres :address.',
     'email.test_subject' => 'PNLCS — testowa wiadomość e-mail',
+    // Shown on the invoice after any gateway sends the customer back
+    // with ?payment=success|failed|orphan.
+    'payment_return' => [
+        'paid' => 'Płatność otrzymana. Dziękujemy.',
+        'failed' => 'Płatność nie powiodła się. Możesz spróbować ponownie lub wybrać inną metodę płatności.',
+        'invoice_missing' => 'Nie znaleźliśmy faktury dla tej płatności. Skontaktuj się z pomocą techniczną.',
+    ],
     'error' => [
         'note_update_failed' => 'Nie udało się zapisać notatki.',
         'withdrawal_not_possible' => 'Ta wypłata nie mogła zostać zrealizowana. Najmniejsza kwota, jaką możemy wypłacić, to :minimum i nie może ona przekraczać Twojego salda.',

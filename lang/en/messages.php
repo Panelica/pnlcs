@@ -71,6 +71,13 @@ API access may be broken. While the balance cannot be read, no low-balance warni
     'email.test_body' => 'This is a test email sent from PNLCS to verify your mail configuration is working correctly.',
     'email.test_sent' => 'Test email sent successfully to :address.',
     'email.test_subject' => 'PNLCS Test Email',
+    // Shown on the invoice after any gateway sends the customer back
+    // with ?payment=success|failed|orphan.
+    'payment_return' => [
+        'paid' => 'Payment received. Thank you.',
+        'failed' => 'The payment did not go through. You can try again or choose another payment method.',
+        'invoice_missing' => 'We could not find the invoice for this payment. Please contact support.',
+    ],
     'error' => [
         'note_update_failed' => 'Could not save the note.',
         'withdrawal_not_possible' => 'That withdrawal could not be made. The smallest amount we can pay out is :minimum, and it cannot be more than your balance.',

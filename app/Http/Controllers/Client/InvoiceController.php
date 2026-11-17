@@ -256,10 +256,10 @@ class InvoiceController extends Controller
     private function flashPaymentOutcome(?string $code): void
     {
         $messages = [
-            'success'       => ['success', 'messages.iyzico.paid'],
-            'failed'        => ['error', 'messages.iyzico.failed'],
+            'success'       => ['success', 'messages.payment_return.paid'],
+            'failed'        => ['error', 'messages.payment_return.failed'],
             'notconfigured' => ['error', 'messages.iyzico.not_configured'],
-            'orphan'        => ['error', 'messages.iyzico.invoice_missing'],
+            'orphan'        => ['error', 'messages.payment_return.invoice_missing'],
         ];
 
         if (! $code || ! isset($messages[$code])) {

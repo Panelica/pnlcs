@@ -71,6 +71,13 @@ API erişimi bozulmuş olabilir. Bakiye okunamadığı sürece düşük bakiye u
     'email.test_body' => 'Bu, mail yapılandırmanızın doğru çalıştığını doğrulamak için PNLCS\'ten gönderilen bir test e-postasıdır.',
     'email.test_sent' => 'Test e-postası :address adresine başarıyla gönderildi.',
     'email.test_subject' => 'PNLCS Test E-postası',
+    // Shown on the invoice after any gateway sends the customer back
+    // with ?payment=success|failed|orphan.
+    'payment_return' => [
+        'paid' => 'Ödemeniz alındı. Teşekkür ederiz.',
+        'failed' => 'Ödeme gerçekleşmedi. Yeniden deneyebilir ya da başka bir ödeme yöntemi seçebilirsiniz.',
+        'invoice_missing' => 'Bu ödemenin faturası bulunamadı. Lütfen destek ekibiyle iletişime geçin.',
+    ],
     'error' => [
         'note_update_failed' => 'Not kaydedilemedi.',
         'withdrawal_not_possible' => 'Bu çekim yapılamadı. Ödenebilecek en düşük tutar :minimum; tutar bakiyenizden de fazla olamaz.',
