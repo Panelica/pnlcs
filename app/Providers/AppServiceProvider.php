@@ -120,6 +120,8 @@ class AppServiceProvider extends ServiceProvider
             'welcome',
             'client.auth.login',
             'client.auth.register',
+            'admin.auth.login',
+            'admin.auth.two-factor',
             'sections.*',
             'legal.*',
             'pages.*',

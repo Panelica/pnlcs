@@ -3,18 +3,17 @@
 <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>{{ __('admin.auth.admin_login_title') }} - PNLCS</title>
+    <title>{{ __('admin.auth.admin_login_title') }} - {{ company_name() }}</title>
     @vite(["resources/css/app.css"])
+    @include('admin.auth.partials.head')
 </head>
 <body style="margin:0;padding:0;background:#f6f6f6;font-family:Inter,-apple-system,BlinkMacSystemFont,sans-serif;min-height:100vh;display:flex;flex-direction:column;align-items:center;justify-content:center;">
 
 <div style="width:100%;max-width:400px;padding:20px;">
     <!-- Logo / Header -->
     <div style="text-align:center;margin-bottom:24px;">
-        <div style="display:inline-flex;align-items:center;justify-content:center;width:56px;height:56px;background:#1a4d80;border-radius:8px;margin-bottom:12px;">
-            <span style="color:#fff;font-size:22px;font-weight:700;">P</span>
-        </div>
-        <h1 style="margin:0;font-size:22px;font-weight:700;color:#1a4d80;">PNLCS</h1>
+        @include('admin.auth.partials.mark')
+        <h1 style="margin:0;font-size:22px;font-weight:700;color:var(--theme-primary,#1a4d80);">{{ company_name() }}</h1>
         <p style="margin:4px 0 0;font-size:13px;color:#666;">{{ __('admin.auth.administration_area') }}</p>
     </div>
 
@@ -66,7 +65,7 @@
 
     <!-- Footer -->
     <p style="text-align:center;font-size:12px;color:#999;margin-top:20px;">
-        &copy; {{ date("Y") }} PNLCS. {{ __('admin.auth.all_rights_reserved') }}
+        &copy; {{ date("Y") }} {{ company_name() }}. {{ __('admin.auth.all_rights_reserved') }}
     </p>
 </div>
 
