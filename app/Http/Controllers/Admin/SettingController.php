@@ -580,11 +580,13 @@ class SettingController extends Controller
     public function uploadLogo(Request $request)
     {
         $request->validate([
-            'logo' => 'required|image|mimes:png,jpg,jpeg,svg,webp|max:2048',
+            'logo' => 'required|image|mimes:png,jpg,jpeg,webp|max:2048',
         ]);
 
         $file = $request->file('logo');
-        $filename = 'logo_' . time() . '.' . $file->getClientOriginalExtension();
+        // The extension comes from the content the rule checked, not from the
+        // name the browser sent: logo.html holding a PNG is still a PNG.
+        $filename = 'logo_' . time() . '.' . $file->guessExtension();
         $file->move(public_path('branding'), $filename);
 
         Setting::set('custom_logo_path', '/branding/' . $filename, 'appearance');
@@ -596,11 +598,14 @@ class SettingController extends Controller
     public function uploadFavicon(Request $request)
     {
         $request->validate([
-            'favicon' => 'required|image|mimes:png,ico,svg|max:512',
+            // Not 'image': Laravel's image rule has no ICO, so every .ico was refused.
+            // No SVG either: the file is served from public/branding on the
+            // panel's own origin, where a script inside an SVG would run.
+            'favicon' => 'required|file|mimes:png,ico|max:512',
         ]);
 
         $file = $request->file('favicon');
-        $filename = 'favicon_' . time() . '.' . $file->getClientOriginalExtension();
+        $filename = 'favicon_' . time() . '.' . $file->guessExtension();
         $file->move(public_path('branding'), $filename);
 
         Setting::set('custom_favicon_path', '/branding/' . $filename, 'appearance');
