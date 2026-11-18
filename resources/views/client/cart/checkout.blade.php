@@ -176,6 +176,9 @@
                         <span>{{ __('client.cart.total') }}</span>
                         <span style="color:var(--primary);font-size:18px">{{ display_money_fmt($totals["total"]) }}</span>
                     </div>
+                    @if($taxNotice = \App\Support\TaxNotice::forCart($totals))
+                    <div class="text-muted" style="font-size:12px;margin-top:6px;line-height:1.5">{{ $taxNotice }}</div>
+                    @endif
                     @if(($creditApplied ?? 0) > 0)
                     <div class="pn-order-row" style="color:var(--success)">
                         <span>{{ __('client.checkout.account_balance') }}</span>

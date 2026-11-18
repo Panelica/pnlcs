@@ -178,6 +178,10 @@
     @endif
     </div>
 
+    @if($taxNotice = \App\Support\TaxNotice::forInvoice($invoice))
+    <div style="clear:both; margin-top:14px; font-size:11px;">{{ $taxNotice }}</div>
+    @endif
+
     @if($invoice->notes)
     <div class="notes">
         <strong>{{ __('pdf.notes') }}:</strong><br>

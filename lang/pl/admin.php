@@ -3103,6 +3103,8 @@ return [
     'tax.charge_tax_hint' => 'Wyłączone: żadne zamówienie, faktura ani oferta nie dostaje podatku, niezależnie od reguł poniżej. Reguły zostają.',
     'tax.prices_include_tax' => 'Ceny zawierają podatek',
     'tax.prices_include_tax_hint' => 'Włączone: cena widoczna dla klienta jest kwotą do zapłaty; faktura pokazuje zawarty w niej podatek (cena × stawka / (100 + stawka)). Wyłączone: podatek jest doliczany.',
+    'tax.exemption_notice' => 'Adnotacja na dokumentach bez podatku',
+    'tax.exemption_notice_hint' => 'Pokazywana na fakturach bez podatku i w koszyku, gdy podatek nie jest doliczany, np. wymagana przez przepisy adnotacja o zwolnieniu podmiotowym („Zwolnienie podmiotowe z VAT na podstawie art. 113 ust. 1 ustawy o VAT”). Zostaw puste, aby nic nie pokazywać.',
     'tax.yes' => 'Tak',
     'custom_fields.add_field' => 'Dodaj pole niestandardowe',
     'custom_fields.admin_only' => 'Tylko dla administratora',

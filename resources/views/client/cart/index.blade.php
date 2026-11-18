@@ -111,6 +111,9 @@
                 <div class="pn-order-row"><span class="key">{{ __('client.cart.tax') }} ({{ $totals["tax_rate"] ?? 0 }}%)</span><span>{{ display_money_fmt($totals["tax"]) }}</span></div>
                 @endif
                 <div class="pn-order-row"><span>{{ __('client.cart.total') }}</span><span style="color:var(--primary)">{{ display_money_fmt($totals["total"]) }}</span></div>
+                @if($taxNotice = \App\Support\TaxNotice::forCart($totals))
+                <div class="text-muted" style="font-size:12px;margin-top:6px;line-height:1.5">{{ $taxNotice }}</div>
+                @endif
                 @include('client.cart.partials.currency-note')
                 <a href="{{ route("client.cart.checkout") }}" class="btn btn-accent" style="width:100%;justify-content:center;margin-top:16px">
                     {{ __('client.cart.checkout') }} &rarr;

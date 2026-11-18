@@ -3103,6 +3103,8 @@ return [
     'tax.charge_tax_hint' => 'Aus: Keiner Bestellung, Rechnung oder keinem Angebot wird Steuer hinzugefügt, unabhängig von den Regeln unten. Die Regeln bleiben erhalten.',
     'tax.prices_include_tax' => 'Preise enthalten Steuer',
     'tax.prices_include_tax_hint' => 'An: Der angezeigte Preis ist der zu zahlende Betrag; die Rechnung weist die enthaltene Steuer aus (Preis × Satz / (100 + Satz)). Aus: Steuer wird aufgeschlagen.',
+    'tax.exemption_notice' => 'Hinweis auf Belegen ohne Steuer',
+    'tax.exemption_notice_hint' => 'Erscheint auf Rechnungen ohne Steuer und im Warenkorb, wenn keine Steuer berechnet wird – etwa der gesetzlich vorgeschriebene Satz der Kleinunternehmerregelung („Umsatzsteuerfrei gemäß § 19 UStG.“). Leer lassen, um nichts anzuzeigen.',
     'tax.yes' => 'Ja',
     'custom_fields.add_field' => 'Benutzerdefiniertes Feld hinzufügen',
     'custom_fields.admin_only' => 'Nur Administrator',

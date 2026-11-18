@@ -3103,6 +3103,8 @@ return [
     'tax.charge_tax_hint' => 'Off: no tax is added to any order, invoice or quote, whatever rules are below. The rules are kept.',
     'tax.prices_include_tax' => 'Prices include tax',
     'tax.prices_include_tax_hint' => 'On: the price a customer sees is what they pay; the invoice shows the tax contained in it (price × rate / (100 + rate)). Off: tax is added on top.',
+    'tax.exemption_notice' => 'Notice on documents without tax',
+    'tax.exemption_notice_hint' => 'Shown on invoices that carry no tax, and in the cart when no tax is added: for example the line your law asks for under a small-business exemption ("Umsatzsteuerfrei gemäß § 19 UStG."). Leave empty to show nothing.',
     'tax.yes' => 'Yes',
     'custom_fields.add_field' => 'Add Custom Field',
     'custom_fields.admin_only' => 'Admin only',

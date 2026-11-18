@@ -86,6 +86,8 @@ class SettingController extends Controller
         // The invoice document template: the built-in view or an uploaded one.
         // The tax page's two switches (#305).
         'TaxEnabled', 'TaxInclusivePrices',
+        // The legal line printed where no tax is charged (#449, App\Support\TaxNotice).
+        'TaxExemptionNotice',
         'AutoSuspensionDays', 'AutoSuspendInvoicedOnly', 'AutoTerminationDays', 'AutoTerminationEnabled',
         'FraudLabsApiKey', 'FraudLabsEnabled',
         'MaxMindAccountId', 'MaxMindEnabled', 'MaxMindLicenseKey',
@@ -177,6 +179,7 @@ class SettingController extends Controller
             'DomainSuggestionCount' => 'sometimes|nullable|integer|between:1,12',
             'DomainSyncRdapMaxPerRun' => 'sometimes|nullable|integer|min:0|max:10000',
             'RegistrarBalanceThreshold' => 'sometimes|nullable|numeric|min:0',
+            'TaxExemptionNotice' => 'sometimes|nullable|string|max:500',
         ]);
 
         $data = $request->only(self::GENERAL_KEYS);
