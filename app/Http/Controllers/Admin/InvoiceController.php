@@ -259,7 +259,7 @@ class InvoiceController extends Controller
         $this->invoiceService->recalculateTotals($invoice);
 
         ActivityLog::log(
-            "Invoice #{$invoice->id} line item updated",
+            "Invoice #{$invoice->invoice_num} line item updated",
             $this->adminName(),
             $invoice->client_id,
             $invoice->id
@@ -286,7 +286,7 @@ class InvoiceController extends Controller
         ]);
 
         ActivityLog::log(
-            "Invoice #{$invoice->id} line item added",
+            "Invoice #{$invoice->invoice_num} line item added",
             $this->adminName(),
             $invoice->client_id,
             $invoice->id
@@ -310,7 +310,7 @@ class InvoiceController extends Controller
         $this->invoiceService->recalculateTotals($invoice);
 
         ActivityLog::log(
-            "Invoice #{$invoice->id} line item removed",
+            "Invoice #{$invoice->invoice_num} line item removed",
             $this->adminName(),
             $invoice->client_id,
             $invoice->id
@@ -341,7 +341,7 @@ class InvoiceController extends Controller
         Mail::to($invoice->client->billingEmail())->queue(new InvoiceCreatedMail($invoice));
 
         ActivityLog::log(
-            "Invoice #{$invoice->id} sent by email",
+            "Invoice #{$invoice->invoice_num} sent by email",
             $this->adminName(),
             $invoice->client_id,
             $invoice->id
@@ -365,7 +365,7 @@ class InvoiceController extends Controller
         Mail::to($invoice->client->billingEmail())->queue(new PaymentReminderMail($invoice, $daysOffset));
 
         ActivityLog::log(
-            "Invoice #{$invoice->id} payment reminder sent",
+            "Invoice #{$invoice->invoice_num} payment reminder sent",
             $this->adminName(),
             $invoice->client_id,
             $invoice->id

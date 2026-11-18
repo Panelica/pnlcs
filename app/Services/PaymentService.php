@@ -227,22 +227,22 @@ class PaymentService
         // balance; the payment rows stay as history, so counting them here
         // would pay the same money out a second time.
         if (strtolower((string) $invoice->status) === InvoiceStatus::Cancelled->value) {
-            return ['success' => false, 'message' => 'This invoice was cancelled and its payments were already returned as credit.'];
+            return ['success' => false, 'message' => __('admin.invoices.refund_already_credited')];
         }
 
         $appliedCredit = round((float) $invoice->credit, 2);
         $paid = round($this->amountPaid($invoice) + $appliedCredit, 2);
 
         if ($paid <= 0.009) {
-            return ['success' => false, 'message' => 'Nothing has been paid on this invoice.'];
+            return ['success' => false, 'message' => __('admin.invoices.refund_nothing_paid')];
         }
 
         $amount = $amount === null ? $paid : round((float) $amount, 2);
         if ($amount <= 0) {
-            return ['success' => false, 'message' => 'Refund amount must be positive.'];
+            return ['success' => false, 'message' => __('admin.invoices.refund_not_positive')];
         }
         if ($amount - $paid > 0.009) {
-            return ['success' => false, 'message' => "Refund amount exceeds the paid amount ({$paid})."];
+            return ['success' => false, 'message' => __('admin.invoices.refund_exceeds_paid', ['paid' => number_format($paid, 2)])];
         }
 
         // Balance first: it is the part that never left the building, and it
@@ -265,17 +265,19 @@ class PaymentService
         if ($useGateway) {
             $module = app(ModuleRegistry::class)->getGatewayModule($gateway);
             if (! $module) {
-                return ['success' => false, 'message' => "Gateway '{$gateway}' is not available for an automatic refund. Use an offline refund instead."];
+                return ['success' => false, 'message' => __('admin.invoices.refund_gateway_unavailable', ['gateway' => $gateway])];
             }
             if (! $payment || ! $payment->transaction_id) {
-                return ['success' => false, 'message' => 'No gateway transaction reference found to refund against.'];
+                return ['success' => false, 'message' => __('admin.invoices.refund_no_reference')];
             }
 
             $result = $module->refund($payment->transaction_id, $cash);
             if (! ($result['success'] ?? false)) {
                 Log::error('PaymentService: gateway refund failed', ['invoice_id' => $invoice->id, 'gateway' => $gateway, 'message' => $result['message'] ?? '']);
 
-                return ['success' => false, 'message' => 'Gateway refund failed: '.($result['message'] ?? 'unknown error')];
+                return ['success' => false, 'message' => empty($result['message'])
+                    ? __('admin.invoices.refund_gateway_failed')
+                    : __('admin.invoices.refund_gateway_failed_reason', ['reason' => $result['message']])];
             }
             $refundRef = $result['refund_id'] ?? null;
         }
@@ -290,7 +292,7 @@ class PaymentService
                     'client_id' => $client->id,
                     'admin_id' => null,
                     'date' => now()->toDateString(),
-                    'description' => "Refund of invoice #{$invoice->invoice_num} — balance returned",
+                    'description' => __('client.invoices.refund_balance_line', ['num' => $invoice->invoice_num], $client->recordLocale()),
                     'amount' => $fromCredit,
                 ]);
 
@@ -307,7 +309,7 @@ class PaymentService
                     'invoice_id' => $invoice->id,
                     'gateway' => $gateway,
                     'date' => now()->toDateString(),
-                    'description' => 'Refund for Invoice #'.($invoice->invoice_num ?? $invoice->id)
+                    'description' => __('client.invoices.refund_line', ['num' => $invoice->invoice_num ?: $invoice->id], $client?->recordLocale())
                         .(! empty($options['reason']) ? ' — '.$options['reason'] : ''),
                     'amount_in' => 0,
                     'fees' => 0,
@@ -333,7 +335,7 @@ class PaymentService
                         'client_id' => $client->id,
                         'admin_id' => null,
                         'date' => now()->toDateString(),
-                        'description' => "Refund of invoice #{$invoice->invoice_num} — funds returned",
+                        'description' => __('client.invoices.refund_funds_line', ['num' => $invoice->invoice_num], $client->recordLocale()),
                         'amount' => -$reclaim,
                     ]);
                 }
@@ -386,7 +388,7 @@ class PaymentService
 
         return [
             'success' => true,
-            'message' => 'Refund of '.number_format($amount, 2).' processed.',
+            'message' => __('admin.invoices.refund_done', ['amount' => number_format($amount, 2)]),
             'amount' => $amount,
             'status' => $invoice->fresh()->status,
         ];
@@ -399,7 +401,7 @@ class PaymentService
             'invoice_id' => $invoice->id,
             'gateway' => $gateway,
             'date' => now()->toDateString(),
-            'description' => $options['description'] ?? ('Payment for Invoice #'.($invoice->invoice_num ?? $invoice->id)),
+            'description' => $options['description'] ?? __('client.invoices.payment_line', ['num' => $invoice->invoice_num ?: $invoice->id], $invoice->client?->recordLocale()),
             'amount_in' => $amount,
             'fees' => (float) ($options['fees'] ?? 0),
             'amount_out' => 0,
@@ -454,14 +456,14 @@ class PaymentService
 
         $addFundsTotal = (float) $invoice->items()->where('type', 'AddFunds')->sum('amount');
         if ($addFundsTotal > 0) {
-            $this->addClientCredit($invoice, $addFundsTotal, "Funds added via invoice #{$invoice->invoice_num}");
+            $this->addClientCredit($invoice, $addFundsTotal, __('client.invoices.funds_added_line', ['num' => $invoice->invoice_num], $invoice->client?->recordLocale()));
         }
 
         // A payment invoice for several invoices: the money is credited, and
         // SettleMassPaymentListener then pays each one from it.
         $massTotal = (float) $invoice->items()->where('type', MassPaymentService::ITEM_TYPE)->sum('amount');
         if ($massTotal > 0) {
-            $this->addClientCredit($invoice, $massTotal, "Payment for several invoices via #{$invoice->invoice_num}");
+            $this->addClientCredit($invoice, $massTotal, __('client.invoices.mass_pay_credit_line', ['num' => $invoice->invoice_num], $invoice->client?->recordLocale()));
         }
     }
 }

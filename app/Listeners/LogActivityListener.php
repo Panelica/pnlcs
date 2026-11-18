@@ -53,8 +53,8 @@ class LogActivityListener
         return match (true) {
             $event instanceof ClientCreated => ["Client #{$event->client->id} created", $event->client->id, null],
             $event instanceof OrderPlaced => ["Order #{$event->order->id} placed", $event->order->client_id, null],
-            $event instanceof InvoiceCreated => ["Invoice #{$event->invoice->id} created", $event->invoice->client_id, $event->invoice->id],
-            $event instanceof InvoicePaid => ["Invoice #{$event->invoice->id} paid", $event->invoice->client_id, $event->invoice->id],
+            $event instanceof InvoiceCreated => ["Invoice #{$event->invoice->invoice_num} created", $event->invoice->client_id, $event->invoice->id],
+            $event instanceof InvoicePaid => ["Invoice #{$event->invoice->invoice_num} paid", $event->invoice->client_id, $event->invoice->id],
             $event instanceof TicketOpened => ["Ticket #{$event->ticket->tid} opened", $event->ticket->client_id, null],
             $event instanceof TicketReplied => ["Ticket #{$event->ticket->tid} replied", $event->ticket->client_id, null],
             $event instanceof ServiceActivated => ["Service #{$event->service->id} activated", $event->service->client_id, null],

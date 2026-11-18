@@ -37,7 +37,7 @@ test('paying an invoice is recorded where the admin area looks for it', function
     $entry = ActivityLog::latest('id')->first();
 
     expect($entry)->not->toBeNull()
-        ->and($entry->description)->toContain("Invoice #{$invoice->id} paid")
+        ->and($entry->description)->toContain("Invoice #{$invoice->invoice_num} paid")
         ->and($entry->client_id)->toBe($client->id);
 });
 

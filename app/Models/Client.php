@@ -192,6 +192,17 @@ class Client extends Model
      * personal mailbox; billing is frequently someone else. When a billing
      * address is set it wins, otherwise the account address is used.
      */
+    /**
+     * The language text kept on the customer's own records is written in:
+     * payment and refund descriptions, notes on their invoices. Their own
+     * choice, else the shop's default, never the language of whoever was
+     * signed in when the record was made.
+     */
+    public function recordLocale(): string
+    {
+        return $this->language ?: (string) Setting::get('DefaultLanguage', config('app.locale', 'en'));
+    }
+
     public function billingEmail(): string
     {
         return $this->billing_email ?: $this->email;
