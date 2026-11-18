@@ -2,6 +2,169 @@
 
 All notable changes to PNLCS are documented here. Newest first.
 
+## 1.30.0 — 2026-11-18
+
+A stable release, offered to every installation. Thirteen reviewed changes:
+domain registrations and transfers stop sending the registry things that were
+never true (a placeholder registrant, a placeholder nameserver, a customer id
+where a contact id belongs), a transfer no longer demands an EPP code for an
+extension whose registry does not use one, a shop that charges no tax can
+print the line its law asks for, and the sign-in pages, the invoice screens
+and the admin's own messages say what they should. No migration.
+
+Thank you [@ertugrulkeyvan](https://github.com/ertugrulkeyvan) for all thirteen
+(#459, #460, #461, #462, #463, #464, #465, #466, #467, #468, #469, #470, #471),
+and thank you [@niosme](https://github.com/niosme) for the nine reports behind
+them (#450, #451, #452, #453, #454, #455, #456, #457, #458) and
+[@Wolfcom](https://github.com/Wolfcom) for #449.
+
+Nothing here had time on the beta channel; it goes out as it was reviewed,
+through the same gates.
+
+### Added
+
+- **A transfer asks for an EPP/auth code only where the extension needs one.**
+  Some registries move a name without one — a .uk transfer is approved with the
+  gaining registrar's IPS tag instead. Every transfer demanded a code all the
+  same, in the cart, on the transfer page and in the order step, so a .uk
+  transfer could not be ordered and had to be started by hand. The flag that
+  says so, `epp_code` on the extension's pricing row, has been in the database
+  since the first release and was read by nothing; it is now on the extension
+  form and decides whether the code is required. Every existing extension keeps
+  asking for one, as before, until an operator clears the box.
+- **A notice on documents that carry no tax**, written once on the tax page.
+  A business under a small-business VAT exemption — Austria's § 6 Abs. 1 Z 27
+  UStG 1994, Germany's § 19 UStG — charges no VAT and must say why on its
+  invoices. PNLCS could already stop charging tax; saying why meant editing
+  views. The line is printed on an invoice that carries no tax (the PDF, the
+  built-in template, the customer's invoice page) and in the cart when no tax
+  is added, and on nothing that does carry tax. Empty by default, so a shop
+  that charges tax sees no change.
+
+### Fixed
+
+- **A ResellerClub transfer pointed the domain's DNS at example.com.** The
+  transfer call sent `ns1.example.com` and `ns2.example.com` as the
+  nameservers, so a name transferred in answered from nowhere until somebody
+  noticed; it also sent none of what the API requires (the customer, the four
+  contact ids, auto-renew), and read the default contacts with a GET from a key
+  the API does not answer with — falling back to the customer id, which is
+  never a contact id. Transfers and registrations now send what ResellerClub's
+  API asks for, keep the nameservers the domain already has when we have none
+  of our own, and refuse rather than invent: no contact, no registration.
+- **Every lookup of a ResellerClub domain failed with "order not found".** The
+  API answers `domains/orderid.json` with the order id as a bare integer, not
+  as JSON; the method that reads it is declared to return an array, so the
+  answer raised a type error that the module's own error handling turned into
+  "order not found". Renewals, nameserver changes, the registrar lock and the
+  EPP code all went that way. The nameservers are read as a list now as well,
+  from the `ns1`, `ns2`, … keys the API actually sends.
+- **A registration no longer invents the registrant's details.** eNom,
+  Namecheap, ResellerClub and Openprovider filled a missing name, address,
+  city, phone or country with a placeholder — "Admin", "123 Main St",
+  "Anytown", CA 90210, US, +1.5555555555 — and registered the domain under it.
+  A domain registered that way belongs on paper to nobody, breaks the
+  registry's accuracy rules and can cost the customer the name. The
+  registration now stops before anything is sent, says which detail is
+  missing, marks the domain as pending and tells the operator, so it can be
+  retried once the customer's profile is complete.
+- **The admin's Sync button moved a due date billing had set.** It wrote the
+  next due date 14 days before every expiry date it read from the registrar,
+  overruling a due date set apart on purpose; the nightly `domains:sync` has
+  moved a due date only while it was still following the expiry since 1.28.0.
+  Both now read the same rule from one place.
+- **A transfer that was started showed as a live domain.** Most registrar
+  modules record the pending transfer on the domain themselves; the order step
+  then overwrote it with "active", so the panel said a name had moved while the
+  losing registrar still had days to release it. A status a module records or
+  returns is kept; a module that says nothing about it still leaves the domain
+  active.
+- **The customer coming back from a payment read a translation key.** The
+  invoice page answered `messages.iyzico.paid`, `.failed` and
+  `.invoice_missing` — three keys that existed in no language file — to a
+  customer returning from any gateway. They are sentences now, in all nine
+  shipped languages, and no longer carry one gateway's name.
+- **A refund showed as "+0.00" in an invoice's payment history**, because the
+  row was read for money coming in; a refund's money is in the column going
+  out. It is shown as a negative amount, and the buyer's address row on the
+  same screen is labelled as an address rather than "Name".
+- **An .ico favicon was refused although the form offered it.** Both uploads
+  were validated with a rule that has no ICO at all and no SVG unless it is
+  asked for, so the most common favicon kind could not be uploaded while the
+  form said "PNG, ICO, SVG". ICO works; SVG is no longer offered for either
+  the favicon or the logo, on purpose — the file is served from the panel's own
+  origin, where a script inside an SVG would run — and the stored file takes
+  its extension from its content, so a PNG uploaded as `logo.html` cannot be
+  served as a page.
+- **The admin's report headings were white text on nothing.** Nine `--pn-*`
+  CSS variables are used by the report tables, the dashboard widgets and
+  several admin screens, and nothing defined them. They are defined on the
+  admin pages now, following the active theme's tokens.
+- **The admin sign-in pages ignored the white-label settings** and printed
+  "PNLCS" in the title, the heading and the footer with a hard-coded "P" badge
+  in the starter blue. They carry the shop's name, its uploaded logo, its
+  favicon and its theme colour, like the client sign-in page.
+- **The other client sign-in pages ignored the theme and the logo.** Register,
+  forgot-password, reset-password, two-factor and invite hard-coded the starter
+  blues and showed no logo, and three of them read card, border and text
+  colours that were defined nowhere. All five follow the theme and show the
+  logo, as the login page does.
+- **Refund messages, payment rows and the activity log read in the wrong
+  language.** Refunding answered the admin "Refund of 50.00 processed." in
+  English whatever their language, and every refusal with it; the payment and
+  refund rows kept on the customer's own records were written in English too.
+  The admin's messages follow the admin's language, and text kept on a
+  customer's records is written in the customer's language — their own choice,
+  else the shop's default, never the language of whoever happened to be signed
+  in. The activity log names an invoice by its invoice number rather than by a
+  database id shown nowhere else.
+
+### Database changes
+
+None. The per-extension EPP flag uses the `domain_pricing.epp_code` column that
+has existed since the first release, with its default of "a code is required",
+so every extension behaves as it did until an operator changes it.
+
+### For theme and module authors
+
+- `App\Support\RegistrantContact::missing($contact)` returns the registrant
+  details a registrar needs that are empty, and `::message($missing)` the
+  sentence a module answers with. A registrar module that fills a missing
+  detail with a placeholder should use these instead.
+- `App\Services\DomainSyncChanges::between($domain, $result)` is what a
+  registrar sync changes on a domain: the registry's expiry and status, and a
+  due date only while it was following the expiry. The nightly command and the
+  admin Sync button both read it.
+- `App\Support\TaxNotice::text()`, `::forInvoice($invoice)` and
+  `::forCart($totals)` give the no-tax notice, or null where tax is charged.
+  The `{tax_notice}` placeholder is available to a custom invoice template; the
+  three shipped templates print it under the totals. A template of your own
+  does not gain it until you add it.
+- `App\Models\DomainPricing::transferNeedsAuthCode($domain)` answers whether a
+  transfer of that name needs an EPP code. An unknown extension needs one.
+- `App\Models\Client::recordLocale()` gives the language that text kept on a
+  customer's own records is written in.
+- A registrar module's `register()` may now be refused before it is called, so
+  a module that relied on core sending a placeholder registrant will see
+  `['success' => false]` with the missing details named.
+
+### Views a theme may override that changed
+
+- `admin/auth/login`, `admin/auth/two-factor` — the shop's name, logo, favicon
+  and theme colour, through the new `admin/auth/partials/head` and
+  `admin/auth/partials/mark`.
+- `client/auth/register`, `client/auth/forgot-password`,
+  `client/auth/reset-password`, `client/auth/two-factor`, `client/auth/invite` —
+  the theme and the logo, through the new `client/auth/partials/theme-head` and
+  `client/auth/partials/brand`.
+- `admin/layouts/app` — the `--pn-*` variables.
+- `admin/invoices/show` — the refund row and the address label.
+- `admin/settings/appearance` — the upload formats offered.
+- `admin/config/tax` — the no-tax notice field.
+- `admin/config/domain-pricing`, `client/domains/transfer` — the EPP flag.
+- `client/cart/index`, `client/cart/checkout`, `client/invoices/show`,
+  `pdf/invoice` — the no-tax notice.
+
 ## 1.29.0 — 2026-11-16
 
 A stable release, offered to every installation. An order placed by staff now
