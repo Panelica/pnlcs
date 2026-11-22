@@ -11,6 +11,7 @@ use App\Models\Service;
 use App\Models\ServiceAddon;
 use Carbon\Carbon;
 use Illuminate\Support\Collection;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Validation\ValidationException;
 
 /**
@@ -258,10 +259,11 @@ class AddonService
     /**
      * Change the billed price, cycle, next due date or notes of an addon.
      *
-     * The stored amount is what the next invoice line uses; past invoices keep
-     * their own copy. A pending addon is waiting on an invoice that was already
-     * written, so changing its price or cycle would make the invoice and the
-     * addon disagree - cancel it and order again, or pay first.
+     * Active and suspended addons keep their price for the next invoice; the
+     * invoices already issued are not rewritten. A pending addon is still on
+     * its open purchase invoice, so its lines are updated with it: otherwise
+     * the customer would pay one figure and the addon would bill another next
+     * time. Paid/cancelled documents are never touched.
      *
      * @param  array<string, mixed>  $data
      */
@@ -273,15 +275,15 @@ class AddonService
             ]);
         }
 
-        $amount = array_key_exists('amount', $data) ? (float) $data['amount'] : (float) $serviceAddon->amount;
-        $cycle = array_key_exists('billing_cycle', $data) ? (string) $data['billing_cycle'] : (string) $serviceAddon->billing_cycle;
-
-        if ($serviceAddon->isPending()
-            && ((float) $serviceAddon->amount !== $amount || (string) $serviceAddon->billing_cycle !== $cycle)) {
+        if ($serviceAddon->isPending() && $serviceAddon->hasBlockingInvoiceLines()) {
             throw ValidationException::withMessages([
                 'addon' => __('admin.messages.service_addon_pending_locked'),
             ]);
         }
+
+        $amount = array_key_exists('amount', $data) ? (float) $data['amount'] : (float) $serviceAddon->amount;
+        $cycle = array_key_exists('billing_cycle', $data) ? (string) $data['billing_cycle'] : (string) $serviceAddon->billing_cycle;
+        $priceChanged = (float) $serviceAddon->amount !== $amount || (string) $serviceAddon->billing_cycle !== $cycle;
 
         $updates = [];
         if (array_key_exists('amount', $data)) {
@@ -297,9 +299,36 @@ class AddonService
             $updates['notes'] = $data['notes'];
         }
 
-        if ($updates !== []) {
-            $serviceAddon->update($updates);
+        if ($updates === []) {
+            return;
         }
+
+        DB::transaction(function () use ($serviceAddon, $updates, $priceChanged, $amount) {
+            $serviceAddon->update($updates);
+
+            if (! $serviceAddon->isPending() || ! $priceChanged) {
+                return;
+            }
+
+            // The purchase invoice is still open: keep its addon lines in step
+            // with the price/cycle the operator just set.
+            foreach ($serviceAddon->invoiceLines()->with('invoice')->get() as $line) {
+                $status = strtolower((string) ($line->invoice?->status));
+
+                if (! in_array($status, ['unpaid', 'overdue', 'draft'], true)) {
+                    continue;
+                }
+
+                $line->update([
+                    'amount' => $amount,
+                    'description' => $this->describe($serviceAddon->fresh()),
+                ]);
+
+                if ($line->invoice) {
+                    app(InvoiceService::class)->recalculateTotals($line->invoice->fresh());
+                }
+            }
+        });
     }
 
     /** Stop billing an addon without touching the service; the record stays. */
@@ -342,13 +371,44 @@ class AddonService
      */
     public function delete(ServiceAddon $serviceAddon): void
     {
-        if ($serviceAddon->hasInvoiceLines()) {
+        if ($serviceAddon->hasBlockingInvoiceLines()) {
             throw ValidationException::withMessages([
                 'addon' => __('admin.messages.service_addon_has_invoices'),
             ]);
         }
 
-        $serviceAddon->delete();
+        if (! $serviceAddon->hasInvoiceLines()) {
+            $serviceAddon->delete();
+
+            return;
+        }
+
+        // The lines are on open (unpaid/overdue/draft) invoices. Removing the
+        // addon removes those lines; an invoice that was only this addon is
+        // cancelled so an empty document is not left behind.
+        DB::transaction(function () use ($serviceAddon) {
+            $lines = $serviceAddon->invoiceLines()->with('invoice')->get();
+            $invoiceIds = $lines->pluck('invoice_id')->unique();
+
+            foreach ($lines as $line) {
+                $line->delete();
+            }
+
+            foreach ($invoiceIds as $invoiceId) {
+                $invoice = Invoice::find($invoiceId);
+                if (! $invoice) {
+                    continue;
+                }
+
+                app(InvoiceService::class)->recalculateTotals($invoice);
+
+                if ($invoice->items()->count() === 0) {
+                    $invoice->update(['status' => InvoiceStatus::Cancelled->value]);
+                }
+            }
+
+            $serviceAddon->delete();
+        });
     }
 
     /** Invoice line wording, kept in one place so renewals and sales match. */

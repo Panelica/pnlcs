@@ -19,7 +19,7 @@
             <div class="alert alert-danger">{{ __('admin.addons.service_ended') }}</div>
         @else
             @if($addon->isPending())
-                <div class="alert alert-warning">{{ __('admin.addons.service_pending_locked') }}</div>
+                <div class="alert alert-warning">{{ __('admin.addons.service_pending_edit_note') }}</div>
             @endif
 
             <form method="POST" action="{{ route('admin.services.addons.update', [$service, $addon]) }}">
@@ -30,12 +30,12 @@
                     <label class="form-label" for="addon-amount">{{ __('common.table.amount') }}</label>
                     <input type="number" step="0.01" min="0" id="addon-amount" name="amount"
                            value="{{ old('amount', number_format((float) $addon->amount, 2, '.', '')) }}"
-                           class="form-control" @disabled($addon->isPending())>
+                           class="form-control">
                 </div>
 
                 <div class="form-group">
                     <label class="form-label" for="addon-cycle">{{ __('common.table.billing_cycle') }}</label>
-                    <select id="addon-cycle" name="billing_cycle" class="form-control" @disabled($addon->isPending())>
+                    <select id="addon-cycle" name="billing_cycle" class="form-control">
                         @foreach($cycles as $cycle)
                             <option value="{{ $cycle }}" @selected(old('billing_cycle', $addon->billing_cycle) === $cycle)>{{ cycle_label($cycle) }}</option>
                         @endforeach

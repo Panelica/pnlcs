@@ -65,18 +65,31 @@ it('lets an admin edit the price and the next invoice line uses it', function ()
     expect((float) $line['amount'])->toBe(75.5);
 });
 
-it('refuses to change the price of an unpaid addon', function () {
+it('updates a pending addon and its open invoice line', function () {
     $fx = pnlcs_test_service_addon(['status' => 'pending']);
+
+    $invoice = Invoice::factory()->create(['client_id' => $fx['client']->id]);
+    $item = InvoiceItem::create([
+        'invoice_id' => $invoice->id,
+        'client_id' => $fx['client']->id,
+        'type' => 'Addon',
+        'rel_id' => $fx['addon']->id,
+        'description' => 'Extra backup',
+        'amount' => 50,
+        'taxed' => true,
+    ]);
 
     $this->actingAs($fx['admin'], 'admin')
         ->put(route('admin.services.addons.update', [$fx['service'], $fx['addon']]), [
-            'amount' => 99,
+            'amount' => 75.50,
             'billing_cycle' => 'Annually',
             'next_due_date' => now()->addYear()->toDateString(),
+            'notes' => 'before payment',
         ])
-        ->assertSessionHasErrors('addon');
+        ->assertRedirect(route('admin.services.show', $fx['service']));
 
-    expect((float) $fx['addon']->fresh()->amount)->toBe(50.0);
+    expect((float) $fx['addon']->fresh()->amount)->toBe(75.5)
+        ->and((float) $item->fresh()->amount)->toBe(75.5);
 });
 
 it('suspends and resumes an addon without touching its service', function () {
@@ -100,10 +113,10 @@ it('suspends and resumes an addon without touching its service', function () {
         ->and($due())->toContain($fx['addon']->id);
 });
 
-it('refuses to delete an addon that already has invoice lines', function () {
+it('refuses to delete an addon whose invoice is paid', function () {
     $fx = pnlcs_test_service_addon();
 
-    $invoice = Invoice::factory()->create(['client_id' => $fx['client']->id]);
+    $invoice = Invoice::factory()->paid()->create(['client_id' => $fx['client']->id]);
     InvoiceItem::create([
         'invoice_id' => $invoice->id,
         'client_id' => $fx['client']->id,
@@ -138,6 +151,29 @@ it('keeps an addon tied to its own service', function () {
     $this->actingAs($fx['admin'], 'admin')
         ->get(route('admin.services.addons.edit', [$other, $fx['addon']]))
         ->assertNotFound();
+});
+
+it('deletes a cancelled addon and cancels its empty unpaid invoice', function () {
+    $fx = pnlcs_test_service_addon(['status' => 'cancelled']);
+
+    $invoice = Invoice::factory()->create(['client_id' => $fx['client']->id]);
+    $item = InvoiceItem::create([
+        'invoice_id' => $invoice->id,
+        'client_id' => $fx['client']->id,
+        'type' => 'Addon',
+        'rel_id' => $fx['addon']->id,
+        'description' => 'Extra backup',
+        'amount' => 50,
+        'taxed' => true,
+    ]);
+
+    $this->actingAs($fx['admin'], 'admin')
+        ->delete(route('admin.services.addons.destroy', [$fx['service'], $fx['addon']]))
+        ->assertRedirect();
+
+    expect(ServiceAddon::find($fx['addon']->id))->toBeNull()
+        ->and(InvoiceItem::find($item->id))->toBeNull()
+        ->and($invoice->fresh()->status)->toBe('cancelled');
 });
 
 it('refuses to delete a product addon that is in use', function () {

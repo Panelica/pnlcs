@@ -382,10 +382,10 @@
                     </form>
                     @endif
 
-                    @if($addon->hasInvoiceLines())
+                    @if($addon->hasBlockingInvoiceLines())
                     <button type="button" class="btn btn-default btn-xs" disabled title="{{ __('admin.addons.service_has_invoices') }}">{{ __('admin.addons.service_delete') }}</button>
                     @else
-                    <form method="POST" action="{{ route('admin.services.addons.destroy', [$service, $addon]) }}" style="display:inline;" onsubmit="return confirm(@js(__('admin.addons.service_delete_confirm')));">
+                    <form method="POST" action="{{ route('admin.services.addons.destroy', [$service, $addon]) }}" style="display:inline;" onsubmit="return confirm(@js($addon->hasInvoiceLines() ? __('admin.addons.service_delete_with_invoice_confirm') : __('admin.addons.service_delete_confirm')));">
                         @csrf
                         @method('DELETE')
                         <button type="submit" class="btn btn-danger btn-xs">{{ __('admin.addons.service_delete') }}</button>

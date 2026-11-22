@@ -57,15 +57,28 @@ class ServiceAddon extends Model
         return in_array(strtolower((string) $this->status), ['cancelled', 'terminated'], true);
     }
 
-    /**
-     * Whether any invoice already carries this addon. Deleting it would leave
-     * those historical lines pointing at nothing; such an addon is cancelled,
-     * never deleted.
-     */
+    /** The invoice lines that bill this addon. */
+    public function invoiceLines()
+    {
+        return $this->hasMany(InvoiceItem::class, 'rel_id')->where('type', 'Addon');
+    }
+
+    /** Whether any invoice already carries this addon. */
     public function hasInvoiceLines(): bool
     {
-        return InvoiceItem::where('type', 'Addon')
-            ->where('rel_id', $this->id)
+        return $this->invoiceLines()->exists();
+    }
+
+    /**
+     * Whether an invoice line sits on a document that must not change:
+     * paid, cancelled or refunded. Those addons are cancelled, never deleted.
+     * Lines on unpaid, overdue or draft invoices are still open and may be
+     * removed together with the addon.
+     */
+    public function hasBlockingInvoiceLines(): bool
+    {
+        return $this->invoiceLines()
+            ->whereHas('invoice', fn ($q) => $q->whereNotIn('status', ['unpaid', 'overdue', 'draft']))
             ->exists();
     }
 
