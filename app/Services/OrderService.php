@@ -443,13 +443,34 @@ class OrderService
      */
     public function acceptOrder(Order $order, bool $manual = false): Order
     {
+        $blocked = in_array($order->status, [OrderStatus::Fraud->value, OrderStatus::Cancelled->value], true);
+
+        // A draft addon order has no invoice yet. Accepting the order is the
+        // acceptance, so issue its invoice first: a product order already has
+        // one by the time it is accepted. A held order is left alone.
+        if (! $blocked) {
+            $drafts = ServiceAddon::where('order_id', $order->id)->where('status', 'draft')->get();
+
+            foreach ($drafts as $draft) {
+                app(AddonService::class)->accept($draft);
+            }
+
+            if ($drafts->isNotEmpty()) {
+                $order->refresh();
+            }
+        }
+
         if ($order->status === OrderStatus::Active->value) {
-            return $order;
+            // Repair an order accepted before its draft addon had an invoice:
+            // the invoice now exists and the addon is pending.
+            $this->activateOrderAddons($order);
+
+            return $order->fresh();
         }
 
         // A held order stays held. Paying for it is not a reason to provision
         // it; an operator has to look at it first.
-        if (in_array($order->status, [OrderStatus::Fraud->value, OrderStatus::Cancelled->value], true)) {
+        if ($blocked) {
             Log::info('Order #'.$order->order_num.' not accepted: status is '.$order->status);
 
             return $order;
@@ -543,9 +564,33 @@ class OrderService
             }
         }
 
-        // Addons bought with a service start billing from the service's own
-        // renewal date. A standalone addon order covered the period from its
-        // issue date, so its next renewal is one cycle after that date.
+        $this->activateOrderAddons($order);
+
+        if ($awaitingManual) {
+            // Keep the order pending so it shows up for admin review.
+            run_hook('PendingOrder', ['order' => $order]);
+            app(NotificationService::class)->dispatch('order.awaiting_acceptance', [
+                'event_type' => 'order.awaiting_acceptance',
+                'subject' => 'Order awaiting manual acceptance',
+                'message' => "Order #{$order->order_num} is paid but contains products that require manual acceptance.",
+                'order_id' => $order->id,
+                'order_num' => $order->order_num,
+            ]);
+        } else {
+            $order->update(['status' => OrderStatus::Active->value]);
+            run_hook('AcceptOrder', ['order' => $order->fresh(), 'manual' => $manual]);
+        }
+
+        return $order->fresh();
+    }
+
+    /**
+     * Activate the order's pending addons. Addons bought with a service start
+     * on the service's renewal date; a standalone addon order covered the
+     * period from its issue date, so its next renewal is one cycle later.
+     */
+    private function activateOrderAddons(Order $order): void
+    {
         $orderHasServices = Service::where('order_id', $order->id)->exists();
 
         foreach (ServiceAddon::where('order_id', $order->id)->where('status', 'pending')->get() as $serviceAddon) {
@@ -565,23 +610,6 @@ class OrderService
                 'next_due_date' => $next,
             ]);
         }
-
-        if ($awaitingManual) {
-            // Keep the order pending so it shows up for admin review.
-            run_hook('PendingOrder', ['order' => $order]);
-            app(NotificationService::class)->dispatch('order.awaiting_acceptance', [
-                'event_type' => 'order.awaiting_acceptance',
-                'subject' => 'Order awaiting manual acceptance',
-                'message' => "Order #{$order->order_num} is paid but contains products that require manual acceptance.",
-                'order_id' => $order->id,
-                'order_num' => $order->order_num,
-            ]);
-        } else {
-            $order->update(['status' => OrderStatus::Active->value]);
-            run_hook('AcceptOrder', ['order' => $order->fresh(), 'manual' => $manual]);
-        }
-
-        return $order->fresh();
     }
 
     /**

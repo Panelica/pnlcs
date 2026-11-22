@@ -322,6 +322,68 @@ it('shows the draft addon on the service and order screens', function () {
         ->assertSee($addon->label());
 });
 
+it('issues the addon invoice when the order itself is accepted', function () {
+    Mail::fake();
+    $fx = pnlcs_test_addon_order_setup();
+
+    $this->actingAs($fx['admin'], 'admin')
+        ->post(route('admin.services.addons.store', $fx['service']), ['addon_id' => $fx['productAddon']->id])
+        ->assertRedirect();
+
+    $addon = ServiceAddon::where('service_id', $fx['service']->id)->firstOrFail();
+    $order = Order::findOrFail($addon->order_id);
+    $issue = now()->addDays(10)->toDateString();
+
+    $this->actingAs($fx['admin'], 'admin')
+        ->put(route('admin.services.addons.update', [$fx['service'], $addon]), [
+            'amount' => 75,
+            'billing_cycle' => 'Annually',
+            'next_due_date' => $issue,
+        ]);
+
+    // Staff may accept the order from Orders instead of the addon's own
+    // Accept button; that acceptance has to raise the invoice too.
+    $this->actingAs($fx['admin'], 'admin')
+        ->post(route('admin.orders.accept', $order))
+        ->assertRedirect();
+
+    $addon->refresh();
+    $order->refresh();
+    $invoice = Invoice::findOrFail($order->invoice_id);
+
+    expect(strtolower((string) $order->status))->toBe('active')
+        ->and(strtolower((string) $addon->status))->toBe('active')
+        ->and($invoice->date->toDateString())->toBe($issue)
+        ->and(strtolower((string) $invoice->status))->toBe('unpaid')
+        ->and((float) $invoice->total)->toBe(75.0)
+        ->and($addon->next_due_date->toDateString())->toBe(Carbon::parse($issue)->addYearNoOverflow()->toDateString());
+});
+
+it('repairs an active order that still has a draft addon', function () {
+    Mail::fake();
+    $fx = pnlcs_test_addon_order_setup();
+
+    $this->actingAs($fx['admin'], 'admin')
+        ->post(route('admin.services.addons.store', $fx['service']), ['addon_id' => $fx['productAddon']->id])
+        ->assertRedirect();
+
+    $addon = ServiceAddon::where('service_id', $fx['service']->id)->firstOrFail();
+    $order = Order::findOrFail($addon->order_id);
+
+    // What the old accept-through-orders path left behind: active order,
+    // draft addon, no invoice.
+    $order->update(['status' => 'active']);
+
+    app(\App\Services\OrderService::class)->acceptOrder($order->fresh());
+
+    $addon->refresh();
+    $order->refresh();
+
+    expect(strtolower((string) $order->status))->toBe('active')
+        ->and($order->invoice_id)->not->toBeNull()
+        ->and(strtolower((string) $addon->status))->toBe('active');
+});
+
 it('refuses to delete a product addon that is in use', function () {
     $fx = pnlcs_test_service_addon();
 
