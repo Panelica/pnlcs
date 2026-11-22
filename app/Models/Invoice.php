@@ -28,7 +28,14 @@ class Invoice extends Model {
         'tax_mode',
         // The language the invoice was issued in, frozen at issue time so a
         // customer who later switches language still reprints the same text.
-        'language'];
+        'language',
+        // The seller as it stood when the invoice was issued: company details,
+        // logo and the bank accounts printed on the document. Without these a
+        // later settings change rewrote every past invoice.
+        'seller_name', 'seller_legal_name', 'seller_website', 'seller_address',
+        'seller_city', 'seller_postcode', 'seller_country', 'seller_phone',
+        'seller_email', 'seller_tax_office', 'seller_tax_id', 'seller_mersis',
+        'seller_logo', 'seller_bank_accounts', 'seller_snapshot_at'];
 
     /**
      * Freeze the billing rate the moment an invoice comes into existence.
@@ -234,7 +241,7 @@ class Invoice extends Model {
                 ->orWhereDoesntHave('replacementInvoice');
         });
     }
-    protected function casts(): array { return ['date' => 'date', 'due_date' => 'date', 'date_paid' => 'datetime', 'subtotal' => 'decimal:2', 'credit' => 'decimal:2', 'tax' => 'decimal:2', 'total' => 'decimal:2', 'buyer_custom_fields' => 'array']; }
+    protected function casts(): array { return ['date' => 'date', 'due_date' => 'date', 'date_paid' => 'datetime', 'subtotal' => 'decimal:2', 'credit' => 'decimal:2', 'tax' => 'decimal:2', 'total' => 'decimal:2', 'buyer_custom_fields' => 'array', 'seller_bank_accounts' => 'array', 'seller_snapshot_at' => 'datetime']; }
 
     public function client() { return $this->belongsTo(Client::class); }
     /**
@@ -454,6 +461,149 @@ class Invoice extends Model {
         }
 
         return CustomField::invoiceSnapshot($this->client);
+    }
+
+    /**
+     * The seller fields to freeze on an invoice when it is issued.
+     *
+     * The company block, the logo and the bank accounts are the other half of
+     * the document: a settings change years later must not alter a VAT invoice
+     * that was already filed. The logo is copied, not referenced, so replacing
+     * the shop logo does not rewrite the past.
+     *
+     * @param  array<string, mixed>  $company  InvoicePdfService::companyDetails()
+     * @param  array<int, array<string, string>>  $accounts
+     * @return array<string, mixed>
+     */
+    public static function sellerSnapshotFrom(array $company, array $accounts): array
+    {
+        return [
+            'seller_name' => $company['name'] ?? null,
+            'seller_legal_name' => $company['legal_name'] ?? null,
+            'seller_website' => $company['domain'] ?? null,
+            'seller_address' => $company['address'] ?? null,
+            'seller_city' => $company['city'] ?? null,
+            'seller_postcode' => $company['postcode'] ?? null,
+            'seller_country' => $company['country'] ?? null,
+            'seller_phone' => $company['phone'] ?? null,
+            'seller_email' => $company['email'] ?? null,
+            'seller_tax_office' => $company['tax_office'] ?? null,
+            'seller_tax_id' => $company['tax_id'] ?? null,
+            'seller_mersis' => $company['mersis'] ?? null,
+            'seller_logo' => self::copySellerLogo($company['logo'] ?? null),
+            'seller_bank_accounts' => array_values($accounts),
+            'seller_snapshot_at' => now(),
+        ];
+    }
+
+    /** Copy the logo into the invoice's own storage; the path is relative to storage/app. */
+    private static function copySellerLogo(?string $source): ?string
+    {
+        if ($source === null || $source === '' || ! is_file($source)) {
+            return null;
+        }
+
+        $hash = @sha1_file($source);
+        if ($hash === false) {
+            return null;
+        }
+
+        $extension = strtolower((string) pathinfo($source, PATHINFO_EXTENSION)) ?: 'png';
+        $relative = 'invoices/seller-logos/'.$hash.'.'.$extension;
+        $target = storage_path('app/'.$relative);
+
+        if (! is_file($target)) {
+            $directory = dirname($target);
+            if (! is_dir($directory) && ! @mkdir($directory, 0775, true) && ! is_dir($directory)) {
+                return null;
+            }
+            if (! @copy($source, $target)) {
+                return null;
+            }
+        }
+
+        return $relative;
+    }
+
+    /**
+     * A seller field as shown on this invoice: the frozen snapshot, falling
+     * back to the live settings for invoices issued before snapshots existed.
+     */
+    public function seller(string $field): mixed
+    {
+        if ($this->seller_snapshot_at !== null) {
+            return $this->getAttribute('seller_'.$field);
+        }
+
+        $live = app(\App\Services\InvoicePdfService::class)->companyDetails();
+        $map = ['website' => 'domain'];
+
+        return $live[$map[$field] ?? $field] ?? null;
+    }
+
+    /**
+     * The seller block the invoice renderer expects, in the same shape
+     * InvoicePdfService::companyDetails() returns.
+     *
+     * @return array<string, string>
+     */
+    public function sellerDetails(): array
+    {
+        if ($this->seller_snapshot_at === null) {
+            return app(\App\Services\InvoicePdfService::class)->companyDetails();
+        }
+
+        return [
+            'name' => (string) $this->seller_name,
+            'legal_name' => (string) $this->seller_legal_name,
+            'domain' => (string) $this->seller_website,
+            'address' => (string) $this->seller_address,
+            'city' => (string) $this->seller_city,
+            'postcode' => (string) $this->seller_postcode,
+            'country' => (string) $this->seller_country,
+            'phone' => (string) $this->seller_phone,
+            'email' => (string) $this->seller_email,
+            'tax_office' => (string) $this->seller_tax_office,
+            'tax_id' => (string) $this->seller_tax_id,
+            'mersis' => (string) $this->seller_mersis,
+            'logo' => $this->sellerLogoFile(),
+        ];
+    }
+
+    /**
+     * The bank accounts printed on this invoice: frozen at issue, live fallback
+     * for invoices issued before the snapshot existed.
+     *
+     * @return array<int, array<string, string>>
+     */
+    public function sellerBankAccounts(): array
+    {
+        if ($this->seller_snapshot_at !== null) {
+            return is_array($this->seller_bank_accounts)
+                ? array_values($this->seller_bank_accounts)
+                : [];
+        }
+
+        $module = new \Modules\Gateways\BankTransfer\BankTransferModule();
+
+        return $module->isActive() ? $module->accounts() : [];
+    }
+
+    /** The logo file the PDF points at: the frozen copy, or the live one for old invoices. */
+    public function sellerLogoFile(): string
+    {
+        if ($this->seller_snapshot_at !== null) {
+            $relative = trim((string) $this->seller_logo);
+            if ($relative === '') {
+                return '';
+            }
+
+            $path = storage_path('app/'.$relative);
+
+            return is_file($path) ? $path : '';
+        }
+
+        return (string) (app(\App\Services\InvoicePdfService::class)->companyDetails()['logo'] ?? '');
     }
 
 }

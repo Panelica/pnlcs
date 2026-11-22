@@ -15,6 +15,7 @@ use App\Models\TaxRule;
 use App\Models\Transaction;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\DB;
+use Modules\Gateways\BankTransfer\BankTransferModule;
 
 class InvoiceService
 {
@@ -69,15 +70,21 @@ class InvoiceService
 
     private function createInvoiceLocked(Client $client, array $items, array $options): Invoice
     {
-        $invoice = DB::transaction(function () use ($client, $items, $options) {
+        $status = (string) ($options['status'] ?? InvoiceStatus::Unpaid->value);
+        // A draft has not been issued yet: the seller is stamped when it is
+        // published, so the document carries the company details of that day.
+        $seller = $status === InvoiceStatus::Draft->value ? [] : $this->sellerSnapshot();
+
+        $invoice = DB::transaction(function () use ($client, $items, $options, $status, $seller) {
             $invoice = Invoice::create([
                 'client_id' => $client->id,
                 // Freeze the buyer alongside the money (issue #7)
                 ...Invoice::buyerSnapshotFrom($client),
+                ...$seller,
                 'invoice_num' => $options['invoice_num'] ?? $this->generateInvoiceNumber($options['type'] ?? $this->defaultType()),
                 'date' => $options['date'] ?? now()->toDateString(),
                 'due_date' => $options['due_date'] ?? now()->addDays((int) Setting::get('InvoiceDueDays', 14))->toDateString(),
-                'status' => $options['status'] ?? InvoiceStatus::Unpaid->value,
+                'status' => $status,
                 'type' => $options['type'] ?? $this->defaultType(),
                 'source_invoice_id' => $options['source_invoice_id'] ?? null,
                 'payment_method' => $options['payment_method'] ?? null,
@@ -126,11 +133,35 @@ class InvoiceService
             return $invoice;
         }
 
-        $invoice->update(['status' => InvoiceStatus::Unpaid->value]);
+        $updates = ['status' => InvoiceStatus::Unpaid->value];
+
+        // The seller is frozen when the document is issued, not when the draft
+        // was started: company details may have changed in between.
+        if ($invoice->seller_snapshot_at === null) {
+            $updates += $this->sellerSnapshot();
+        }
+
+        $invoice->update($updates);
         event(new InvoiceCreated($invoice->fresh()));
         $this->applyAvailableCredit($invoice->fresh());
 
         return $invoice->fresh();
+    }
+
+    /**
+     * The seller block and bank accounts as they stand right now.
+     *
+     * @return array<string, mixed>
+     */
+    private function sellerSnapshot(): array
+    {
+        $company = app(InvoicePdfService::class)->companyDetails();
+        $module = new BankTransferModule();
+
+        return Invoice::sellerSnapshotFrom(
+            $company,
+            $module->isActive() ? $module->accounts() : []
+        );
     }
 
     /**
