@@ -47,6 +47,20 @@ class Client extends Model
         return $this->missingBillingIdentity() === [];
     }
 
+    /**
+     * The method a document issued for this customer should name: the
+     * customer's own choice, or bank transfer for an account that never chose
+     * one (and for the "none" sentinel used to switch renewals off).
+     */
+    public function billingPaymentMethod(): string
+    {
+        $method = trim((string) $this->default_payment_method);
+
+        return ($method !== '' && strtolower($method) !== 'none')
+            ? $method
+            : 'banktransfer';
+    }
+
     protected $fillable = [
         'first_name',
         'last_name',
