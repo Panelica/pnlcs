@@ -15,6 +15,7 @@ use App\Services\BillingCycleChange;
 use App\Services\Module\ModuleScreens;
 use App\Services\ProvisioningService;
 use App\Services\ServerAccount;
+use Carbon\Carbon;
 use Illuminate\Http\Request;
 use Illuminate\Validation\Rule;
 use Illuminate\Validation\ValidationException;
@@ -87,14 +88,25 @@ class ServiceController extends Controller
      */
     public function storeAddon(Request $request, Service $service)
     {
-        $request->validate(['addon_id' => 'required|integer|exists:product_addons,id']);
+        $validated = $request->validate([
+            'addon_id' => ['required', 'integer', 'exists:product_addons,id'],
+            'billing_cycle' => ['nullable', Rule::in(self::cyclesFor($service))],
+            'issue_date' => ['nullable', 'date'],
+        ]);
 
-        app(AddonService::class)->draftForService(
+        $cycle = $validated['billing_cycle'] ?? ($service->billing_cycle ?: 'Monthly');
+        $issue = ! empty($validated['issue_date']) ? Carbon::parse($validated['issue_date']) : null;
+
+        // Like a product order: the invoice exists immediately and the customer
+        // can pay it. Staff may also accept the order by hand.
+        app(AddonService::class)->purchaseForService(
             $service,
-            ProductAddon::findOrFail($request->integer('addon_id'))
+            ProductAddon::findOrFail($validated['addon_id']),
+            $cycle,
+            $issue
         );
 
-        return back()->with('success', __('admin.messages.addon_draft_created'));
+        return back()->with('success', __('admin.messages.service_addon_created'));
     }
 
     public function cancelAddon(Service $service, ServiceAddon $addon)

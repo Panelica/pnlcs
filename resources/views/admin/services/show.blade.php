@@ -408,11 +408,17 @@
         @if(($availableAddons ?? collect())->isNotEmpty())
         <form method="POST" action="{{ route('admin.services.addons.store', $service) }}" style="display:flex;gap:8px;align-items:center;">
             @csrf
-            <select name="addon_id" class="form-control" style="max-width:320px;">
+            <select name="addon_id" class="form-control" style="max-width:300px;">
                 @foreach($availableAddons as $available)
-                    <option value="{{ $available->id }}">{{ $available->name }} ({{ number_format($available->priceFor($service->billing_cycle ?: 'Monthly'), 2) }})</option>
+                    <option value="{{ $available->id }}">{{ $available->name }}</option>
                 @endforeach
             </select>
+            <select name="billing_cycle" class="form-control" style="max-width:160px;">
+                @foreach($cycles as $cycle)
+                    <option value="{{ $cycle }}" @selected(($service->billing_cycle ?: 'Monthly') === $cycle)>{{ cycle_label($cycle) }}</option>
+                @endforeach
+            </select>
+            <input type="date" name="issue_date" value="{{ now()->toDateString() }}" class="form-control" style="max-width:170px;" title="{{ __('admin.addons.service_issue_date') }}">
             <button type="submit" class="btn btn-primary btn-sm">{{ __('client.services.addon_order') }}</button>
         </form>
         @else

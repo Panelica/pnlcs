@@ -204,20 +204,24 @@ it('deletes a cancelled addon and cancels its empty unpaid invoice', function ()
 it('runs a new addon through its own order and invoice', function () {
     Mail::fake();
     $fx = pnlcs_test_addon_order_setup();
+    $issue = now()->addDays(10)->toDateString();
 
     $this->actingAs($fx['admin'], 'admin')
-        ->post(route('admin.services.addons.store', $fx['service']), ['addon_id' => $fx['productAddon']->id])
+        ->post(route('admin.services.addons.store', $fx['service']), [
+            'addon_id' => $fx['productAddon']->id,
+            'billing_cycle' => 'Annually',
+            'issue_date' => $issue,
+        ])
         ->assertRedirect();
 
     $addon = ServiceAddon::where('service_id', $fx['service']->id)->firstOrFail();
     $order = Order::findOrFail($addon->order_id);
+    $invoice = Invoice::findOrFail($order->invoice_id);
 
-    expect(strtolower((string) $addon->status))->toBe('draft')
+    // Like a product: an order and an invoice exist straight away.
+    expect(strtolower((string) $addon->status))->toBe('pending')
         ->and(strtolower((string) $order->status))->toBe('pending')
-        ->and($order->invoice_id)->toBeNull()
-        ->and(Invoice::where('client_id', $fx['client']->id)->count())->toBe(0);
-
-    $issue = now()->addDays(10)->toDateString();
+        ->and($invoice->date->toDateString())->toBe($issue);
 
     $this->actingAs($fx['admin'], 'admin')
         ->put(route('admin.services.addons.update', [$fx['service'], $addon]), [
@@ -230,24 +234,14 @@ it('runs a new addon through its own order and invoice', function () {
 
     $addon->refresh();
     $order->refresh();
+    $invoice->refresh();
 
     expect((float) $addon->amount)->toBe(75.0)
         ->and((float) $order->amount)->toBe(75.0)
-        ->and($order->date->toDateString())->toBe($issue);
+        ->and((float) $invoice->items()->where('type', 'Addon')->value('amount'))->toBe(75.0)
+        ->and((float) $invoice->total)->toBe(75.0);
 
-    $this->actingAs($fx['admin'], 'admin')
-        ->post(route('admin.services.addons.accept', [$fx['service'], $addon]))
-        ->assertRedirect();
-
-    $addon->refresh();
-    $order->refresh();
-    $invoice = Invoice::findOrFail($order->invoice_id);
-
-    expect(strtolower((string) $addon->status))->toBe('pending')
-        ->and(strtolower((string) $order->status))->toBe('pending')
-        ->and($invoice->date->toDateString())->toBe($issue)
-        ->and((float) $invoice->items()->where('type', 'Addon')->value('amount'))->toBe(75.0);
-
+    // The customer pays; the order is accepted and the addon starts.
     $this->actingAs($fx['admin'], 'admin')
         ->post(route('admin.invoices.mark-paid', $invoice), ['gateway' => 'banktransfer'])
         ->assertRedirect();
@@ -260,14 +254,11 @@ it('runs a new addon through its own order and invoice', function () {
         ->and($addon->next_due_date->toDateString())->toBe(Carbon::parse($issue)->addYearNoOverflow()->toDateString());
 });
 
+
 it('deletes a draft addon together with its order', function () {
     $fx = pnlcs_test_addon_order_setup();
 
-    $this->actingAs($fx['admin'], 'admin')
-        ->post(route('admin.services.addons.store', $fx['service']), ['addon_id' => $fx['productAddon']->id])
-        ->assertRedirect();
-
-    $addon = ServiceAddon::where('service_id', $fx['service']->id)->firstOrFail();
+    $addon = app(AddonService::class)->draftForService($fx['service'], $fx['productAddon']);
     $order = Order::findOrFail($addon->order_id);
 
     $this->actingAs($fx['admin'], 'admin')
@@ -278,15 +269,12 @@ it('deletes a draft addon together with its order', function () {
         ->and(Order::find($order->id))->toBeNull();
 });
 
+
 it('refuses to accept an addon twice', function () {
     Mail::fake();
     $fx = pnlcs_test_addon_order_setup();
 
-    $this->actingAs($fx['admin'], 'admin')
-        ->post(route('admin.services.addons.store', $fx['service']), ['addon_id' => $fx['productAddon']->id])
-        ->assertRedirect();
-
-    $addon = ServiceAddon::where('service_id', $fx['service']->id)->firstOrFail();
+    $addon = app(AddonService::class)->draftForService($fx['service'], $fx['productAddon']);
 
     $this->actingAs($fx['admin'], 'admin')
         ->post(route('admin.services.addons.accept', [$fx['service'], $addon]))
@@ -299,7 +287,8 @@ it('refuses to accept an addon twice', function () {
     expect(Invoice::where('client_id', $fx['client']->id)->count())->toBe(1);
 });
 
-it('shows the draft addon on the service and order screens', function () {
+
+it('shows the addon on the service and order screens', function () {
     Mail::fake();
     $fx = pnlcs_test_addon_order_setup();
 
@@ -313,8 +302,7 @@ it('shows the draft addon on the service and order screens', function () {
     $this->actingAs($fx['admin'], 'admin')
         ->get(route('admin.services.show', $fx['service']))
         ->assertOk()
-        ->assertSee($addon->label())
-        ->assertSee(__('admin.addons.service_accept'));
+        ->assertSee($addon->label());
 
     $this->actingAs($fx['admin'], 'admin')
         ->get(route('admin.orders.show', $order))
@@ -322,17 +310,21 @@ it('shows the draft addon on the service and order screens', function () {
         ->assertSee($addon->label());
 });
 
+
 it('issues the addon invoice when the order itself is accepted', function () {
     Mail::fake();
     $fx = pnlcs_test_addon_order_setup();
+    $issue = now()->addDays(10)->toDateString();
 
     $this->actingAs($fx['admin'], 'admin')
-        ->post(route('admin.services.addons.store', $fx['service']), ['addon_id' => $fx['productAddon']->id])
+        ->post(route('admin.services.addons.store', $fx['service']), [
+            'addon_id' => $fx['productAddon']->id,
+            'issue_date' => $issue,
+        ])
         ->assertRedirect();
 
     $addon = ServiceAddon::where('service_id', $fx['service']->id)->firstOrFail();
     $order = Order::findOrFail($addon->order_id);
-    $issue = now()->addDays(10)->toDateString();
 
     $this->actingAs($fx['admin'], 'admin')
         ->put(route('admin.services.addons.update', [$fx['service'], $addon]), [
@@ -341,8 +333,7 @@ it('issues the addon invoice when the order itself is accepted', function () {
             'next_due_date' => $issue,
         ]);
 
-    // Staff may accept the order from Orders instead of the addon's own
-    // Accept button; that acceptance has to raise the invoice too.
+    // Staff accept the order from Orders; the invoice exists and stays unpaid.
     $this->actingAs($fx['admin'], 'admin')
         ->post(route('admin.orders.accept', $order))
         ->assertRedirect();
@@ -359,15 +350,12 @@ it('issues the addon invoice when the order itself is accepted', function () {
         ->and($addon->next_due_date->toDateString())->toBe(Carbon::parse($issue)->addYearNoOverflow()->toDateString());
 });
 
+
 it('repairs an active order that still has a draft addon', function () {
     Mail::fake();
     $fx = pnlcs_test_addon_order_setup();
 
-    $this->actingAs($fx['admin'], 'admin')
-        ->post(route('admin.services.addons.store', $fx['service']), ['addon_id' => $fx['productAddon']->id])
-        ->assertRedirect();
-
-    $addon = ServiceAddon::where('service_id', $fx['service']->id)->firstOrFail();
+    $addon = app(AddonService::class)->draftForService($fx['service'], $fx['productAddon']);
     $order = Order::findOrFail($addon->order_id);
 
     // What the old accept-through-orders path left behind: active order,
@@ -383,6 +371,7 @@ it('repairs an active order that still has a draft addon', function () {
         ->and($order->invoice_id)->not->toBeNull()
         ->and(strtolower((string) $addon->status))->toBe('active');
 });
+
 
 it('refuses to delete a product addon that is in use', function () {
     $fx = pnlcs_test_service_addon();

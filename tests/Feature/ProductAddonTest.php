@@ -453,7 +453,7 @@ test('editing an addon keeps its product list', function () {
         ->and($addon->priceFor('monthly'))->toBe(6.0);
 });
 
-test('an operator adds an addon as a draft and accepts it to issue the invoice', function () {
+test('an operator adds an addon as an order and can accept it by hand', function () {
     Mail::fake();
     $fx = addonShop(monthly: 4.0);
     $admin = Admin::factory()->create();
@@ -472,26 +472,26 @@ test('an operator adds an addon as a draft and accepts it to issue the invoice',
 
     $serviceAddon = ServiceAddon::where('service_id', $service->id)->firstOrFail();
     $order = Order::where('client_id', $client->id)->firstOrFail();
+    $invoice = Invoice::where('client_id', $client->id)->latest('id')->firstOrFail();
 
-    // Adding leaves a draft order: no invoice until the operator accepts it.
-    expect(strtolower((string) $serviceAddon->status))->toBe('draft')
+    // Like a product: the order and its invoice exist immediately.
+    expect(strtolower((string) $serviceAddon->status))->toBe('pending')
         ->and($serviceAddon->order_id)->toBe($order->id)
         ->and(strtolower((string) $order->status))->toBe('pending')
-        ->and($order->invoice_id)->toBeNull()
-        ->and(Invoice::where('client_id', $client->id)->count())->toBe(0);
+        ->and($order->invoice_id)->toBe($invoice->id)
+        ->and((float) $invoice->total)->toBe(4.0);
 
+    // Staff may accept the order by hand; the invoice stays unpaid.
     $this->actingAs($admin, 'admin')
-        ->post(route('admin.services.addons.accept', [$service, $serviceAddon]))
+        ->post(route('admin.orders.accept', $order))
         ->assertRedirect();
 
     $serviceAddon->refresh();
     $order->refresh();
-    $invoice = Invoice::where('client_id', $client->id)->latest('id')->firstOrFail();
 
-    expect(strtolower((string) $serviceAddon->status))->toBe('pending')
-        ->and($order->invoice_id)->toBe($invoice->id)
-        ->and(strtolower((string) $order->status))->toBe('pending')
-        ->and((float) $invoice->total)->toBe(4.0);
+    expect(strtolower((string) $order->status))->toBe('active')
+        ->and(strtolower((string) $serviceAddon->status))->toBe('active')
+        ->and($order->invoice_id)->toBe($invoice->id);
 });
 
 test('the service page names the addon instead of showing an id', function () {

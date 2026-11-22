@@ -206,9 +206,9 @@ class AddonService
      *
      * @throws ValidationException
      */
-    public function purchaseForService(Service $service, ProductAddon $addon, ?string $cycle = null): array
+    public function purchaseForService(Service $service, ProductAddon $addon, ?string $cycle = null, ?Carbon $issueDate = null): array
     {
-        $serviceAddon = $this->draftForService($service, $addon, $cycle);
+        $serviceAddon = $this->draftForService($service, $addon, $cycle, $issueDate);
         $invoice = $this->accept($serviceAddon);
 
         return ['addon' => $serviceAddon->fresh(), 'invoice' => $invoice];
@@ -373,12 +373,20 @@ class AddonService
         DB::transaction(function () use ($serviceAddon, $updates, $priceChanged, $amount) {
             $serviceAddon->update($updates);
 
-            if ($serviceAddon->isDraft() && $serviceAddon->order) {
-                $serviceAddon->order->update([
+            if ($serviceAddon->order
+                && in_array(strtolower((string) $serviceAddon->status), ['draft', 'pending'], true)
+                && ! $serviceAddon->order->services()->exists()
+                && ! $serviceAddon->order->domains()->exists()) {
+                $orderFields = [
                     'amount' => (float) $serviceAddon->amount,
-                    'date' => ($serviceAddon->next_due_date ?: now())->toDateString(),
                     'notes' => 'Addon: '.$serviceAddon->label().' — '.($serviceAddon->service?->domain ?: '#'.$serviceAddon->service_id),
-                ]);
+                ];
+
+                if ($serviceAddon->isDraft()) {
+                    $orderFields['date'] = ($serviceAddon->next_due_date ?: now())->toDateString();
+                }
+
+                $serviceAddon->order->update($orderFields);
             }
 
             if (! $serviceAddon->isPending() || ! $priceChanged) {
