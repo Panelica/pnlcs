@@ -1097,7 +1097,7 @@ return [
         'section' => 'domains',
         'params' => ['*domain' => ['string', 'The name to check.']],
         'returns' => ['domain' => 'string', 'status' => 'available or unavailable'],
-        'errors' => [422 => 'The name is not a domain.', 503 => 'No registrar or WHOIS server answered, so availability is unknown.'],
+        'errors' => [422 => 'The name is not a domain.', 503 => 'Neither the registrar nor the registry (RDAP or WHOIS) answered, so availability is unknown.'],
         'notes' => 'The same check as the domain search in the shop.',
     ],
     'updateclientdomain' => [

@@ -3071,7 +3071,7 @@
                         }
                     },
                     "503": {
-                        "description": "No registrar or WHOIS server answered, so availability is unknown.",
+                        "description": "Neither the registrar nor the registry (RDAP or WHOIS) answered, so availability is unknown.",
                         "content": {
                             "application/json": {
                                 "schema": {

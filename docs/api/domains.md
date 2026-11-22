@@ -559,7 +559,7 @@ Check whether a domain is available to register.
 | Status | When |
 |---|---|
 | 422 | The name is not a domain. |
-| 503 | No registrar or WHOIS server answered, so availability is unknown. |
+| 503 | Neither the registrar nor the registry (RDAP or WHOIS) answered, so availability is unknown. |
 
 !!! note
     The same check as the domain search in the shop.
