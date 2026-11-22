@@ -154,10 +154,15 @@ class AddonService
             throw ValidationException::withMessages(['addon_id' => __('client.cart.addon_invalid')]);
         }
 
-        // Selling an extra for an account that has ended raises an invoice for
-        // something the customer can never use.
-        if (in_array(strtolower((string) $service->status), ['terminated', 'cancelled', 'fraud'], true)) {
-            throw ValidationException::withMessages(['addon_id' => __('client.services.addon_service_ended')]);
+        // Addons hang off a running service: adding one to an unpaid (pending),
+        // suspended or ended account sells something that cannot work yet.
+        $serviceStatus = strtolower((string) $service->status);
+        if ($serviceStatus !== 'active') {
+            throw ValidationException::withMessages([
+                'addon_id' => in_array($serviceStatus, ['terminated', 'cancelled', 'fraud'], true)
+                    ? __('client.services.addon_service_ended')
+                    : __('client.services.addon_service_not_active'),
+            ]);
         }
 
         $cycle = $cycle ?: ($service->billing_cycle ?: 'Monthly');

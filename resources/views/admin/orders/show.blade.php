@@ -83,7 +83,7 @@
                 <tbody>
                 @foreach($order->addons as $addon)
                 <tr>
-                    <td>{{ $addon->label() }}</td>
+                    <td>{{ $addon->label() }}@if($addon->addon?->description)<br><small style="color:#777;">{{ \Illuminate\Support\Str::limit($addon->addon->description, 80) }}</small>@endif</td>
                     <td>@if($addon->service)<a href="{{ route('admin.services.show', $addon->service) }}" style="color:#337ab7;">{{ $addon->service->domain ?: '#'.$addon->service->id }}</a>@else &mdash; @endif</td>
                     <td style="text-align:right;">{{ number_format((float) $addon->amount, 2) }}</td>
                     <td>{{ cycle_label($addon->billing_cycle) }}</td>

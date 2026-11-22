@@ -44,7 +44,8 @@ class ServiceController extends Controller
     {
         $service->load('client', 'product', 'server', 'addons.addon', 'order');
 
-        $availableAddons = $service->product
+        $canAddAddons = strtolower((string) $service->status) === 'active';
+        $availableAddons = $service->product && $canAddAddons
             ? app(AddonService::class)->availableFor($service->product)
             : collect();
 
@@ -79,7 +80,7 @@ class ServiceController extends Controller
             ->latest('id')
             ->first();
 
-        return view('admin.services.show', compact('service', 'availableAddons', 'vpsFeatures', 'reinstallChoices', 'products', 'cycles', 'productFields', 'moduleScreen', 'pendingSetup'));
+        return view('admin.services.show', compact('service', 'availableAddons', 'canAddAddons', 'vpsFeatures', 'reinstallChoices', 'products', 'cycles', 'productFields', 'moduleScreen', 'pendingSetup'));
     }
 
     /**

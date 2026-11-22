@@ -985,6 +985,7 @@ return [
     'services.addon_order' => 'Order',
     'services.addon_ordered' => 'Addon ordered. It starts once the invoice is paid.',
     'services.addon_service_ended' => 'This service has ended, so addons can no longer be added to it.',
+    'services.addon_service_not_active' => 'Addons can only be added to active services.',
     'services.addons_available' => 'Available Addons',
     'services.addon_prefix' => 'Addon #:id',
     'services.addons' => 'Addons',

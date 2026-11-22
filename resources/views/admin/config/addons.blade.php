@@ -59,40 +59,42 @@
 {{-- Add Addon Modal --}}
 <div id="modal-add-addon" style="display:none;position:fixed;inset:0;z-index:1050;align-items:center;justify-content:center;">
     <div style="position:fixed;inset:0;background:rgba(0,0,0,0.5);" onclick="document.getElementById('modal-add-addon').style.display='none'"></div>
-    <div style="position:relative;background:#fff;border-radius:4px;width:500px;max-width:95%;box-shadow:0 5px 30px rgba(0,0,0,0.3);">
-        <div style="padding:15px 20px;border-bottom:1px solid #e5e5e5;display:flex;align-items:center;justify-content:space-between;">
-            <h4 style="margin:0;font-size:16px;">{{ __('admin.addons.add_product_addon') }}</h4>
+    <div style="position:relative;background:#fff;border-radius:4px;width:680px;max-width:96%;max-height:90vh;overflow:auto;box-shadow:0 5px 30px rgba(0,0,0,0.3);">
+        <div style="padding:18px 24px;border-bottom:1px solid #e5e5e5;display:flex;align-items:center;justify-content:space-between;">
+            <h4 style="margin:0;font-size:18px;">{{ __('admin.addons.add_product_addon') }}</h4>
             <button type="button" onclick="document.getElementById('modal-add-addon').style.display='none'" style="background:none;border:none;font-size:22px;cursor:pointer;color:#777;">&times;</button>
         </div>
         <form method="POST" action="{{ route('admin.config.addons.store') }}">
             @csrf
-            <div style="padding:20px;">
+            <div style="padding:24px;">
                 <div class="form-group"><label class="form-label">{{ __('admin.addons.name') }} *</label><input type="text" name="name" required class="form-control" placeholder="{{ __('admin.addons.name_placeholder') }}"></div>
-                <div class="form-group"><label class="form-label">{{ __('common.form.description') }}</label><textarea name="description" rows="2" class="form-control" placeholder="{{ __('admin.addons.description_placeholder') }}"></textarea></div>
+                <div class="form-group"><label class="form-label">{{ __('common.form.description') }}</label><textarea name="description" rows="3" class="form-control" placeholder="{{ __('admin.addons.description_placeholder') }}"></textarea></div>
                 <div class="form-group"><label class="form-label">{{ __('admin.addons.applicable_products') }}</label>
-                    <select name="packages[]" multiple class="form-control" style="height:100px;">
+                    <div style="max-height:180px;overflow:auto;border:1px solid #d9d9d9;border-radius:6px;padding:10px 12px;display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:6px 16px;">
                         @foreach($products as $product)
-                            <option value="{{ $product->id }}">{{ $product->name }}</option>
+                            <label style="display:flex;align-items:center;gap:8px;font-size:13px;color:#333;margin:0;cursor:pointer;">
+                                <input type="checkbox" name="packages[]" value="{{ $product->id }}"> {{ $product->name }}
+                            </label>
                         @endforeach
-                    </select>
-                    <p style="font-size:11px;color:#999;margin-top:4px;">{{ __('admin.addons.applicable_products_hint') }}</p>
+                    </div>
+                    <p style="font-size:12px;color:#666;background:#f7f7f7;border:1px solid #eee;border-radius:4px;padding:8px 10px;margin-top:6px;">{{ __('admin.addons.applicable_products_hint') }}</p>
                 </div>
                 <div style="display:flex;gap:10px;">
                     <div class="form-group" style="flex:1;"><label class="form-label">{{ __('admin.addons.sort_order') }}</label><input type="number" name="sort_order" value="0" class="form-control"></div>
                 </div>
                 <div class="form-group"><label class="form-label">{{ __('admin.addons.pricing') }}</label>
                     <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:8px;">
-                        <div><label style="font-size:11px;color:#777;">{{ __('admin.addons.cycle_monthly') }}</label><input type="number" step="0.01" min="-1" name="pricing[monthly]" value="0" class="form-control"></div>
-                        <div><label style="font-size:11px;color:#777;">{{ __('admin.addons.cycle_quarterly') }}</label><input type="number" step="0.01" min="-1" name="pricing[quarterly]" value="0" class="form-control"></div>
-                        <div><label style="font-size:11px;color:#777;">{{ __('admin.addons.cycle_semiannually') }}</label><input type="number" step="0.01" min="-1" name="pricing[semiannually]" value="0" class="form-control"></div>
-                        <div><label style="font-size:11px;color:#777;">{{ __('admin.addons.cycle_annually') }}</label><input type="number" step="0.01" min="-1" name="pricing[annually]" value="0" class="form-control"></div>
-                        <div><label style="font-size:11px;color:#777;">{{ __('admin.addons.cycle_biennially') }}</label><input type="number" step="0.01" min="-1" name="pricing[biennially]" value="0" class="form-control"></div>
-                        <div><label style="font-size:11px;color:#777;">{{ __('admin.addons.cycle_triennially') }}</label><input type="number" step="0.01" min="-1" name="pricing[triennially]" value="0" class="form-control"></div>
+                        <div><label style="font-size:12px;color:#444;font-weight:600;display:block;margin-bottom:4px;">{{ __('admin.addons.cycle_monthly') }}</label><input type="number" step="0.01" min="-1" name="pricing[monthly]" value="0" class="form-control"></div>
+                        <div><label style="font-size:12px;color:#444;font-weight:600;display:block;margin-bottom:4px;">{{ __('admin.addons.cycle_quarterly') }}</label><input type="number" step="0.01" min="-1" name="pricing[quarterly]" value="0" class="form-control"></div>
+                        <div><label style="font-size:12px;color:#444;font-weight:600;display:block;margin-bottom:4px;">{{ __('admin.addons.cycle_semiannually') }}</label><input type="number" step="0.01" min="-1" name="pricing[semiannually]" value="0" class="form-control"></div>
+                        <div><label style="font-size:12px;color:#444;font-weight:600;display:block;margin-bottom:4px;">{{ __('admin.addons.cycle_annually') }}</label><input type="number" step="0.01" min="-1" name="pricing[annually]" value="0" class="form-control"></div>
+                        <div><label style="font-size:12px;color:#444;font-weight:600;display:block;margin-bottom:4px;">{{ __('admin.addons.cycle_biennially') }}</label><input type="number" step="0.01" min="-1" name="pricing[biennially]" value="0" class="form-control"></div>
+                        <div><label style="font-size:12px;color:#444;font-weight:600;display:block;margin-bottom:4px;">{{ __('admin.addons.cycle_triennially') }}</label><input type="number" step="0.01" min="-1" name="pricing[triennially]" value="0" class="form-control"></div>
                     </div>
-                    <p style="font-size:11px;color:#999;margin-top:4px;">{{ __('admin.addons.pricing_hint') }}</p>
+                    <p style="font-size:12px;color:#666;background:#f7f7f7;border:1px solid #eee;border-radius:4px;padding:8px 10px;margin-top:6px;">{{ __('admin.addons.pricing_hint') }}</p>
                 </div>
 
-                <div class="form-group" style="display:flex;gap:16px;">
+                <div class="form-group" style="display:flex;gap:20px;align-items:center;">
                     <label class="form-label"><input type="checkbox" name="hidden" value="1"> {{ __('admin.addons.hidden') }}</label>
                     <label class="form-label"><input type="checkbox" name="tax" value="1" checked> {{ __('admin.addons.apply_tax') }}</label>
                 </div>
@@ -108,40 +110,42 @@
 {{-- Edit Addon Modal --}}
 <div id="modal-edit-addon" style="display:none;position:fixed;inset:0;z-index:1050;align-items:center;justify-content:center;">
     <div style="position:fixed;inset:0;background:rgba(0,0,0,0.5);" onclick="document.getElementById('modal-edit-addon').style.display='none'"></div>
-    <div style="position:relative;background:#fff;border-radius:4px;width:500px;max-width:95%;box-shadow:0 5px 30px rgba(0,0,0,0.3);">
-        <div style="padding:15px 20px;border-bottom:1px solid #e5e5e5;display:flex;align-items:center;justify-content:space-between;">
-            <h4 style="margin:0;font-size:16px;">{{ __('admin.addons.edit_addon') }}</h4>
+    <div style="position:relative;background:#fff;border-radius:4px;width:680px;max-width:96%;max-height:90vh;overflow:auto;box-shadow:0 5px 30px rgba(0,0,0,0.3);">
+        <div style="padding:18px 24px;border-bottom:1px solid #e5e5e5;display:flex;align-items:center;justify-content:space-between;">
+            <h4 style="margin:0;font-size:18px;">{{ __('admin.addons.edit_addon') }}</h4>
             <button type="button" onclick="document.getElementById('modal-edit-addon').style.display='none'" style="background:none;border:none;font-size:22px;cursor:pointer;color:#777;">&times;</button>
         </div>
         <form id="edit-addon-form" method="POST" action="">
             @csrf @method("PUT")
-            <div style="padding:20px;">
+            <div style="padding:24px;">
                 <div class="form-group"><label class="form-label">{{ __('admin.addons.name') }} *</label><input type="text" name="name" id="edit-addon-name" required class="form-control"></div>
-                <div class="form-group"><label class="form-label">{{ __('common.form.description') }}</label><textarea name="description" id="edit-addon-desc" rows="2" class="form-control"></textarea></div>
+                <div class="form-group"><label class="form-label">{{ __('common.form.description') }}</label><textarea name="description" id="edit-addon-desc" rows="3" class="form-control"></textarea></div>
                 <div class="form-group"><label class="form-label">{{ __('admin.addons.applicable_products') }}</label>
-                    <select name="packages[]" id="edit-addon-packages" multiple class="form-control" style="height:100px;">
+                    <div id="edit-addon-packages" style="max-height:180px;overflow:auto;border:1px solid #d9d9d9;border-radius:6px;padding:10px 12px;display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:6px 16px;">
                         @foreach($products as $product)
-                            <option value="{{ $product->id }}">{{ $product->name }}</option>
+                            <label style="display:flex;align-items:center;gap:8px;font-size:13px;color:#333;margin:0;cursor:pointer;">
+                                <input type="checkbox" name="packages[]" value="{{ $product->id }}"> {{ $product->name }}
+                            </label>
                         @endforeach
-                    </select>
-                    <p style="font-size:11px;color:#999;margin-top:4px;">{{ __('admin.addons.applicable_products_hint') }}</p>
+                    </div>
+                    <p style="font-size:12px;color:#666;background:#f7f7f7;border:1px solid #eee;border-radius:4px;padding:8px 10px;margin-top:6px;">{{ __('admin.addons.applicable_products_hint') }}</p>
                 </div>
                 <div style="display:flex;gap:10px;">
                     <div class="form-group" style="flex:1;"><label class="form-label">{{ __('admin.addons.sort_order') }}</label><input type="number" name="sort_order" id="edit-addon-sort" class="form-control"></div>
                 </div>
                 <div class="form-group"><label class="form-label">{{ __('admin.addons.pricing') }}</label>
                     <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:8px;">
-                        <div><label style="font-size:11px;color:#777;">{{ __('admin.addons.cycle_monthly') }}</label><input type="number" step="0.01" min="-1" name="pricing[monthly]" value="0" id="edit-addon-price-monthly" class="form-control"></div>
-                        <div><label style="font-size:11px;color:#777;">{{ __('admin.addons.cycle_quarterly') }}</label><input type="number" step="0.01" min="-1" name="pricing[quarterly]" value="0" id="edit-addon-price-quarterly" class="form-control"></div>
-                        <div><label style="font-size:11px;color:#777;">{{ __('admin.addons.cycle_semiannually') }}</label><input type="number" step="0.01" min="-1" name="pricing[semiannually]" value="0" id="edit-addon-price-semiannually" class="form-control"></div>
-                        <div><label style="font-size:11px;color:#777;">{{ __('admin.addons.cycle_annually') }}</label><input type="number" step="0.01" min="-1" name="pricing[annually]" value="0" id="edit-addon-price-annually" class="form-control"></div>
-                        <div><label style="font-size:11px;color:#777;">{{ __('admin.addons.cycle_biennially') }}</label><input type="number" step="0.01" min="-1" name="pricing[biennially]" value="0" id="edit-addon-price-biennially" class="form-control"></div>
-                        <div><label style="font-size:11px;color:#777;">{{ __('admin.addons.cycle_triennially') }}</label><input type="number" step="0.01" min="-1" name="pricing[triennially]" value="0" id="edit-addon-price-triennially" class="form-control"></div>
+                        <div><label style="font-size:12px;color:#444;font-weight:600;display:block;margin-bottom:4px;">{{ __('admin.addons.cycle_monthly') }}</label><input type="number" step="0.01" min="-1" name="pricing[monthly]" value="0" id="edit-addon-price-monthly" class="form-control"></div>
+                        <div><label style="font-size:12px;color:#444;font-weight:600;display:block;margin-bottom:4px;">{{ __('admin.addons.cycle_quarterly') }}</label><input type="number" step="0.01" min="-1" name="pricing[quarterly]" value="0" id="edit-addon-price-quarterly" class="form-control"></div>
+                        <div><label style="font-size:12px;color:#444;font-weight:600;display:block;margin-bottom:4px;">{{ __('admin.addons.cycle_semiannually') }}</label><input type="number" step="0.01" min="-1" name="pricing[semiannually]" value="0" id="edit-addon-price-semiannually" class="form-control"></div>
+                        <div><label style="font-size:12px;color:#444;font-weight:600;display:block;margin-bottom:4px;">{{ __('admin.addons.cycle_annually') }}</label><input type="number" step="0.01" min="-1" name="pricing[annually]" value="0" id="edit-addon-price-annually" class="form-control"></div>
+                        <div><label style="font-size:12px;color:#444;font-weight:600;display:block;margin-bottom:4px;">{{ __('admin.addons.cycle_biennially') }}</label><input type="number" step="0.01" min="-1" name="pricing[biennially]" value="0" id="edit-addon-price-biennially" class="form-control"></div>
+                        <div><label style="font-size:12px;color:#444;font-weight:600;display:block;margin-bottom:4px;">{{ __('admin.addons.cycle_triennially') }}</label><input type="number" step="0.01" min="-1" name="pricing[triennially]" value="0" id="edit-addon-price-triennially" class="form-control"></div>
                     </div>
-                    <p style="font-size:11px;color:#999;margin-top:4px;">{{ __('admin.addons.pricing_hint') }}</p>
+                    <p style="font-size:12px;color:#666;background:#f7f7f7;border:1px solid #eee;border-radius:4px;padding:8px 10px;margin-top:6px;">{{ __('admin.addons.pricing_hint') }}</p>
                 </div>
 
-                <div class="form-group" style="display:flex;gap:16px;">
+                <div class="form-group" style="display:flex;gap:20px;align-items:center;">
                     <label class="form-label"><input type="checkbox" name="hidden" value="1" id="edit-addon-hidden"> {{ __('admin.addons.hidden') }}</label>
                     <label class="form-label"><input type="checkbox" name="retired" value="1" id="edit-addon-retired"> {{ __('admin.addons.retired') }}</label>
                     <label class="form-label"><input type="checkbox" name="tax" value="1" id="edit-addon-tax"> {{ __('admin.addons.apply_tax') }}</label>
@@ -160,8 +164,8 @@
 function editAddon(id, data) {
     document.getElementById('edit-addon-form').action = '/admin/config/addons/' + id;
     var packages = String(data.packages || '').split(',').filter(Boolean);
-    Array.prototype.forEach.call(document.getElementById('edit-addon-packages').options, function (opt) {
-        opt.selected = packages.indexOf(opt.value) !== -1;
+    Array.prototype.forEach.call(document.querySelectorAll('#edit-addon-packages input[type="checkbox"]'), function (box) {
+        box.checked = packages.indexOf(String(box.value)) !== -1;
     });
     var pricing = (data.pricing && data.pricing[0]) || {};
     ['monthly', 'quarterly', 'semiannually', 'annually', 'biennially', 'triennially'].forEach(function (cycle) {

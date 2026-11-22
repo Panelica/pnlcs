@@ -4,6 +4,7 @@ use App\Models\Admin;
 use App\Models\Client;
 use App\Models\Invoice;
 use App\Models\InvoiceItem;
+use App\Models\Product;
 use App\Models\Order;
 use App\Models\ProductAddon;
 use App\Models\Service;
@@ -372,6 +373,56 @@ it('repairs an active order that still has a draft addon', function () {
         ->and(strtolower((string) $addon->status))->toBe('active');
 });
 
+
+it('refuses to add an addon to a service that is not active', function () {
+    foreach (['pending', 'suspended', 'terminated', 'cancelled', 'fraud'] as $status) {
+        $fx = pnlcs_test_addon_order_setup();
+        $fx['service']->update(['status' => $status]);
+
+        $this->actingAs($fx['admin'], 'admin')
+            ->post(route('admin.services.addons.store', $fx['service']), ['addon_id' => $fx['productAddon']->id])
+            ->assertSessionHasErrors('addon_id');
+
+        expect(ServiceAddon::where('service_id', $fx['service']->id)->count())->toBe(0)
+            ->and(Invoice::where('client_id', $fx['client']->id)->count())->toBe(0);
+    }
+});
+
+it('shows addon descriptions and translated order headings', function () {
+    Mail::fake();
+    $fx = pnlcs_test_addon_order_setup();
+    $fx['productAddon']->update(['description' => 'Dodatkowy IP SEO']);
+
+    $this->actingAs($fx['admin'], 'admin')
+        ->post(route('admin.services.addons.store', $fx['service']), ['addon_id' => $fx['productAddon']->id])
+        ->assertRedirect();
+
+    $addon = ServiceAddon::where('service_id', $fx['service']->id)->firstOrFail();
+    $order = Order::findOrFail($addon->order_id);
+
+    $this->actingAs($fx['admin'], 'admin')
+        ->get(route('admin.services.show', $fx['service']))
+        ->assertOk()
+        ->assertSee('Dodatkowy IP SEO');
+
+    $this->actingAs($fx['admin'], 'admin')
+        ->get(route('admin.orders.show', $order))
+        ->assertOk()
+        ->assertSee(__('admin.orders.addons_header'))
+        ->assertSee(__('admin.orders.service'))
+        ->assertSee('Dodatkowy IP SEO')
+        ->assertDontSee('admin.orders.addons_header');
+});
+
+it('renders the addon editor with product checkboxes', function () {
+    $admin = Admin::factory()->create();
+    Product::factory()->create();
+
+    $this->actingAs($admin, 'admin')
+        ->get(route('admin.config.addons'))
+        ->assertOk()
+        ->assertSee('name="packages[]"', false);
+});
 
 it('refuses to delete a product addon that is in use', function () {
     $fx = pnlcs_test_service_addon();

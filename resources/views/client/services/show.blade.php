@@ -248,7 +248,7 @@
     <div style="overflow-x:auto"><table class="pn-table">
         <thead><tr><th>{{ __('common.table.name') }}</th><th>{{ __('common.table.amount') }}</th><th>{{ __('common.table.billing_cycle') }}</th><th>{{ __('client.services.next_due_date') }}</th><th>{{ __('common.table.status') }}</th><th style="text-align:right">{{ __('common.table.actions') }}</th></tr></thead>
         <tbody>@foreach($service->addons as $addon)<tr>
-            <td>{{ $addon->label() }}</td><td>{{ display_money_fmt($addon->amount) }}</td><td>{{ cycle_label($addon->billing_cycle) }}</td>
+            <td>{{ $addon->label() }}@if($addon->addon?->description)<br><small class="text-muted">{{ \Illuminate\Support\Str::limit($addon->addon->description, 100) }}</small>@endif</td><td>{{ display_money_fmt($addon->amount) }}</td><td>{{ cycle_label($addon->billing_cycle) }}</td>
             <td class="text-muted text-sm">{{ $addon->next_due_date?->format(date_fmt()) ?? '-' }}</td>
             <td><span class="badge badge-{{ strtolower($addon->status) }}">{{ __('client.status.' . strtolower($addon->status)) }}</span></td>
             <td style="text-align:right">@if(in_array(strtolower($addon->status),['active','pending'],true))<form method="POST" action="{{ route('client.services.addons.cancel',[$service,$addon]) }}" onsubmit="return pnConfirm(event, @js(__('client.services.addon_cancel_confirm')))">@csrf<button type="submit" class="pn-btn pn-btn-sm pn-btn-danger">{{ __('client.services.addon_cancel') }}</button></form>@endif</td>

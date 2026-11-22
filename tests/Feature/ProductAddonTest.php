@@ -608,14 +608,46 @@ test('an addon on a suspended service is still billed', function () {
     expect(Invoice::where('client_id', $suspended->client_id)->count())->toBe(1);
 });
 
-test('terminating a service stops its addons', function () {
+test('terminating a service terminates its addons', function () {
     $fx = addonShop();
     $addon = addonOnService($fx, 'active');
     $service = Service::findOrFail($addon->service_id);
 
     $service->update(['status' => 'terminated']);
 
+    expect(strtolower($addon->fresh()->status))->toBe('terminated');
+});
+
+test('cancelling a service cancels its addons', function () {
+    $fx = addonShop();
+    $addon = addonOnService($fx, 'active');
+    $service = Service::findOrFail($addon->service_id);
+
+    $service->update(['status' => 'cancelled']);
+
     expect(strtolower($addon->fresh()->status))->toBe('cancelled');
+});
+
+test('terminating a service ends draft and suspended addons too', function () {
+    $fx = addonShop();
+    $addon = addonOnService($fx, 'active');
+    $addon->update(['status' => 'draft']);
+
+    $suspended = ServiceAddon::create([
+        'service_id' => $addon->service_id,
+        'addon_id' => $fx['addon']->id,
+        'client_id' => $addon->client_id,
+        'qty' => 1,
+        'amount' => 5,
+        'billing_cycle' => 'Monthly',
+        'next_due_date' => now()->addMonth(),
+        'status' => 'suspended',
+    ]);
+
+    Service::findOrFail($addon->service_id)->update(['status' => 'terminated']);
+
+    expect(strtolower($addon->fresh()->status))->toBe('terminated')
+        ->and(strtolower($suspended->fresh()->status))->toBe('terminated');
 });
 
 test('an addon cannot be bought for a service that has ended', function () {

@@ -985,6 +985,7 @@ return [
     'services.addon_order' => 'Zamów',
     'services.addon_ordered' => 'Moduł dodatkowy zamówiony. Zostanie uruchomiony po opłaceniu faktury.',
     'services.addon_service_ended' => 'Ta usługa została zakończona, więc nie można już do niej dodawać modułów dodatkowych.',
+    'services.addon_service_not_active' => 'Dodatki można dodawać tylko do aktywnych usług.',
     'services.addons_available' => 'Dostępne moduły dodatkowe',
     'services.addon_prefix' => 'Moduł dodatkowy #:id',
     'services.addons' => 'Moduły dodatkowe',
