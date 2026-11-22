@@ -132,6 +132,10 @@
                         <td style="padding:5px 0;"><input type="number" step="0.01" min="0" name="recurring_amount" value="{{ old('recurring_amount', $domain->recurring_amount) }}" class="form-control" style="max-width:160px;font-size:13px;padding:3px 6px;"></td>
                     </tr>
                     <tr>
+                        <td style="padding:5px 0;color:#777;">{{ __('admin.domains.next_due_date') }}</td>
+                        <td style="padding:5px 0;"><input type="date" name="next_due_date" value="{{ old('next_due_date', $domain->next_due_date?->toDateString()) }}" class="form-control" style="max-width:160px;font-size:13px;padding:3px 6px;"></td>
+                    </tr>
+                    <tr>
                         <td style="padding:5px 0;color:#777;">{{ __('admin.domains.client_payment_method') }}</td>
                         <td style="padding:5px 0;">
                             {{ $domain->client?->default_payment_method ? payment_method_label((string) $domain->client->default_payment_method) : '-' }}
