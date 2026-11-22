@@ -3473,7 +3473,7 @@ return [
     'clients.service_provision_failed' => 'Usługa dodana, ale utworzenie nie powiodło się: :error',
     'clients.link_existing' => 'Powiąż z istniejącym kontem',
     'clients.link_none' => '— brak (tylko rozliczenia) —',
-    'clients.link_existing_hint' => 'To konta, które już istnieją na wybranym serwerze — w Panelice są to konta klientów na liście Użytkownicy panelu. Wybierz to, do którego należy ta usługa, aby PNLCS mógł nim zarządzać (zawieszanie, usuwanie, hasło). Lista kont działa dla serwerów Panelica; pozostaw puste, aby zapisać tylko rozliczenie.',
+    'clients.link_existing_hint' => 'To konta, które już istnieją na wybranym serwerze — w Panelice są to konta klientów na liście Użytkownicy panelu. Wybierz to, do którego należy ta usługa, aby PNLCS mógł nim zarządzać (zawieszanie, usuwanie, hasło). Konta są wyświetlane dla serwerów Panelica, Plesk i Proxmox (w Proxmox: serwery wirtualne); pozostaw puste, aby zapisać tylko rozliczenie.',
     'clients.service_linked' => 'Usługa dodana i powiązana z istniejącym kontem na serwerze.',
     'clients.link_taken' => 'To konto na serwerze jest już powiązane z usługą #:service.',
     'clients.add_domain' => 'Dodaj domenę',

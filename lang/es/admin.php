@@ -3405,7 +3405,7 @@ return [
 	'clients.service_provision_failed' => 'Servicio agregado, pero falló el aprovisionamiento: :error',
 	'clients.link_existing' => 'Vincular a una cuenta existente',
 	'clients.link_none' => '— ninguno (solo facturación) —',
-	'clients.link_existing_hint' => 'Estas son las cuentas que ya existen en el servidor seleccionado; en Panelica, las cuentas de clientes en la lista de Usuarios del panel. Elija la que corresponde a este servicio para que PNLCS pueda gestionarlo (suspender, terminar, contraseña). El listado de cuentas funciona para servidores de Panelica; deje vacío para un registro solo de facturación.',
+	'clients.link_existing_hint' => 'Estas son las cuentas que ya existen en el servidor seleccionado; en Panelica, las cuentas de clientes en la lista de Usuarios del panel. Elija la que corresponde a este servicio para que PNLCS pueda gestionarlo (suspender, terminar, contraseña). Las cuentas se listan para servidores Panelica, Plesk y Proxmox (en Proxmox, los servidores virtuales); deje vacío para un registro solo de facturación.',
 	'clients.service_linked' => 'Servicio agregado y vinculado a la cuenta del servidor existente.',
 	'clients.link_taken' => 'Esa cuenta del servidor ya está vinculada al servicio #:service.',
 	'clients.add_domain' => 'Agregar dominio',
