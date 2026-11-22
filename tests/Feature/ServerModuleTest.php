@@ -191,6 +191,9 @@ test('plesk unsuspend account with mocked API', function () {
 
 test('plesk terminate account with mocked API', function () {
     Http::fake([
+        // Asked first whether the id is a customer: only a customer is removed.
+        '*/enterprise/control/agent.php' => Http::response('<?xml version="1.0"?><packet><customer><get><result><status>ok</status><id>777</id>'
+            .'<data><gen_info><login>c777</login></gen_info></data></result></get></customer></packet>', 200),
         '*/api/v2/clients/*' => Http::response(null, 200),
     ]);
 
@@ -204,7 +207,7 @@ test('plesk terminate account with mocked API', function () {
         'product_id' => $product->id,
         'server_id'  => $server->id,
         'order_id'   => $order->id,
-        'notes'      => json_encode(['plesk_client_id' => 'client-777']),
+        'notes'      => json_encode(['plesk_client_id' => '777']),
     ]);
 
     $module = new \Modules\Servers\Plesk\PleskModule();

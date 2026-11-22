@@ -272,7 +272,7 @@ class PleskModule extends AbstractServerModule
      * owner, and reading it as one stopped the whole list. The same holds for
      * every list read here, so each takes only the results that carry data.
      *
-     * @return array<string, array{login: string, name: string, email: string}>
+     * @return array<string, array{login: string, name: string, email: string, type: string}>
      */
     private function owners(Server $server): array
     {
@@ -286,6 +286,7 @@ class PleskModule extends AbstractServerModule
                 'login' => (string) $info->login,
                 'name' => trim((string) $info->cname) ?: trim((string) $info->pname),
                 'email' => (string) $info->email,
+                'type' => isset($result->data->gen_info) ? 'customer' : 'reseller',
             ];
         }
 
@@ -467,7 +468,13 @@ class PleskModule extends AbstractServerModule
         $ownerId = (string) $info->{'owner-id'};
         $owner = $this->owners($server)[$ownerId] ?? null;
 
-        // A subscription the administrator owns has no customer to address.
+        // Only a customer is recorded as the service's owner. A subscription
+        // the administrator or a reseller owns has no customer to address:
+        // the service acts on the subscription alone, and never on the
+        // reseller, whose account holds other customers' sites.
+        if (($owner['type'] ?? null) !== 'customer') {
+            $owner = null;
+        }
         $this->setModuleData($service, array_filter([
             'plesk_domain_id' => $subscriptionId,
             'plesk_client_id' => $owner ? $ownerId : null,
@@ -547,6 +554,20 @@ class PleskModule extends AbstractServerModule
     private function getClientId(Service $service): ?string
     {
         return $this->getModuleData($service)['plesk_client_id'] ?? null;
+    }
+
+    /**
+     * Whether the id is a customer on the panel. A service linked before only
+     * customers were recorded may hold a reseller's id, and the REST clients
+     * endpoint addresses resellers too: what removes a customer would remove
+     * the reseller with everyone under it.
+     */
+    private function isCustomer(Server $server, string $clientId): bool
+    {
+        $id = (int) $clientId;
+        $xml = $this->xmlApi($server, "<customer><get><filter><id>{$id}</id></filter><dataset><gen_info/></dataset></get></customer>");
+
+        return $xml !== null && ($xml->xpath('//customer/get/result[status="ok"][data]') ?: []) !== [];
     }
 
     private function getDomainId(Service $service): ?string
@@ -783,6 +804,12 @@ class PleskModule extends AbstractServerModule
 
         if (! $domainId) {
             // A service recorded before the subscription id was kept.
+            if (! $this->isCustomer($server, $clientId)) {
+                $result = $this->buildResult(false, "Plesk client #{$clientId} is not a customer; it was not removed.");
+                $this->logAction($service, 'terminate', $result);
+
+                return $result;
+            }
             $resp = $this->http($server)->delete("{$this->baseUrl($server)}/clients/{$clientId}");
             $result = $this->buildResult($resp->successful(), $resp->successful() ? 'Account terminated.' : $this->errorMessage($resp));
             $this->logAction($service, 'terminate', $result);
@@ -800,7 +827,7 @@ class PleskModule extends AbstractServerModule
         }
 
         $message = 'Subscription removed.';
-        if ($clientId) {
+        if ($clientId && $this->isCustomer($server, $clientId)) {
             $owner = (int) $clientId;
             $left = $this->xmlApi($server, "<webspace><get><filter><owner-id>{$owner}</owner-id></filter><dataset><gen_info/></dataset></get></webspace>");
             $remaining = $left ? count($left->xpath('//webspace/get/result[status="ok"][data]') ?: []) : null;
@@ -825,16 +852,32 @@ class PleskModule extends AbstractServerModule
     {
         $server = $this->getServer($service);
         $clientId = $this->getClientId($service);
+        $domainId = $this->subscriptionId($service);
 
-        if (! $server || ! $clientId) {
+        if (! $server || (! $clientId && ! $domainId)) {
             return $this->buildResult(false, 'Missing server or Plesk client ID.');
         }
 
-        if ($this->isReseller($service)) {
+        if ($clientId && $this->isReseller($service)) {
             $id = (int) $clientId;
             $set = $this->xmlApi($server, "<reseller><set><filter><id>{$id}</id></filter><values><gen-info><passwd>".self::xml($newPassword).'</passwd></gen-info></values></set></reseller>');
             if (! $this->xmlOk($set)) {
                 return $this->buildResult(false, $this->xmlError($set));
+            }
+            $service->update(['password' => $newPassword]);
+
+            return $this->buildResult(true, 'Password changed.');
+        }
+
+        // A subscription with no customer of its own (the administrator's or
+        // a reseller's) changes only its FTP password: the owner's login is
+        // not this service's to change.
+        if ($domainId && (! $clientId || ! $this->isCustomer($server, $clientId))) {
+            $ftp = $this->http($server)->put("{$this->baseUrl($server)}/domains/{$domainId}", [
+                'hosting_settings' => ['ftp_password' => $newPassword],
+            ]);
+            if (! $ftp->successful()) {
+                return $this->buildResult(false, $this->errorMessage($ftp));
             }
             $service->update(['password' => $newPassword]);
 

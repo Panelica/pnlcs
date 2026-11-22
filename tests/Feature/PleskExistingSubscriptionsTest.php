@@ -241,6 +241,7 @@ it('removes the plesk customer with their last subscription', function () {
     fakePleskAgent([
         'webspace-del' => '<result><status>ok</status><id>12</id></result>',
         'webspace-get' => '',
+        'customer-get' => customerResult(5, 'rossi', 'Rossi Srl', 'info@rossi.it'),
     ]);
     Http::fake(['https://plesk.test:8443/api/v2/clients/5' => Http::response(null, 204)]);
     $service = existingSubsService(existingSubsServer(), ['plesk_domain_id' => '12', 'plesk_client_id' => '5']);
@@ -254,6 +255,7 @@ it('removes the plesk customer when plesk answers an empty list for what is left
     fakePleskAgent([
         'webspace-del' => '<result><status>ok</status><id>12</id></result>',
         'webspace-get' => '<result><status>ok</status></result>',
+        'customer-get' => customerResult(5, 'rossi', 'Rossi Srl', 'info@rossi.it'),
     ]);
     Http::fake(['https://plesk.test:8443/api/v2/clients/5' => Http::response(null, 204)]);
     $service = existingSubsService(existingSubsServer(), ['plesk_domain_id' => '12', 'plesk_client_id' => '5']);
@@ -270,3 +272,85 @@ it('does not touch the customer when plesk would not delete the subscription', f
     expect((new PleskModule)->terminate($service)['success'])->toBeFalse();
     Http::assertNotSent(fn (Request $request) => $request->method() === 'DELETE');
 });
+
+/*
+ * A reseller owns subscriptions too, and the REST clients endpoint addresses
+ * resellers as well as customers. What a service does to its owner must never
+ * reach a reseller: removing one removes every customer and site under it.
+ */
+function resellerResult(int $id, string $login): string
+{
+    return "<result><status>ok</status><id>{$id}</id><data><gen-info><login>{$login}</login>"
+        .'<cname>Web Co</cname><pname></pname><email>info@webco.it</email></gen-info></data></result>';
+}
+
+it('links a subscription a reseller owns without recording the reseller', function () {
+    fakePleskAgent([
+        'webspace-get' => webspaceResult(12, 'rossi.it', 7),
+        'customer-get' => '<result><status>ok</status></result>',
+        'reseller-get' => resellerResult(7, 'webco'),
+    ]);
+    $service = existingSubsService(existingSubsServer(), []);
+
+    expect((new PleskModule)->linkAccount($service, '12')['success'])->toBeTrue()
+        ->and($service->fresh()->module_data)->toBe(['plesk_domain_id' => '12'])
+        ->and($service->fresh()->username)->not->toBe('webco');
+});
+
+it('keeps a reseller recorded as the owner when its last subscription goes', function () {
+    // Linked before only customers were recorded: the reseller's id is the owner.
+    fakePleskAgent([
+        'webspace-del' => '<result><status>ok</status><id>12</id></result>',
+        'webspace-get' => '',
+        'customer-get' => '<result><status>error</status><errcode>1013</errcode><errtext>client does not exist</errtext></result>',
+    ]);
+    $service = existingSubsService(existingSubsServer(), ['plesk_domain_id' => '12', 'plesk_client_id' => '7']);
+
+    expect((new PleskModule)->terminate($service)['success'])->toBeTrue();
+    Http::assertSent(fn (Request $request) => str_contains($request->body(), '<webspace><del><filter><id>12</id>'));
+    Http::assertNotSent(fn (Request $request) => $request->method() === 'DELETE');
+});
+
+it('does not remove a reseller for a service recorded without a subscription', function () {
+    fakePleskAgent(['customer-get' => '<result><status>error</status><errcode>1013</errcode><errtext>client does not exist</errtext></result>']);
+    $service = existingSubsService(existingSubsServer(), ['plesk_client_id' => '7']);
+
+    expect((new PleskModule)->terminate($service)['success'])->toBeFalse();
+    Http::assertNotSent(fn (Request $request) => $request->method() === 'DELETE');
+});
+
+it('changes only the ftp password of a subscription a reseller owns', function () {
+    fakePleskAgent(['customer-get' => '<result><status>error</status><errcode>1013</errcode><errtext>client does not exist</errtext></result>']);
+    Http::fake(['https://plesk.test:8443/api/v2/domains/12' => Http::response(['id' => 12], 200)]);
+    $service = existingSubsService(existingSubsServer(), ['plesk_domain_id' => '12', 'plesk_client_id' => '7']);
+
+    expect((new PleskModule)->changePassword($service, 'N3w-secret!')['success'])->toBeTrue();
+    Http::assertSent(fn (Request $request) => $request->method() === 'PUT'
+        && $request->url() === 'https://plesk.test:8443/api/v2/domains/12'
+        && $request['hosting_settings']['ftp_password'] === 'N3w-secret!');
+    Http::assertNotSent(fn (Request $request) => str_contains($request->url(), '/clients/'));
+    expect($service->fresh()->password)->toBe('N3w-secret!');
+});
+
+it('changes the ftp password of a subscription the administrator owns', function () {
+    Http::preventStrayRequests();
+    Http::fake(['https://plesk.test:8443/api/v2/domains/12' => Http::response(['id' => 12], 200)]);
+    $service = existingSubsService(existingSubsServer(), ['plesk_domain_id' => '12']);
+
+    expect((new PleskModule)->changePassword($service, 'N3w-secret!')['success'])->toBeTrue();
+    Http::assertNotSent(fn (Request $request) => str_contains($request->url(), '/clients/'));
+});
+
+it('changes the customer password and the ftp password for a customer owner', function () {
+    fakePleskAgent(['customer-get' => customerResult(5, 'rossi', 'Rossi Srl', 'info@rossi.it')]);
+    Http::fake([
+        'https://plesk.test:8443/api/v2/clients/5' => Http::response(['id' => 5], 200),
+        'https://plesk.test:8443/api/v2/domains/12' => Http::response(['id' => 12], 200),
+    ]);
+    $service = existingSubsService(existingSubsServer(), ['plesk_domain_id' => '12', 'plesk_client_id' => '5']);
+
+    expect((new PleskModule)->changePassword($service, 'N3w-secret!')['success'])->toBeTrue();
+    Http::assertSent(fn (Request $request) => $request->method() === 'PUT' && $request->url() === 'https://plesk.test:8443/api/v2/clients/5');
+    Http::assertSent(fn (Request $request) => $request->method() === 'PUT' && $request->url() === 'https://plesk.test:8443/api/v2/domains/12');
+});
+
