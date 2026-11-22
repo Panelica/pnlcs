@@ -89,12 +89,12 @@ class ServiceController extends Controller
     {
         $request->validate(['addon_id' => 'required|integer|exists:product_addons,id']);
 
-        app(AddonService::class)->purchaseForService(
+        app(AddonService::class)->draftForService(
             $service,
             ProductAddon::findOrFail($request->integer('addon_id'))
         );
 
-        return back()->with('success', __('admin.messages.addon_created'));
+        return back()->with('success', __('admin.messages.addon_draft_created'));
     }
 
     public function cancelAddon(Service $service, ServiceAddon $addon)
@@ -137,6 +137,25 @@ class ServiceController extends Controller
         $validated = $request->validate($rules);
 
         app(AddonService::class)->updateDetails($addon, $validated);
+        $addon->refresh();
+
+        if ($request->boolean('accept') && $addon->isDraft()) {
+            try {
+                $invoice = app(AddonService::class)->accept($addon);
+            } catch (ValidationException $e) {
+                return back()->with('error', $e->validator->errors()->first());
+            }
+
+            ActivityLog::log(
+                "Addon #{$addon->id} ({$addon->label()}) accepted as {$invoice->invoice_num}",
+                $this->adminName(),
+                $addon->client_id,
+                $invoice->id
+            );
+
+            return redirect()->route('admin.invoices.show', $invoice)
+                ->with('success', __('admin.messages.service_addon_accepted', ['number' => $invoice->invoice_num]));
+        }
 
         ActivityLog::log(
             "Addon #{$addon->id} ({$addon->label()}) updated",
@@ -146,6 +165,27 @@ class ServiceController extends Controller
 
         return redirect()->route('admin.services.show', $service)
             ->with('success', __('admin.messages.service_addon_updated'));
+    }
+
+    public function acceptAddon(Service $service, ServiceAddon $addon)
+    {
+        abort_if($addon->service_id !== $service->id, 404);
+
+        try {
+            $invoice = app(AddonService::class)->accept($addon);
+        } catch (ValidationException $e) {
+            return back()->with('error', $e->validator->errors()->first());
+        }
+
+        ActivityLog::log(
+            "Addon #{$addon->id} ({$addon->label()}) accepted as {$invoice->invoice_num}",
+            $this->adminName(),
+            $addon->client_id,
+            $invoice->id
+        );
+
+        return redirect()->route('admin.invoices.show', $invoice)
+            ->with('success', __('admin.messages.service_addon_accepted', ['number' => $invoice->invoice_num]));
     }
 
     public function suspendAddon(Service $service, ServiceAddon $addon)

@@ -3,12 +3,14 @@
 namespace App\Services;
 
 use App\Enums\InvoiceStatus;
+use App\Enums\OrderStatus;
 use App\Models\Invoice;
 use App\Models\Order;
 use App\Models\Product;
 use App\Models\ProductAddon;
 use App\Models\Service;
 use App\Models\ServiceAddon;
+use App\Models\Setting;
 use Carbon\Carbon;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\DB;
@@ -141,14 +143,10 @@ class AddonService
     }
 
     /**
-     * Sell an addon to a service that is already running, which is the case
-     * addons exist for. The addon waits on its own invoice.
-     *
-     * @return array{addon: ServiceAddon, invoice: Invoice}
-     *
-     * @throws ValidationException
+     * Put an addon on a service as a draft. No invoice is raised yet: the
+     * operator can correct the price, cycle and issue date, then accept it.
      */
-    public function purchaseForService(Service $service, ProductAddon $addon, ?string $cycle = null): array
+    public function draftForService(Service $service, ProductAddon $addon, ?string $cycle = null, ?Carbon $issueDate = null): ServiceAddon
     {
         $service->loadMissing('product', 'client');
 
@@ -173,32 +171,101 @@ class AddonService
         }
 
         $price = $addon->priceFor($cycle);
+        $date = $issueDate ?: now();
 
-        $serviceAddon = ServiceAddon::create([
-            'service_id' => $service->id,
-            'addon_id' => $addon->id,
-            'client_id' => $service->client_id,
-            'server_id' => $service->server_id,
-            'qty' => 1,
-            'amount' => $price,
-            'billing_cycle' => $cycle,
-            // Set when the invoice is paid, so an unpaid addon is never billed
-            // a second time by the renewal generator.
-            'next_due_date' => null,
-            'status' => 'pending',
-        ]);
+        return DB::transaction(function () use ($service, $addon, $cycle, $price, $date) {
+            // The addon gets an order like a product does. No invoice yet: the
+            // order is what "accept" later turns into one.
+            $order = app(OrderService::class)->createAddonOrder(
+                $service->client,
+                $price,
+                $date,
+                'Addon: '.$addon->name.' — '.($service->domain ?: '#'.$service->id)
+            );
 
-        $invoice = app(InvoiceService::class)->createInvoice($service->client, [
-            [
-                'type' => 'Addon',
-                'rel_id' => $serviceAddon->id,
-                'description' => $this->describe($serviceAddon, $addon->name),
+            return ServiceAddon::create([
+                'order_id' => $order->id,
+                'service_id' => $service->id,
+                'addon_id' => $addon->id,
+                'client_id' => $service->client_id,
+                'server_id' => $service->server_id,
+                'qty' => 1,
                 'amount' => $price,
-                'taxed' => (bool) ($addon->tax ?? true),
-            ],
-        ], ['notes' => 'Addon purchase.']);
+                'billing_cycle' => $cycle,
+                'next_due_date' => $date->toDateString(),
+                'status' => 'draft',
+            ]);
+        });
+    }
 
-        return ['addon' => $serviceAddon, 'invoice' => $invoice];
+    /**
+     * Sell an addon to a service that is already running, without the draft
+     * step (the client's own purchase): the invoice goes out immediately.
+     *
+     * @return array{addon: ServiceAddon, invoice: Invoice}
+     *
+     * @throws ValidationException
+     */
+    public function purchaseForService(Service $service, ProductAddon $addon, ?string $cycle = null): array
+    {
+        $serviceAddon = $this->draftForService($service, $addon, $cycle);
+        $invoice = $this->accept($serviceAddon);
+
+        return ['addon' => $serviceAddon->fresh(), 'invoice' => $invoice];
+    }
+
+    /**
+     * Accept a draft addon: issue its invoice on the planned date (default
+     * today) and leave the addon pending until that invoice is paid.
+     */
+    public function accept(ServiceAddon $serviceAddon): Invoice
+    {
+        if (! $serviceAddon->isDraft()) {
+            throw ValidationException::withMessages([
+                'addon' => __('admin.messages.service_addon_not_draft'),
+            ]);
+        }
+
+        $serviceAddon->loadMissing('client', 'service', 'addon', 'order');
+        $issue = $serviceAddon->next_due_date ?: now();
+        $order = $serviceAddon->order;
+
+        if (! $order) {
+            $order = app(OrderService::class)->createAddonOrder(
+                $serviceAddon->client,
+                (float) $serviceAddon->amount,
+                $issue,
+                'Addon: '.$serviceAddon->label().' — '.($serviceAddon->service?->domain ?: '#'.$serviceAddon->service_id)
+            );
+            $serviceAddon->update(['order_id' => $order->id]);
+        }
+
+        return DB::transaction(function () use ($serviceAddon, $order, $issue) {
+            $invoice = app(InvoiceService::class)->createInvoice($serviceAddon->client, [
+                $this->lineItem($serviceAddon->fresh()),
+            ], [
+                // Draft first: the order must know the invoice before the
+                // InvoicePaid event (customer balance) can fire, otherwise the
+                // order listener cannot find it and the addon stays pending.
+                'status' => InvoiceStatus::Draft->value,
+                'date' => $issue->toDateString(),
+                'due_date' => $issue->copy()->addDays((int) Setting::get('InvoiceDueDays', 14))->toDateString(),
+                'notes' => 'Addon order '.$order->order_num,
+            ]);
+
+            $order->update([
+                'invoice_id' => $invoice->id,
+                'amount' => (float) $serviceAddon->amount,
+                'date' => $issue->toDateString(),
+            ]);
+
+            $serviceAddon->update([
+                'status' => 'pending',
+                'next_due_date' => $issue->toDateString(),
+            ]);
+
+            return app(InvoiceService::class)->publishDraft($invoice);
+        });
     }
 
     /**
@@ -306,6 +373,14 @@ class AddonService
         DB::transaction(function () use ($serviceAddon, $updates, $priceChanged, $amount) {
             $serviceAddon->update($updates);
 
+            if ($serviceAddon->isDraft() && $serviceAddon->order) {
+                $serviceAddon->order->update([
+                    'amount' => (float) $serviceAddon->amount,
+                    'date' => ($serviceAddon->next_due_date ?: now())->toDateString(),
+                    'notes' => 'Addon: '.$serviceAddon->label().' — '.($serviceAddon->service?->domain ?: '#'.$serviceAddon->service_id),
+                ]);
+            }
+
             if (! $serviceAddon->isPending() || ! $priceChanged) {
                 return;
             }
@@ -377,8 +452,20 @@ class AddonService
             ]);
         }
 
+        $order = $serviceAddon->order;
+        $standaloneOrder = $order !== null
+            && ! $order->services()->exists()
+            && ! $order->domains()->exists();
+
         if (! $serviceAddon->hasInvoiceLines()) {
-            $serviceAddon->delete();
+            DB::transaction(function () use ($serviceAddon, $order, $standaloneOrder) {
+                $serviceAddon->delete();
+
+                // A draft order that never produced an invoice goes with it.
+                if ($standaloneOrder) {
+                    $order->delete();
+                }
+            });
 
             return;
         }
@@ -386,7 +473,7 @@ class AddonService
         // The lines are on open (unpaid/overdue/draft) invoices. Removing the
         // addon removes those lines; an invoice that was only this addon is
         // cancelled so an empty document is not left behind.
-        DB::transaction(function () use ($serviceAddon) {
+        DB::transaction(function () use ($serviceAddon, $order, $standaloneOrder) {
             $lines = $serviceAddon->invoiceLines()->with('invoice')->get();
             $invoiceIds = $lines->pluck('invoice_id')->unique();
 
@@ -405,6 +492,10 @@ class AddonService
                 if ($invoice->items()->count() === 0) {
                     $invoice->update(['status' => InvoiceStatus::Cancelled->value]);
                 }
+            }
+
+            if ($standaloneOrder) {
+                $order->update(['status' => OrderStatus::Cancelled->value]);
             }
 
             $serviceAddon->delete();

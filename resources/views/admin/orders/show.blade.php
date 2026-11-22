@@ -75,6 +75,27 @@
         </div>
         @endif
 
+        @if($order->addons->count() > 0)
+        <div class="card" style="margin-bottom:15px;">
+            <div class="card-header"><strong>{{ __('admin.orders.addons_header') }} ({{ $order->addons->count() }})</strong></div>
+            <table class="data-table">
+                <thead><tr><th>{{ __('common.table.name') }}</th><th>{{ __('admin.orders.service') }}</th><th style="text-align:right;">{{ __('common.table.amount') }}</th><th>{{ __('common.table.billing_cycle') }}</th><th>{{ __('client.services.next_due_date') }}</th><th>{{ __('common.table.status') }}</th></tr></thead>
+                <tbody>
+                @foreach($order->addons as $addon)
+                <tr>
+                    <td>{{ $addon->label() }}</td>
+                    <td>@if($addon->service)<a href="{{ route('admin.services.show', $addon->service) }}" style="color:#337ab7;">{{ $addon->service->domain ?: '#'.$addon->service->id }}</a>@else &mdash; @endif</td>
+                    <td style="text-align:right;">{{ number_format((float) $addon->amount, 2) }}</td>
+                    <td>{{ cycle_label($addon->billing_cycle) }}</td>
+                    <td>{{ $addon->next_due_date?->format(date_fmt()) ?? '&mdash;' }}</td>
+                    <td><span class="badge-{{ strtolower($addon->status) }}">{{ status_label($addon->status) }}</span></td>
+                </tr>
+                @endforeach
+                </tbody>
+            </table>
+        </div>
+        @endif
+
         @if(strtolower($order->status) === 'fraud' && $order->fraud_output)
         <div style="padding:12px 15px;background:#f2dede;border:1px solid #ebccd1;border-radius:4px;margin-bottom:15px;">
             <strong style="color:#a94442;">{{ __('admin.orders.fraud_info') }}</strong>

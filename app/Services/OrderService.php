@@ -543,14 +543,26 @@ class OrderService
             }
         }
 
-        // Addons ordered alongside a service start billing from the service's
-        // own renewal date, which is what the customer was quoted.
+        // Addons bought with a service start billing from the service's own
+        // renewal date. A standalone addon order covered the period from its
+        // issue date, so its next renewal is one cycle after that date.
+        $orderHasServices = Service::where('order_id', $order->id)->exists();
+
         foreach (ServiceAddon::where('order_id', $order->id)->where('status', 'pending')->get() as $serviceAddon) {
+            $cycle = $serviceAddon->billing_cycle ?: 'Monthly';
+
+            if ($orderHasServices) {
+                $next = $serviceAddon->next_due_date
+                    ?? $serviceAddon->service?->next_due_date
+                    ?? BillingCycleHelper::advance(now(), $cycle)->toDateString();
+            } else {
+                $base = $serviceAddon->next_due_date ? Carbon::parse($serviceAddon->next_due_date) : now();
+                $next = BillingCycleHelper::advance($base, $cycle)->toDateString();
+            }
+
             $serviceAddon->update([
                 'status' => 'active',
-                'next_due_date' => $serviceAddon->next_due_date
-                    ?? $serviceAddon->service?->next_due_date
-                    ?? BillingCycleHelper::advance(now(), $serviceAddon->billing_cycle ?: 'Monthly')->toDateString(),
+                'next_due_date' => $next,
             ]);
         }
 
@@ -1270,6 +1282,24 @@ class OrderService
         $period = $periodStart->format('Y/m/d').' - '.$dueDate->format('Y/m/d');
 
         return "{$name} ({$period}){$domain}".($configured ? " ({$configured})" : '');
+    }
+
+    /**
+     * A one-line order for an addon added to a running service. It has no
+     * invoice yet: accepting the addon raises one for this order.
+     */
+    public function createAddonOrder(Client $client, float $amount, Carbon $date, string $notes): Order
+    {
+        return Order::create([
+            'order_num' => $this->generateOrderNumber(),
+            'client_id' => $client->id,
+            'date' => $date->toDateString(),
+            'amount' => $amount,
+            'payment_method' => $client->default_payment_method ?: 'banktransfer',
+            'status' => OrderStatus::Pending->value,
+            'ip_address' => request()->ip() ?? '0.0.0.0',
+            'notes' => $notes,
+        ]);
     }
 
     private function generateOrderNumber(): string

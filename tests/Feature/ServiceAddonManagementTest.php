@@ -4,10 +4,13 @@ use App\Models\Admin;
 use App\Models\Client;
 use App\Models\Invoice;
 use App\Models\InvoiceItem;
+use App\Models\Order;
 use App\Models\ProductAddon;
 use App\Models\Service;
 use App\Models\ServiceAddon;
 use App\Services\AddonService;
+use Carbon\Carbon;
+use Illuminate\Support\Facades\Mail;
 
 function pnlcs_test_service_addon(array $overrides = []): array
 {
@@ -42,6 +45,28 @@ function pnlcs_test_service_addon(array $overrides = []): array
     ], $overrides));
 
     return compact('admin', 'client', 'service', 'productAddon', 'addon');
+}
+
+function pnlcs_test_addon_order_setup(): array
+{
+    $admin = Admin::factory()->create();
+    $client = Client::factory()->create();
+    $service = Service::factory()->create([
+        'client_id' => $client->id,
+        'status' => 'active',
+        'billing_cycle' => 'Monthly',
+        'domain' => 'addon-order.test',
+    ]);
+    $productAddon = ProductAddon::create([
+        'name' => 'Extra backup',
+        'packages' => null,
+        'hidden' => false,
+        'retired' => false,
+        'sort_order' => 0,
+        'tax' => true,
+    ]);
+
+    return compact('admin', 'client', 'service', 'productAddon');
 }
 
 it('lets an admin edit the price and the next invoice line uses it', function () {
@@ -174,6 +199,127 @@ it('deletes a cancelled addon and cancels its empty unpaid invoice', function ()
     expect(ServiceAddon::find($fx['addon']->id))->toBeNull()
         ->and(InvoiceItem::find($item->id))->toBeNull()
         ->and($invoice->fresh()->status)->toBe('cancelled');
+});
+
+it('runs a new addon through its own order and invoice', function () {
+    Mail::fake();
+    $fx = pnlcs_test_addon_order_setup();
+
+    $this->actingAs($fx['admin'], 'admin')
+        ->post(route('admin.services.addons.store', $fx['service']), ['addon_id' => $fx['productAddon']->id])
+        ->assertRedirect();
+
+    $addon = ServiceAddon::where('service_id', $fx['service']->id)->firstOrFail();
+    $order = Order::findOrFail($addon->order_id);
+
+    expect(strtolower((string) $addon->status))->toBe('draft')
+        ->and(strtolower((string) $order->status))->toBe('pending')
+        ->and($order->invoice_id)->toBeNull()
+        ->and(Invoice::where('client_id', $fx['client']->id)->count())->toBe(0);
+
+    $issue = now()->addDays(10)->toDateString();
+
+    $this->actingAs($fx['admin'], 'admin')
+        ->put(route('admin.services.addons.update', [$fx['service'], $addon]), [
+            'amount' => 75,
+            'billing_cycle' => 'Annually',
+            'next_due_date' => $issue,
+            'notes' => 'planned',
+        ])
+        ->assertRedirect(route('admin.services.show', $fx['service']));
+
+    $addon->refresh();
+    $order->refresh();
+
+    expect((float) $addon->amount)->toBe(75.0)
+        ->and((float) $order->amount)->toBe(75.0)
+        ->and($order->date->toDateString())->toBe($issue);
+
+    $this->actingAs($fx['admin'], 'admin')
+        ->post(route('admin.services.addons.accept', [$fx['service'], $addon]))
+        ->assertRedirect();
+
+    $addon->refresh();
+    $order->refresh();
+    $invoice = Invoice::findOrFail($order->invoice_id);
+
+    expect(strtolower((string) $addon->status))->toBe('pending')
+        ->and(strtolower((string) $order->status))->toBe('pending')
+        ->and($invoice->date->toDateString())->toBe($issue)
+        ->and((float) $invoice->items()->where('type', 'Addon')->value('amount'))->toBe(75.0);
+
+    $this->actingAs($fx['admin'], 'admin')
+        ->post(route('admin.invoices.mark-paid', $invoice), ['gateway' => 'banktransfer'])
+        ->assertRedirect();
+
+    $addon->refresh();
+    $order->refresh();
+
+    expect(strtolower((string) $order->status))->toBe('active')
+        ->and(strtolower((string) $addon->status))->toBe('active')
+        ->and($addon->next_due_date->toDateString())->toBe(Carbon::parse($issue)->addYearNoOverflow()->toDateString());
+});
+
+it('deletes a draft addon together with its order', function () {
+    $fx = pnlcs_test_addon_order_setup();
+
+    $this->actingAs($fx['admin'], 'admin')
+        ->post(route('admin.services.addons.store', $fx['service']), ['addon_id' => $fx['productAddon']->id])
+        ->assertRedirect();
+
+    $addon = ServiceAddon::where('service_id', $fx['service']->id)->firstOrFail();
+    $order = Order::findOrFail($addon->order_id);
+
+    $this->actingAs($fx['admin'], 'admin')
+        ->delete(route('admin.services.addons.destroy', [$fx['service'], $addon]))
+        ->assertRedirect();
+
+    expect(ServiceAddon::find($addon->id))->toBeNull()
+        ->and(Order::find($order->id))->toBeNull();
+});
+
+it('refuses to accept an addon twice', function () {
+    Mail::fake();
+    $fx = pnlcs_test_addon_order_setup();
+
+    $this->actingAs($fx['admin'], 'admin')
+        ->post(route('admin.services.addons.store', $fx['service']), ['addon_id' => $fx['productAddon']->id])
+        ->assertRedirect();
+
+    $addon = ServiceAddon::where('service_id', $fx['service']->id)->firstOrFail();
+
+    $this->actingAs($fx['admin'], 'admin')
+        ->post(route('admin.services.addons.accept', [$fx['service'], $addon]))
+        ->assertRedirect();
+
+    $this->actingAs($fx['admin'], 'admin')
+        ->post(route('admin.services.addons.accept', [$fx['service'], $addon]))
+        ->assertSessionHas('error');
+
+    expect(Invoice::where('client_id', $fx['client']->id)->count())->toBe(1);
+});
+
+it('shows the draft addon on the service and order screens', function () {
+    Mail::fake();
+    $fx = pnlcs_test_addon_order_setup();
+
+    $this->actingAs($fx['admin'], 'admin')
+        ->post(route('admin.services.addons.store', $fx['service']), ['addon_id' => $fx['productAddon']->id])
+        ->assertRedirect();
+
+    $addon = ServiceAddon::where('service_id', $fx['service']->id)->firstOrFail();
+    $order = Order::findOrFail($addon->order_id);
+
+    $this->actingAs($fx['admin'], 'admin')
+        ->get(route('admin.services.show', $fx['service']))
+        ->assertOk()
+        ->assertSee($addon->label())
+        ->assertSee(__('admin.addons.service_accept'));
+
+    $this->actingAs($fx['admin'], 'admin')
+        ->get(route('admin.orders.show', $order))
+        ->assertOk()
+        ->assertSee($addon->label());
 });
 
 it('refuses to delete a product addon that is in use', function () {

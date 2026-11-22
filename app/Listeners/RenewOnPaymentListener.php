@@ -111,12 +111,24 @@ class RenewOnPaymentListener
             return;
         }
 
+        // The first invoice of an order-linked addon is activated by
+        // AutoAcceptOrderListener; advancing it here as well would move the
+        // renewal date twice. Renewals (already active) still pass through.
+        if ($addon->order_id && strtolower((string) $addon->status) === 'pending') {
+            return;
+        }
+
         $cycle = $addon->billing_cycle ?: 'Monthly';
 
         if (strtolower((string) $addon->status) === 'pending' || ! $addon->next_due_date) {
+            // The invoice was issued for the addon's planned date, which may be
+            // in the future: anchor the next renewal to that date, not to the
+            // day the customer happened to pay.
+            $base = $addon->next_due_date ? Carbon::parse($addon->next_due_date) : now();
+
             $addon->update([
                 'status' => 'active',
-                'next_due_date' => BillingCycleHelper::advance(now(), $cycle)->toDateString(),
+                'next_due_date' => BillingCycleHelper::advance($base, $cycle)->toDateString(),
             ]);
 
             Log::info("RenewOnPayment: addon #{$addon->id} activated, due {$addon->next_due_date}");

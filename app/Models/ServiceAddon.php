@@ -21,6 +21,11 @@ class ServiceAddon extends Model
         return $this->belongsTo(Service::class);
     }
 
+    public function order()
+    {
+        return $this->belongsTo(Order::class);
+    }
+
     public function client()
     {
         return $this->belongsTo(Client::class);
@@ -40,6 +45,11 @@ class ServiceAddon extends Model
     public function isActive(): bool
     {
         return strtolower((string) $this->status) === 'active';
+    }
+
+    public function isDraft(): bool
+    {
+        return strtolower((string) $this->status) === 'draft';
     }
 
     public function isPending(): bool

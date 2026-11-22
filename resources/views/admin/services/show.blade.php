@@ -363,6 +363,13 @@
                     <a class="btn btn-default btn-xs" href="{{ route('admin.services.addons.edit', [$service, $addon]) }}">{{ __('admin.addons.service_edit') }}</a>
                     @endunless
 
+                    @if($addon->isDraft())
+                    <form method="POST" action="{{ route('admin.services.addons.accept', [$service, $addon]) }}" style="display:inline;">
+                        @csrf
+                        <button type="submit" class="btn btn-success btn-xs">{{ __('admin.addons.service_accept') }}</button>
+                    </form>
+                    @endif
+
                     @if($addon->isActive())
                     <form method="POST" action="{{ route('admin.services.addons.suspend', [$service, $addon]) }}" style="display:inline;">
                         @csrf
@@ -410,6 +417,10 @@
         </form>
         @else
             <p style="color:#999;margin:0;">{{ __('admin.addons.no_addons') }}</p>
+        @endif
+
+        @if(($availableAddons ?? collect())->isNotEmpty())
+        <p style="color:#777;margin:10px 0 0;">{{ __('admin.addons.service_add_hint') }}</p>
         @endif
     </div>
 </div>

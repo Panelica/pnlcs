@@ -350,8 +350,8 @@ test('a customer can order an addon for a running service', function () {
     $invoice = Invoice::where('client_id', $client->id)->latest('id')->firstOrFail();
 
     expect($serviceAddon->status)->toBe('pending')
-        // Nothing is billed until it is paid for.
-        ->and($serviceAddon->next_due_date)->toBeNull()
+        // The planned issue date is kept, but nothing is billed while pending.
+        ->and($serviceAddon->next_due_date->toDateString())->toBe(now()->toDateString())
         ->and((float) $invoice->total)->toBe(9.0);
 
     app(PaymentService::class)->applyPayment($invoice, 'banktransfer', 'TXN-LATER', 9.0);
@@ -453,7 +453,7 @@ test('editing an addon keeps its product list', function () {
         ->and($addon->priceFor('monthly'))->toBe(6.0);
 });
 
-test('an operator can put an addon on a service and it gets invoiced', function () {
+test('an operator adds an addon as a draft and accepts it to issue the invoice', function () {
     Mail::fake();
     $fx = addonShop(monthly: 4.0);
     $admin = Admin::factory()->create();
@@ -471,9 +471,26 @@ test('an operator can put an addon on a service and it gets invoiced', function 
         ->assertRedirect();
 
     $serviceAddon = ServiceAddon::where('service_id', $service->id)->firstOrFail();
+    $order = Order::where('client_id', $client->id)->firstOrFail();
+
+    // Adding leaves a draft order: no invoice until the operator accepts it.
+    expect(strtolower((string) $serviceAddon->status))->toBe('draft')
+        ->and($serviceAddon->order_id)->toBe($order->id)
+        ->and(strtolower((string) $order->status))->toBe('pending')
+        ->and($order->invoice_id)->toBeNull()
+        ->and(Invoice::where('client_id', $client->id)->count())->toBe(0);
+
+    $this->actingAs($admin, 'admin')
+        ->post(route('admin.services.addons.accept', [$service, $serviceAddon]))
+        ->assertRedirect();
+
+    $serviceAddon->refresh();
+    $order->refresh();
     $invoice = Invoice::where('client_id', $client->id)->latest('id')->firstOrFail();
 
-    expect((float) $serviceAddon->amount)->toBe(4.0)
+    expect(strtolower((string) $serviceAddon->status))->toBe('pending')
+        ->and($order->invoice_id)->toBe($invoice->id)
+        ->and(strtolower((string) $order->status))->toBe('pending')
         ->and((float) $invoice->total)->toBe(4.0);
 });
 

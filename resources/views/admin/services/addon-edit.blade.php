@@ -18,7 +18,9 @@
         @if($addon->isEnded())
             <div class="alert alert-danger">{{ __('admin.addons.service_ended') }}</div>
         @else
-            @if($addon->isPending())
+            @if($addon->isDraft())
+                <div class="alert alert-info">{{ __('admin.addons.service_draft_note', ['date' => $addon->next_due_date?->format(date_fmt()) ?? now()->format(date_fmt())]) }}</div>
+            @elseif($addon->isPending())
                 <div class="alert alert-warning">{{ __('admin.addons.service_pending_edit_note') }}</div>
             @endif
 
@@ -43,7 +45,7 @@
                 </div>
 
                 <div class="form-group">
-                    <label class="form-label" for="addon-next-due">{{ __('client.services.next_due_date') }}</label>
+                    <label class="form-label" for="addon-next-due">{{ $addon->isDraft() ? __('admin.addons.service_issue_date') : __('client.services.next_due_date') }}</label>
                     <input type="date" id="addon-next-due" name="next_due_date"
                            value="{{ old('next_due_date', $addon->next_due_date?->toDateString()) }}"
                            class="form-control">
@@ -56,6 +58,9 @@
 
                 <div style="display:flex;gap:8px;align-items:center;">
                     <button type="submit" class="btn btn-primary">{{ __('common.actions.save') }}</button>
+                    @if($addon->isDraft())
+                    <button type="submit" name="accept" value="1" class="btn btn-success">{{ __('admin.addons.service_save_accept') }}</button>
+                    @endif
                     <a href="{{ route('admin.services.show', $service) }}" class="btn btn-default">{{ __('common.actions.cancel') }}</a>
                 </div>
             </form>

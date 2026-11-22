@@ -239,6 +239,7 @@ Route::middleware(['admin.auth', 'admin.2fa'])->prefix('admin')->name('admin.')-
         Route::post('services/{service}/addons', [ServiceController::class, 'storeAddon'])->name('services.addons.store');
         Route::get('services/{service}/addons/{addon}/edit', [ServiceController::class, 'editAddon'])->name('services.addons.edit');
         Route::put('services/{service}/addons/{addon}', [ServiceController::class, 'updateAddon'])->name('services.addons.update');
+        Route::post('services/{service}/addons/{addon}/accept', [ServiceController::class, 'acceptAddon'])->name('services.addons.accept');
         Route::post('services/{service}/addons/{addon}/suspend', [ServiceController::class, 'suspendAddon'])->name('services.addons.suspend');
         Route::post('services/{service}/addons/{addon}/resume', [ServiceController::class, 'resumeAddon'])->name('services.addons.resume');
         Route::delete('services/{service}/addons/{addon}', [ServiceController::class, 'destroyAddon'])->name('services.addons.destroy');
