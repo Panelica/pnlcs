@@ -57,20 +57,6 @@ it('updates the two billing amounts', function () {
         ->and((float) $fresh->recurring_amount)->toBe(25.0);
 });
 
-it('updates the next payment date from the billing panel', function () {
-    $this->withoutMiddleware(VerifyCsrfToken::class);
-    $domain = bdDomain();
-
-    $due = now()->addMonths(3)->toDateString();
-
-    $this->actingAs(bdAdmin(), 'admin')
-        ->post(route('admin.domains.billing', $domain), [
-            'next_due_date' => $due,
-        ])->assertRedirect();
-
-    expect($domain->fresh()->next_due_date->toDateString())->toBe($due);
-});
-
 it('rejects a negative billing amount', function () {
     $this->withoutMiddleware(VerifyCsrfToken::class);
     $domain = bdDomain();

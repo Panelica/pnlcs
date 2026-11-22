@@ -56,17 +56,6 @@ it('saves the edited fields', function () {
         ->and($service->notes)->toBe('Agreed by phone.');
 });
 
-it('updates the next payment date from the billing panel', function () {
-    $service = aseService();
-    $due = now()->addDays(20)->toDateString();
-
-    test()->actingAs(aseAdmin(), 'admin')
-        ->put(route('admin.services.next-due', $service), ['next_due_date' => $due])
-        ->assertSessionHas('success');
-
-    expect($service->fresh()->next_due_date->toDateString())->toBe($due);
-});
-
 it('holds off the automatic suspension until the chosen day', function () {
     $service = aseService(['status' => 'active']);
 

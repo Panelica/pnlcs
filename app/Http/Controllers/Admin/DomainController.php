@@ -114,21 +114,20 @@ class DomainController extends Controller
     }
 
     /**
-     * Correct the billing amounts and the next payment date an operator can
-     * change on a domain.
+     * Correct the two billing amounts an operator can change on a domain.
+     * next_due_date is billing-automation territory and is left to the
+     * renewal flow.
      */
     public function updateBilling(Request $request, Domain $domain)
     {
         $validated = $request->validate([
             'first_payment_amount' => ['nullable', 'numeric', 'min:0', 'max:99999999'],
             'recurring_amount' => ['nullable', 'numeric', 'min:0', 'max:99999999'],
-            'next_due_date' => ['nullable', 'date'],
         ]);
 
         $domain->update([
             'first_payment_amount' => $validated['first_payment_amount'] ?? $domain->first_payment_amount,
             'recurring_amount' => $validated['recurring_amount'] ?? $domain->recurring_amount,
-            'next_due_date' => $validated['next_due_date'] ?? $domain->next_due_date,
         ]);
 
         return back()->with('success', __('admin.domains.billing_saved'));
