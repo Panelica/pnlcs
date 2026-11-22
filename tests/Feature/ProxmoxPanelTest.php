@@ -253,3 +253,17 @@ it('adds a virtual server by hand with the customer\'s options, or links one tha
         ->and($pve->guests[810]['config']['tags'])->toContain('pnlcs-s'.$linked->id)
         ->and($pve->guests[810]['status'])->toBe('running');
 });
+
+it('keeps no service when the virtual server to link is not there', function () {
+    FakeProxmox::install()->template(9000);
+    $server = pveServer();
+    $product = pveService($server)->product;
+    $client = \App\Models\Client::factory()->create();
+
+    test()->actingAs(pveAdmin(), 'admin')->post(route('admin.clients.services.store', $client), [
+        'product_id' => $product->id, 'server_id' => $server->id, 'domain' => 'gone.example.com', 'billing_cycle' => 'Monthly',
+        'amount' => '10.00', 'status' => 'active', 'provision' => '0', 'link_user_id' => '811',
+    ])->assertSessionHas('error');
+
+    expect($client->services()->exists())->toBeFalse();
+});

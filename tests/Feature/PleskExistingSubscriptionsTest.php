@@ -202,6 +202,27 @@ it('does not record a second service for a subscription another one manages', fu
     expect(Service::where('client_id', $client->id)->exists())->toBeFalse();
 });
 
+it('keeps no service when plesk refuses the link', function () {
+    fakePleskAgent(['webspace-get' => '<result><status>error</status><errcode>1013</errcode><errtext>Object not found</errtext></result>']);
+    $client = Client::factory()->create();
+
+    $this->actingAs(existingSubsAdmin(), 'admin')
+        ->post(route('admin.clients.services.store', $client), [
+            'product_id' => Product::factory()->create([
+                'group_id' => ProductGroup::factory()->create()->id, 'server_type' => 'plesk',
+            ])->id,
+            'server_id' => existingSubsServer()->id,
+            'billing_cycle' => 'Annually',
+            'amount' => '60',
+            'status' => 'active',
+            'link_user_id' => '99',
+        ])
+        ->assertSessionHas('error')
+        ->assertSessionHasInput('link_user_id', '99');
+
+    expect(Service::where('client_id', $client->id)->exists())->toBeFalse();
+});
+
 it('suspends and reactivates only the subscription', function (string $action, int $status) {
     fakePleskAgent(['webspace-set' => '<result><status>ok</status><id>12</id></result>']);
     $service = existingSubsService(existingSubsServer(), ['plesk_domain_id' => '12', 'plesk_client_id' => '5']);
