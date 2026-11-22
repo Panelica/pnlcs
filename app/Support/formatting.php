@@ -118,7 +118,7 @@ if (! function_exists('cycle_label')) {
      * named cycles come from common.billing.*, a term of months from
      * common.billing.months, which is a plural.
      */
-    function cycle_label(?string $cycle): string
+    function cycle_label(?string $cycle, ?string $locale = null): string
     {
         $word = strtolower(trim(str_replace([' ', '-', '_'], '', (string) $cycle)));
 
@@ -130,14 +130,14 @@ if (! function_exists('cycle_label')) {
             'annually' => 'annually', 'biennially' => 'biennially', 'triennially' => 'triennially',
             'onetime' => 'one_time', 'free' => 'free'];
 
-        if (isset($named[$word]) && Lang::has('common.billing.'.$named[$word])) {
-            return Lang::get('common.billing.'.$named[$word]);
+        if (isset($named[$word]) && Lang::has('common.billing.'.$named[$word], $locale)) {
+            return Lang::get('common.billing.'.$named[$word], [], $locale);
         }
 
         $months = \App\Services\BillingCycleHelper::months($word);
 
-        if ($months !== null && Lang::has('common.billing.months')) {
-            return trans_choice('common.billing.months', $months, ['count' => $months]);
+        if ($months !== null && Lang::has('common.billing.months', $locale)) {
+            return trans_choice('common.billing.months', $months, ['count' => $months], $locale);
         }
 
         return ucfirst(str_replace(['_', '-'], ' ', (string) $cycle));

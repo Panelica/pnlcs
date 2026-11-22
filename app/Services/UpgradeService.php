@@ -234,7 +234,7 @@ class UpgradeService
             $invoice = app(InvoiceService::class)->createInvoice($service->client, [[
                 'type' => 'Upgrade',
                 'rel_id' => $upgrade->id,
-                'description' => "Upgrade: {$currentName} -> {$newProduct->name} ({$service->billing_cycle}) - prorated for {$calc['remaining_days']} days - {$service->domain}",
+                'description' => "Upgrade: {$currentName} -> {$newProduct->name} (".cycle_label($service->billing_cycle, $service->client?->language).") - prorated for {$calc['remaining_days']} days - {$service->domain}",
                 'amount' => $calc['prorated_diff'],
                 'taxed' => $newProduct->tax ?? true,
             ]], ['notes' => 'Prorated product upgrade charge.']);

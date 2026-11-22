@@ -260,7 +260,7 @@ class AddonService
     {
         $name = $name ?: $serviceAddon->label();
         $domain = $serviceAddon->service?->domain;
-        $cycle = ucfirst(strtolower((string) ($serviceAddon->billing_cycle ?: 'Monthly')));
+        $cycle = cycle_label($serviceAddon->billing_cycle ?: 'Monthly', $serviceAddon->client?->language);
 
         return trim("Addon: {$name} ({$cycle})".($domain ? " — {$domain}" : ''));
     }

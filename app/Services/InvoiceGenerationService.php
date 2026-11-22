@@ -750,7 +750,7 @@ class InvoiceGenerationService
             $items[] = [
                 'type' => 'Hosting',
                 'rel_id' => $service->id,
-                'description' => "{$productName} ({$billingCycle}) — {$service->domain} — {$period}",
+                'description' => "{$productName} (".cycle_label($billingCycle, $client->language).") — {$service->domain} — {$period}",
                 'amount' => (float) $service->amount,
                 'taxed' => $service->product->tax ?? true,
                 'due_date' => $dueDate->toDateString(),
