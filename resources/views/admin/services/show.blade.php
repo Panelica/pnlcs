@@ -409,20 +409,33 @@
             @if(($availableAddons ?? collect())->isNotEmpty())
             <form method="POST" action="{{ route('admin.services.addons.store', $service) }}" style="display:flex;gap:8px;align-items:center;">
                 @csrf
-                <select name="addon_id" class="form-control" style="max-width:340px;">
+                <select name="addon_id" class="form-control" style="max-width:480px;">
                     @foreach($availableAddons as $available)
-                        <option value="{{ $available->id }}">{{ $available->name }}@if($available->description) — {{ \Illuminate\Support\Str::limit($available->description, 60) }}@endif</option>
+                        @php($quote = $addonQuotes[$available->id] ?? null)
+                        <option value="{{ $available->id }}" @disabled(! ($quote['available'] ?? false))>
+                            {{ $available->name }}@if($available->description) — {{ \Illuminate\Support\Str::limit($available->description, 60) }}@endif
+                            @if($quote && $quote['available'])
+                                @if($quote['prorated'])
+                                    — {{ __('admin.addons.first_payment_short', [
+                                        'first' => money_fmt($quote['first_amount']),
+                                        'days' => $quote['remaining_days'],
+                                        'cycle_days' => $quote['cycle_days'],
+                                        'full' => money_fmt($quote['full_amount']),
+                                        'cycle' => cycle_label($quote['cycle']),
+                                    ]) }}
+                                @else
+                                    — {{ money_fmt($quote['full_amount']) }}/{{ cycle_label($quote['cycle']) }}
+                                @endif
+                            @else
+                                — {{ __('admin.addons.service_period_unpaid') }}
+                            @endif
+                        </option>
                     @endforeach
                 </select>
-                <select name="billing_cycle" class="form-control" style="max-width:160px;">
-                    @foreach($cycles as $cycle)
-                        <option value="{{ $cycle }}" @selected(($service->billing_cycle ?: 'Monthly') === $cycle)>{{ cycle_label($cycle) }}</option>
-                    @endforeach
-                </select>
-                <input type="date" name="issue_date" value="{{ now()->toDateString() }}" class="form-control" style="max-width:170px;" title="{{ __('admin.addons.service_issue_date') }}">
                 <button type="submit" class="btn btn-primary btn-sm">{{ __('client.services.addon_order') }}</button>
             </form>
             <p style="color:#777;margin:10px 0 0;">{{ __('admin.addons.service_add_hint') }}</p>
+            <p style="color:#777;margin:4px 0 0;">{{ __('admin.addons.service_add_proration_hint', ['cycle' => cycle_label($service->billing_cycle ?: 'Monthly')]) }}</p>
             @else
                 <p style="color:#999;margin:0;">{{ __('admin.addons.no_addons') }}</p>
             @endif

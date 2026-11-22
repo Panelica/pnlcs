@@ -287,10 +287,18 @@
 <div class="sv-panel" style="margin-bottom:22px">
     <div class="sv-ph">{{ __('client.services.addons_available') }}</div>
     <div style="padding:6px 20px">@foreach($availableAddons as $available)
+        @php($quote = $addonQuotes[$available->id] ?? null)
         <form method="POST" action="{{ route('client.services.addons.store',$service) }}" style="display:flex;align-items:center;justify-content:space-between;gap:12px;padding:12px 0;border-bottom:1px solid var(--border)">@csrf
             <input type="hidden" name="addon_id" value="{{ $available->id }}">
             <span><strong>{{ $available->name }}</strong>@if($available->description)<br><small class="text-muted">{{ $available->description }}</small>@endif</span>
-            <span style="white-space:nowrap">{{ display_money_fmt($available->priceFor($service->billing_cycle ?: 'Monthly')) }} <button type="submit" class="pn-btn pn-btn-sm">{{ __('client.services.addon_order') }}</button></span>
+            <span style="white-space:nowrap">
+                @if($quote && $quote['prorated'])
+                    {{ __('client.services.addon_first_payment', ['first' => display_money_fmt($quote['first_amount']), 'days' => $quote['remaining_days'], 'cycle_days' => $quote['cycle_days'], 'full' => display_money_fmt($quote['full_amount']), 'cycle' => cycle_label($quote['cycle'])]) }}
+                @elseif($quote)
+                    {{ display_money_fmt($quote['full_amount']) }}/{{ cycle_label($quote['cycle']) }}
+                @endif
+                <button type="submit" class="pn-btn pn-btn-sm">{{ __('client.services.addon_order') }}</button>
+            </span>
         </form>@endforeach</div>
 </div>
 @endif

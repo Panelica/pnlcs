@@ -143,10 +143,59 @@ class AddonService
     }
 
     /**
-     * Put an addon on a service as a draft. No invoice is raised yet: the
-     * operator can correct the price, cycle and issue date, then accept it.
+     * What the first invoice and the renewal will cost for this service.
+     *
+     * The addon follows the service's cycle. A service paid further than one
+     * cycle ahead is charged for every remaining paid day: remaining days are
+     * divided by the nominal cycle length, so a two-year prepayment buys two
+     * years of the addon, not one.
+     *
+     * @return array{available: bool, cycle: string, full_amount: float, first_amount: float, remaining_days: int, cycle_days: int, prorated: bool, next_due_date: ?string}
      */
-    public function draftForService(Service $service, ProductAddon $addon, ?string $cycle = null, ?Carbon $issueDate = null): ServiceAddon
+    public function quoteFor(Service $service, ProductAddon $addon): array
+    {
+        $cycle = $service->billing_cycle ?: 'Monthly';
+        $cycleDays = BillingCycleHelper::cycleDays($cycle);
+        $supported = BillingCycleHelper::pricingColumn($cycle) !== null;
+        $offered = $supported && $addon->offeredOn($cycle);
+
+        $due = $service->next_due_date
+            ? Carbon::parse($service->next_due_date)->startOfDay()
+            : null;
+        $remainingDays = $due
+            ? max(0, (int) now()->startOfDay()->diffInDays($due, false))
+            : 0;
+
+        $available = $offered && $remainingDays > 0;
+        $full = $offered ? (float) $addon->priceFor($cycle) : 0.0;
+        // At the very start of a service period the whole cycle is still
+        // ahead, so the addon costs its full price even when a 31-day month or
+        // a leap year makes the count a day longer. Any other date is a
+        // partial period (or prepaid cycles) and is charged by the day.
+        $startsToday = $due
+            && BillingCycleHelper::rewind($due, $cycle)->startOfDay()->equalTo(now()->startOfDay());
+        $prorated = $available && ! $startsToday;
+        $first = $prorated
+            ? round($full * $remainingDays / $cycleDays, 2)
+            : $full;
+
+        return [
+            'available' => $available,
+            'cycle' => $cycle,
+            'full_amount' => round($full, 2),
+            'first_amount' => round($first, 2),
+            'remaining_days' => $remainingDays,
+            'cycle_days' => $cycleDays,
+            'prorated' => $prorated,
+            'next_due_date' => $due?->toDateString(),
+        ];
+    }
+
+    /**
+     * Put an addon on a service as a draft. No invoice is raised yet: the
+     * operator can correct the price and notes, then accept it.
+     */
+    public function draftForService(Service $service, ProductAddon $addon): ServiceAddon
     {
         $service->loadMissing('product', 'client');
 
@@ -165,25 +214,34 @@ class AddonService
             ]);
         }
 
-        $cycle = $cycle ?: ($service->billing_cycle ?: 'Monthly');
+        $cycle = $service->billing_cycle ?: 'Monthly';
 
         // The same rule as the basket: a term the addon was withdrawn from is
         // not a term it is given away on.
-        if (! $addon->offeredOn($cycle)) {
+        if (BillingCycleHelper::pricingColumn($cycle) === null || ! $addon->offeredOn($cycle)) {
             throw ValidationException::withMessages([
                 'addon_id' => __('client.cart.addon_not_on_cycle', ['addon' => $addon->name]),
             ]);
         }
 
-        $price = $addon->priceFor($cycle);
-        $date = $issueDate ?: now();
+        $quote = $this->quoteFor($service, $addon);
 
-        return DB::transaction(function () use ($service, $addon, $cycle, $price, $date) {
+        if (! $quote['available']) {
+            throw ValidationException::withMessages([
+                'addon_id' => __('client.services.addon_service_period_unpaid'),
+            ]);
+        }
+
+        $price = $quote['full_amount'];
+        $first = $quote['first_amount'];
+        $date = now()->startOfDay();
+
+        return DB::transaction(function () use ($service, $addon, $cycle, $price, $first, $date, $quote) {
             // The addon gets an order like a product does. No invoice yet: the
             // order is what "accept" later turns into one.
             $order = app(OrderService::class)->createAddonOrder(
                 $service->client,
-                $price,
+                $first,
                 $date,
                 'Addon: '.$addon->name.' — '.($service->domain ?: '#'.$service->id)
             );
@@ -196,8 +254,12 @@ class AddonService
                 'server_id' => $service->server_id,
                 'qty' => 1,
                 'amount' => $price,
+                'prorated' => $quote['prorated'],
+                'proration_days' => $quote['remaining_days'],
+                'proration_cycle_days' => $quote['cycle_days'],
                 'billing_cycle' => $cycle,
-                'next_due_date' => $date->toDateString(),
+                'next_due_date' => $quote['next_due_date'],
+                'first_invoice_date' => $date->toDateString(),
                 'status' => 'draft',
             ]);
         });
@@ -211,17 +273,17 @@ class AddonService
      *
      * @throws ValidationException
      */
-    public function purchaseForService(Service $service, ProductAddon $addon, ?string $cycle = null, ?Carbon $issueDate = null): array
+    public function purchaseForService(Service $service, ProductAddon $addon): array
     {
-        $serviceAddon = $this->draftForService($service, $addon, $cycle, $issueDate);
+        $serviceAddon = $this->draftForService($service, $addon);
         $invoice = $this->accept($serviceAddon);
 
         return ['addon' => $serviceAddon->fresh(), 'invoice' => $invoice];
     }
 
     /**
-     * Accept a draft addon: issue its invoice on the planned date (default
-     * today) and leave the addon pending until that invoice is paid.
+     * Accept a draft addon: issue its first invoice and leave the addon
+     * pending until that invoice is paid.
      */
     public function accept(ServiceAddon $serviceAddon): Invoice
     {
@@ -232,22 +294,24 @@ class AddonService
         }
 
         $serviceAddon->loadMissing('client', 'service', 'addon', 'order');
-        $issue = $serviceAddon->next_due_date ?: now();
+        $issue = $serviceAddon->first_invoice_date
+            ?: ($serviceAddon->next_due_date ?: now());
+        $first = $serviceAddon->firstPeriodAmount();
         $order = $serviceAddon->order;
 
         if (! $order) {
             $order = app(OrderService::class)->createAddonOrder(
                 $serviceAddon->client,
-                (float) $serviceAddon->amount,
+                $first,
                 $issue,
                 'Addon: '.$serviceAddon->label().' — '.($serviceAddon->service?->domain ?: '#'.$serviceAddon->service_id)
             );
             $serviceAddon->update(['order_id' => $order->id]);
         }
 
-        return DB::transaction(function () use ($serviceAddon, $order, $issue) {
+        return DB::transaction(function () use ($serviceAddon, $order, $issue, $first) {
             $invoice = app(InvoiceService::class)->createInvoice($serviceAddon->client, [
-                $this->lineItem($serviceAddon->fresh()),
+                $this->lineItem($serviceAddon->fresh(), $first, true),
             ], [
                 // Draft first: the order must know the invoice before the
                 // InvoicePaid event (customer balance) can fire, otherwise the
@@ -260,14 +324,19 @@ class AddonService
 
             $order->update([
                 'invoice_id' => $invoice->id,
-                'amount' => (float) $serviceAddon->amount,
+                'amount' => $first,
                 'date' => $issue->toDateString(),
             ]);
 
-            $serviceAddon->update([
-                'status' => 'pending',
-                'next_due_date' => $issue->toDateString(),
-            ]);
+            $update = ['status' => 'pending'];
+
+            // Old drafts used next_due_date as the invoice date. New ones keep
+            // it as the service renewal date and have first_invoice_date.
+            if (! $serviceAddon->first_invoice_date) {
+                $update['next_due_date'] = $issue->toDateString();
+            }
+
+            $serviceAddon->update($update);
 
             return app(InvoiceService::class)->publishDraft($invoice);
         });
@@ -308,18 +377,38 @@ class AddonService
     /**
      * The invoice line for one addon, in the shape InvoiceService expects.
      *
+     * Pass an amount for the first, prorated invoice; renewals leave it null
+     * and bill the full recurring price.
+     *
      * @return array<string, mixed>
      */
-    public function lineItem(ServiceAddon $serviceAddon): array
+    public function lineItem(ServiceAddon $serviceAddon, ?float $amount = null, bool $firstPeriod = false): array
     {
         return [
             'type' => 'Addon',
             'rel_id' => $serviceAddon->id,
-            'description' => $this->describe($serviceAddon),
-            'amount' => (float) $serviceAddon->amount,
+            'description' => $this->describe(
+                $serviceAddon,
+                null,
+                $firstPeriod ? $this->firstPeriodNote($serviceAddon) : null
+            ),
+            'amount' => $amount ?? (float) $serviceAddon->amount,
             'taxed' => (bool) ($serviceAddon->addon->tax ?? true),
             'due_date' => $serviceAddon->next_due_date?->toDateString(),
         ];
+    }
+
+    /** The explanatory suffix on a prorated first invoice, if any. */
+    private function firstPeriodNote(ServiceAddon $serviceAddon): ?string
+    {
+        if (! $serviceAddon->isProrated()) {
+            return null;
+        }
+
+        return __('client.services.addon_first_period', [
+            'days' => (int) $serviceAddon->proration_days,
+            'cycle_days' => (int) $serviceAddon->proration_cycle_days,
+        ]);
     }
 
     /** Stop billing an addon without touching the service it belongs to. */
@@ -353,18 +442,45 @@ class AddonService
             ]);
         }
 
+        $serviceAddon->loadMissing('service');
+        $locked = $serviceAddon->first_invoice_date !== null;
+        $serviceCycle = (string) ($serviceAddon->service?->billing_cycle ?: 'Monthly');
+
+        if ($locked) {
+            if (array_key_exists('billing_cycle', $data) && (string) $data['billing_cycle'] !== $serviceCycle) {
+                throw ValidationException::withMessages([
+                    'billing_cycle' => __('admin.messages.service_addon_cycle_locked'),
+                ]);
+            }
+
+            if (array_key_exists('next_due_date', $data)) {
+                $requested = $data['next_due_date']
+                    ? Carbon::parse($data['next_due_date'])->toDateString()
+                    : null;
+                $expected = $serviceAddon->service?->next_due_date?->toDateString();
+
+                if ($requested !== $expected) {
+                    throw ValidationException::withMessages([
+                        'next_due_date' => __('admin.messages.service_addon_due_locked'),
+                    ]);
+                }
+            }
+        }
+
         $amount = array_key_exists('amount', $data) ? (float) $data['amount'] : (float) $serviceAddon->amount;
-        $cycle = array_key_exists('billing_cycle', $data) ? (string) $data['billing_cycle'] : (string) $serviceAddon->billing_cycle;
+        $cycle = $locked
+            ? $serviceCycle
+            : (array_key_exists('billing_cycle', $data) ? (string) $data['billing_cycle'] : (string) $serviceAddon->billing_cycle);
         $priceChanged = (float) $serviceAddon->amount !== $amount || (string) $serviceAddon->billing_cycle !== $cycle;
 
         $updates = [];
         if (array_key_exists('amount', $data)) {
             $updates['amount'] = $amount;
         }
-        if (array_key_exists('billing_cycle', $data)) {
+        if (array_key_exists('billing_cycle', $data) && ! $locked) {
             $updates['billing_cycle'] = $cycle;
         }
-        if (array_key_exists('next_due_date', $data)) {
+        if (array_key_exists('next_due_date', $data) && ! $locked) {
             $updates['next_due_date'] = $data['next_due_date'] ?: null;
         }
         if (array_key_exists('notes', $data)) {
@@ -375,20 +491,21 @@ class AddonService
             return;
         }
 
-        DB::transaction(function () use ($serviceAddon, $updates, $priceChanged, $amount) {
+        DB::transaction(function () use ($serviceAddon, $updates, $priceChanged) {
             $serviceAddon->update($updates);
+            $first = $serviceAddon->firstPeriodAmount();
 
             if ($serviceAddon->order
                 && in_array(strtolower((string) $serviceAddon->status), ['draft', 'pending'], true)
                 && ! $serviceAddon->order->services()->exists()
                 && ! $serviceAddon->order->domains()->exists()) {
                 $orderFields = [
-                    'amount' => (float) $serviceAddon->amount,
+                    'amount' => $first,
                     'notes' => 'Addon: '.$serviceAddon->label().' — '.($serviceAddon->service?->domain ?: '#'.$serviceAddon->service_id),
                 ];
 
                 if ($serviceAddon->isDraft()) {
-                    $orderFields['date'] = ($serviceAddon->next_due_date ?: now())->toDateString();
+                    $orderFields['date'] = ($serviceAddon->first_invoice_date ?: $serviceAddon->next_due_date ?: now())->toDateString();
                 }
 
                 $serviceAddon->order->update($orderFields);
@@ -407,9 +524,10 @@ class AddonService
                     continue;
                 }
 
+                $fresh = $serviceAddon->fresh();
                 $line->update([
-                    'amount' => $amount,
-                    'description' => $this->describe($serviceAddon->fresh()),
+                    'amount' => $fresh->firstPeriodAmount(),
+                    'description' => $this->lineItem($fresh, $fresh->firstPeriodAmount(), true)['description'],
                 ]);
 
                 if ($line->invoice) {
@@ -516,12 +634,13 @@ class AddonService
     }
 
     /** Invoice line wording, kept in one place so renewals and sales match. */
-    public function describe(ServiceAddon $serviceAddon, ?string $name = null): string
+    public function describe(ServiceAddon $serviceAddon, ?string $name = null, ?string $suffix = null): string
     {
         $name = $name ?: $serviceAddon->label();
         $domain = $serviceAddon->service?->domain;
         $cycle = ucfirst(strtolower((string) ($serviceAddon->billing_cycle ?: 'Monthly')));
+        $line = trim("Addon: {$name} ({$cycle})".($domain ? " — {$domain}" : ''));
 
-        return trim("Addon: {$name} ({$cycle})".($domain ? " — {$domain}" : ''));
+        return $suffix ? "{$line} — {$suffix}" : $line;
     }
 }

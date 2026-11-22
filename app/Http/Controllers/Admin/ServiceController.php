@@ -15,7 +15,6 @@ use App\Services\BillingCycleChange;
 use App\Services\Module\ModuleScreens;
 use App\Services\ProvisioningService;
 use App\Services\ServerAccount;
-use Carbon\Carbon;
 use Illuminate\Http\Request;
 use Illuminate\Validation\Rule;
 use Illuminate\Validation\ValidationException;
@@ -48,6 +47,9 @@ class ServiceController extends Controller
         $availableAddons = $service->product && $canAddAddons
             ? app(AddonService::class)->availableFor($service->product)
             : collect();
+        $addonQuotes = $availableAddons->mapWithKeys(fn ($addon) => [
+            $addon->id => app(AddonService::class)->quoteFor($service, $addon),
+        ]);
 
         $vpsFeatures = [];
         $reinstallChoices = [];
@@ -80,7 +82,7 @@ class ServiceController extends Controller
             ->latest('id')
             ->first();
 
-        return view('admin.services.show', compact('service', 'availableAddons', 'canAddAddons', 'vpsFeatures', 'reinstallChoices', 'products', 'cycles', 'productFields', 'moduleScreen', 'pendingSetup'));
+        return view('admin.services.show', compact('service', 'availableAddons', 'addonQuotes', 'canAddAddons', 'vpsFeatures', 'reinstallChoices', 'products', 'cycles', 'productFields', 'moduleScreen', 'pendingSetup'));
     }
 
     /**
@@ -91,20 +93,14 @@ class ServiceController extends Controller
     {
         $validated = $request->validate([
             'addon_id' => ['required', 'integer', 'exists:product_addons,id'],
-            'billing_cycle' => ['nullable', Rule::in(self::cyclesFor($service))],
-            'issue_date' => ['nullable', 'date'],
         ]);
 
-        $cycle = $validated['billing_cycle'] ?? ($service->billing_cycle ?: 'Monthly');
-        $issue = ! empty($validated['issue_date']) ? Carbon::parse($validated['issue_date']) : null;
-
         // Like a product order: the invoice exists immediately and the customer
-        // can pay it. Staff may also accept the order by hand.
+        // can pay it. The addon follows the service's cycle; a mid-term add is
+        // charged for the days the service is already paid for.
         app(AddonService::class)->purchaseForService(
             $service,
-            ProductAddon::findOrFail($validated['addon_id']),
-            $cycle,
-            $issue
+            ProductAddon::findOrFail($validated['addon_id'])
         );
 
         return back()->with('success', __('admin.messages.service_addon_created'));
@@ -132,19 +128,29 @@ class ServiceController extends Controller
     {
         abort_if($addon->service_id !== $service->id, 404);
 
+        $locked = $addon->first_invoice_date !== null;
+        $serviceCycle = $service->billing_cycle ?: 'Monthly';
+        $cycleRule = $locked
+            ? ['sometimes', Rule::in([$serviceCycle])]
+            : null;
+
         $rules = [
             'next_due_date' => ['nullable', 'date'],
             'notes' => ['nullable', 'string', 'max:1000'],
         ];
 
         if ($addon->isPending()) {
-            // The price and cycle are already on an invoice; the service
-            // refuses a change, but accept the fields so it can say so.
+            // The price is already on an invoice; the service refuses a change
+            // it cannot make, but accepts the fields so it can say so.
             $rules['amount'] = ['sometimes', 'numeric', 'min:0'];
-            $rules['billing_cycle'] = ['sometimes', Rule::in($this->addonCycles($addon))];
+            $rules['billing_cycle'] = $locked
+                ? $cycleRule
+                : ['sometimes', Rule::in($this->addonCycles($addon))];
         } else {
             $rules['amount'] = ['required', 'numeric', 'min:0'];
-            $rules['billing_cycle'] = ['required', Rule::in($this->addonCycles($addon))];
+            $rules['billing_cycle'] = $locked
+                ? $cycleRule
+                : ['required', Rule::in($this->addonCycles($addon))];
         }
 
         $validated = $request->validate($rules);

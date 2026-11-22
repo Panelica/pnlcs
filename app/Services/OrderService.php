@@ -596,7 +596,11 @@ class OrderService
         foreach (ServiceAddon::where('order_id', $order->id)->where('status', 'pending')->get() as $serviceAddon) {
             $cycle = $serviceAddon->billing_cycle ?: 'Monthly';
 
-            if ($orderHasServices) {
+            // New addons on a running service already carry the service's next
+            // renewal date, even when their first invoice was prorated. Only
+            // legacy standalone addons, whose next_due_date was the issue date,
+            // are advanced by one cycle here.
+            if ($orderHasServices || $serviceAddon->first_invoice_date) {
                 $next = $serviceAddon->next_due_date
                     ?? $serviceAddon->service?->next_due_date
                     ?? BillingCycleHelper::advance(now(), $cycle)->toDateString();

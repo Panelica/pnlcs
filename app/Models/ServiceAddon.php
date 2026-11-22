@@ -9,11 +9,18 @@ class ServiceAddon extends Model
 {
     use HasFactory;
 
-    protected $fillable = ['order_id', 'service_id', 'addon_id', 'client_id', 'server_id', 'qty', 'amount', 'billing_cycle', 'next_due_date', 'status', 'notes'];
+    protected $fillable = ['order_id', 'service_id', 'addon_id', 'client_id', 'server_id', 'qty', 'amount', 'prorated', 'proration_days', 'proration_cycle_days', 'billing_cycle', 'next_due_date', 'first_invoice_date', 'status', 'notes'];
 
     protected function casts(): array
     {
-        return ['next_due_date' => 'date', 'amount' => 'decimal:2'];
+        return [
+            'next_due_date' => 'date',
+            'first_invoice_date' => 'date',
+            'amount' => 'decimal:2',
+            'prorated' => 'boolean',
+            'proration_days' => 'integer',
+            'proration_cycle_days' => 'integer',
+        ];
     }
 
     public function service()
@@ -60,6 +67,24 @@ class ServiceAddon extends Model
     public function isSuspended(): bool
     {
         return strtolower((string) $this->status) === 'suspended';
+    }
+
+    /** Whether the first invoice covers part of the service's paid period. */
+    public function isProrated(): bool
+    {
+        return (bool) $this->prorated;
+    }
+
+    /** The first invoice amount; full price unless proration is stored. */
+    public function firstPeriodAmount(): float
+    {
+        $amount = (float) $this->amount;
+
+        if (! $this->isProrated() || ! $this->proration_cycle_days) {
+            return round($amount, 2);
+        }
+
+        return round($amount * ((int) $this->proration_days / (int) $this->proration_cycle_days), 2);
     }
 
     public function isEnded(): bool

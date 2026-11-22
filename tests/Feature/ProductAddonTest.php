@@ -350,18 +350,47 @@ test('a customer can order an addon for a running service', function () {
     $invoice = Invoice::where('client_id', $client->id)->latest('id')->firstOrFail();
 
     expect($serviceAddon->status)->toBe('pending')
-        // The planned issue date is kept, but nothing is billed while pending.
-        ->and($serviceAddon->next_due_date->toDateString())->toBe(now()->toDateString())
+        // The first full cycle renews with the service; nothing is billed while
+        // pending, and activation does not push that date forward.
+        ->and($serviceAddon->next_due_date->toDateString())->toBe($service->next_due_date->toDateString())
         ->and((float) $invoice->total)->toBe(9.0);
 
     app(PaymentService::class)->applyPayment($invoice, 'banktransfer', 'TXN-LATER', 9.0);
 
     $serviceAddon->refresh();
     expect($serviceAddon->status)->toBe('active')
-        // One month on, the way BillingCycleHelper counts it: addMonthsNoOverflow,
-        // so a monthly addon activated on the 31st falls due on the 30th and not
-        // in the month after next (which is what Carbon's addMonth() would say).
-        ->and($serviceAddon->next_due_date->toDateString())->toBe(now()->addMonthsNoOverflow(1)->toDateString());
+        ->and($serviceAddon->next_due_date->toDateString())->toBe($service->next_due_date->toDateString());
+});
+
+test('the service page shows the prorated first payment', function () {
+    $fx = addonShop(monthly: 9.0);
+    $user = User::factory()->create();
+    $client = Client::factory()->create();
+    $user->clients()->attach($client->id);
+    $service = Service::factory()->create([
+        'client_id' => $client->id,
+        'product_id' => $fx['product']->id,
+        'status' => 'active',
+        'billing_cycle' => 'Monthly',
+        'next_due_date' => now()->addDays(20),
+        'domain' => 'later-addon.com',
+    ]);
+
+    $quote = app(AddonService::class)->quoteFor($service, $fx['addon']);
+    $expected = __('client.services.addon_first_payment', [
+        'first' => display_money_fmt($quote['first_amount']),
+        'days' => $quote['remaining_days'],
+        'cycle_days' => $quote['cycle_days'],
+        'full' => display_money_fmt($quote['full_amount']),
+        'cycle' => cycle_label($quote['cycle']),
+    ]);
+
+    expect($quote['first_amount'])->toBe(6.0);
+
+    $this->actingAs($user)
+        ->get(route('client.services.show', $service))
+        ->assertOk()
+        ->assertSee($expected);
 });
 
 test('a customer cannot order an addon on somebody else service', function () {
@@ -463,6 +492,7 @@ test('an operator adds an addon as an order and can accept it by hand', function
         'product_id' => $fx['product']->id,
         'status' => 'active',
         'billing_cycle' => 'Monthly',
+        'next_due_date' => now()->addMonth(),
         'domain' => 'admin-added.com',
     ]);
 
