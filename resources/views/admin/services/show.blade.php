@@ -358,11 +358,37 @@
                 <td>{{ cycle_label($addon->billing_cycle) }}</td>
                 <td>{{ $addon->next_due_date?->format(date_fmt()) ?? '-' }}</td>
                 <td><span class="badge badge-{{ strtolower($addon->status) }}">{{ status_label($addon->status) }}</span></td>
-                <td style="text-align:right;">
+                <td style="text-align:right;white-space:nowrap;">
+                    @unless($addon->isEnded())
+                    <a class="btn btn-default btn-xs" href="{{ route('admin.services.addons.edit', [$service, $addon]) }}">{{ __('admin.addons.service_edit') }}</a>
+                    @endunless
+
+                    @if($addon->isActive())
+                    <form method="POST" action="{{ route('admin.services.addons.suspend', [$service, $addon]) }}" style="display:inline;">
+                        @csrf
+                        <button type="submit" class="btn btn-warning btn-xs">{{ __('admin.addons.service_suspend') }}</button>
+                    </form>
+                    @elseif($addon->isSuspended())
+                    <form method="POST" action="{{ route('admin.services.addons.resume', [$service, $addon]) }}" style="display:inline;">
+                        @csrf
+                        <button type="submit" class="btn btn-success btn-xs">{{ __('admin.addons.service_resume') }}</button>
+                    </form>
+                    @endif
+
                     @if(in_array(strtolower($addon->status), ['active', 'pending'], true))
                     <form method="POST" action="{{ route('admin.services.addons.cancel', [$service, $addon]) }}" style="display:inline;">
                         @csrf
                         <button type="submit" class="btn btn-danger btn-xs">{{ __('client.services.addon_cancel') }}</button>
+                    </form>
+                    @endif
+
+                    @if($addon->hasInvoiceLines())
+                    <button type="button" class="btn btn-default btn-xs" disabled title="{{ __('admin.addons.service_has_invoices') }}">{{ __('admin.addons.service_delete') }}</button>
+                    @else
+                    <form method="POST" action="{{ route('admin.services.addons.destroy', [$service, $addon]) }}" style="display:inline;" onsubmit="return confirm(@js(__('admin.addons.service_delete_confirm')));">
+                        @csrf
+                        @method('DELETE')
+                        <button type="submit" class="btn btn-danger btn-xs">{{ __('admin.addons.service_delete') }}</button>
                     </form>
                     @endif
                 </td>

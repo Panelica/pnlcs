@@ -42,6 +42,33 @@ class ServiceAddon extends Model
         return strtolower((string) $this->status) === 'active';
     }
 
+    public function isPending(): bool
+    {
+        return strtolower((string) $this->status) === 'pending';
+    }
+
+    public function isSuspended(): bool
+    {
+        return strtolower((string) $this->status) === 'suspended';
+    }
+
+    public function isEnded(): bool
+    {
+        return in_array(strtolower((string) $this->status), ['cancelled', 'terminated'], true);
+    }
+
+    /**
+     * Whether any invoice already carries this addon. Deleting it would leave
+     * those historical lines pointing at nothing; such an addon is cancelled,
+     * never deleted.
+     */
+    public function hasInvoiceLines(): bool
+    {
+        return InvoiceItem::where('type', 'Addon')
+            ->where('rel_id', $this->id)
+            ->exists();
+    }
+
     /**
      * Addons that should be billed: paid for and not cancelled. The column
      * collation is case-insensitive, so this matches Active as well.

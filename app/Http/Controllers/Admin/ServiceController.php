@@ -17,6 +17,7 @@ use App\Services\ProvisioningService;
 use App\Services\ServerAccount;
 use Illuminate\Http\Request;
 use Illuminate\Validation\Rule;
+use Illuminate\Validation\ValidationException;
 
 class ServiceController extends Controller
 {
@@ -103,6 +104,126 @@ class ServiceController extends Controller
         app(AddonService::class)->cancel($addon);
 
         return back()->with('success', __('admin.messages.addon_updated'));
+    }
+
+    public function editAddon(Service $service, ServiceAddon $addon)
+    {
+        abort_if($addon->service_id !== $service->id, 404);
+
+        $cycles = $this->addonCycles($addon);
+
+        return view('admin.services.addon-edit', compact('service', 'addon', 'cycles'));
+    }
+
+    public function updateAddon(Request $request, Service $service, ServiceAddon $addon)
+    {
+        abort_if($addon->service_id !== $service->id, 404);
+
+        $rules = [
+            'next_due_date' => ['nullable', 'date'],
+            'notes' => ['nullable', 'string', 'max:1000'],
+        ];
+
+        if ($addon->isPending()) {
+            // The price and cycle are already on an invoice; the service
+            // refuses a change, but accept the fields so it can say so.
+            $rules['amount'] = ['sometimes', 'numeric', 'min:0'];
+            $rules['billing_cycle'] = ['sometimes', Rule::in($this->addonCycles($addon))];
+        } else {
+            $rules['amount'] = ['required', 'numeric', 'min:0'];
+            $rules['billing_cycle'] = ['required', Rule::in($this->addonCycles($addon))];
+        }
+
+        $validated = $request->validate($rules);
+
+        app(AddonService::class)->updateDetails($addon, $validated);
+
+        ActivityLog::log(
+            "Addon #{$addon->id} ({$addon->label()}) updated",
+            $this->adminName(),
+            $addon->client_id
+        );
+
+        return redirect()->route('admin.services.show', $service)
+            ->with('success', __('admin.messages.service_addon_updated'));
+    }
+
+    public function suspendAddon(Service $service, ServiceAddon $addon)
+    {
+        abort_if($addon->service_id !== $service->id, 404);
+
+        try {
+            app(AddonService::class)->suspend($addon);
+        } catch (ValidationException $e) {
+            return back()->with('error', $e->validator->errors()->first());
+        }
+
+        ActivityLog::log(
+            "Addon #{$addon->id} ({$addon->label()}) suspended",
+            $this->adminName(),
+            $addon->client_id
+        );
+
+        return back()->with('success', __('admin.messages.service_addon_suspended'));
+    }
+
+    public function resumeAddon(Service $service, ServiceAddon $addon)
+    {
+        abort_if($addon->service_id !== $service->id, 404);
+
+        try {
+            app(AddonService::class)->resume($addon);
+        } catch (ValidationException $e) {
+            return back()->with('error', $e->validator->errors()->first());
+        }
+
+        ActivityLog::log(
+            "Addon #{$addon->id} ({$addon->label()}) resumed",
+            $this->adminName(),
+            $addon->client_id
+        );
+
+        return back()->with('success', __('admin.messages.service_addon_resumed'));
+    }
+
+    public function destroyAddon(Service $service, ServiceAddon $addon)
+    {
+        abort_if($addon->service_id !== $service->id, 404);
+
+        $label = $addon->label();
+        $addonId = $addon->id;
+        $clientId = $addon->client_id;
+
+        try {
+            app(AddonService::class)->delete($addon);
+        } catch (ValidationException $e) {
+            return back()->with('error', $e->validator->errors()->first());
+        }
+
+        ActivityLog::log(
+            "Addon #{$addonId} ({$label}) deleted",
+            $this->adminName(),
+            $clientId
+        );
+
+        return back()->with('success', __('admin.messages.service_addon_deleted'));
+    }
+
+    /** @return array<int, string> */
+    private function addonCycles(ServiceAddon $addon): array
+    {
+        $cycles = array_values(BillingCycleChange::CYCLES);
+
+        if ($addon->billing_cycle && ! in_array($addon->billing_cycle, $cycles, true)) {
+            array_unshift($cycles, (string) $addon->billing_cycle);
+        }
+
+        return $cycles;
+    }
+
+    private function adminName(): string
+    {
+        return auth('admin')->user()?->full_name ?? 'Admin';
     }
 
     public function updateNextDue(Request $request, Service $service)

@@ -255,6 +255,102 @@ class AddonService
         $serviceAddon->update(['status' => 'cancelled', 'next_due_date' => null]);
     }
 
+    /**
+     * Change the billed price, cycle, next due date or notes of an addon.
+     *
+     * The stored amount is what the next invoice line uses; past invoices keep
+     * their own copy. A pending addon is waiting on an invoice that was already
+     * written, so changing its price or cycle would make the invoice and the
+     * addon disagree - cancel it and order again, or pay first.
+     *
+     * @param  array<string, mixed>  $data
+     */
+    public function updateDetails(ServiceAddon $serviceAddon, array $data): void
+    {
+        if ($serviceAddon->isEnded()) {
+            throw ValidationException::withMessages([
+                'addon' => __('admin.messages.service_addon_ended'),
+            ]);
+        }
+
+        $amount = array_key_exists('amount', $data) ? (float) $data['amount'] : (float) $serviceAddon->amount;
+        $cycle = array_key_exists('billing_cycle', $data) ? (string) $data['billing_cycle'] : (string) $serviceAddon->billing_cycle;
+
+        if ($serviceAddon->isPending()
+            && ((float) $serviceAddon->amount !== $amount || (string) $serviceAddon->billing_cycle !== $cycle)) {
+            throw ValidationException::withMessages([
+                'addon' => __('admin.messages.service_addon_pending_locked'),
+            ]);
+        }
+
+        $updates = [];
+        if (array_key_exists('amount', $data)) {
+            $updates['amount'] = $amount;
+        }
+        if (array_key_exists('billing_cycle', $data)) {
+            $updates['billing_cycle'] = $cycle;
+        }
+        if (array_key_exists('next_due_date', $data)) {
+            $updates['next_due_date'] = $data['next_due_date'] ?: null;
+        }
+        if (array_key_exists('notes', $data)) {
+            $updates['notes'] = $data['notes'];
+        }
+
+        if ($updates !== []) {
+            $serviceAddon->update($updates);
+        }
+    }
+
+    /** Stop billing an addon without touching the service; the record stays. */
+    public function suspend(ServiceAddon $serviceAddon): void
+    {
+        if ($serviceAddon->isSuspended()) {
+            return;
+        }
+
+        if (! $serviceAddon->isActive()) {
+            throw ValidationException::withMessages([
+                'addon' => __('admin.messages.service_addon_cannot_suspend'),
+            ]);
+        }
+
+        // next_due_date is kept: resume() picks it up again, so a suspension
+        // does not silently push the renewal date forward.
+        $serviceAddon->update(['status' => 'suspended']);
+    }
+
+    /** Start billing a suspended addon again. */
+    public function resume(ServiceAddon $serviceAddon): void
+    {
+        if (! $serviceAddon->isSuspended()) {
+            throw ValidationException::withMessages([
+                'addon' => __('admin.messages.service_addon_not_suspended'),
+            ]);
+        }
+
+        $next = $serviceAddon->next_due_date
+            ?: BillingCycleHelper::advance(now(), (string) ($serviceAddon->billing_cycle ?: 'Monthly'));
+
+        $serviceAddon->update(['status' => 'active', 'next_due_date' => $next]);
+    }
+
+    /**
+     * Remove an addon that never reached an invoice. An addon with invoice
+     * lines is cancelled instead: the historical document must keep pointing
+     * at a row that still exists.
+     */
+    public function delete(ServiceAddon $serviceAddon): void
+    {
+        if ($serviceAddon->hasInvoiceLines()) {
+            throw ValidationException::withMessages([
+                'addon' => __('admin.messages.service_addon_has_invoices'),
+            ]);
+        }
+
+        $serviceAddon->delete();
+    }
+
     /** Invoice line wording, kept in one place so renewals and sales match. */
     public function describe(ServiceAddon $serviceAddon, ?string $name = null): string
     {
