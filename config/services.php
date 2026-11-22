@@ -44,8 +44,11 @@ return [
 
     // RDAP bootstrap (App\Services\RdapRegistrationDate): read the registry's
     // creation date for a domain when the panel does not know it yet.
+    // 'bootstrap' is IANA's list of each TLD's RDAP server, which the domain
+    // availability check (App\Services\RdapAvailability) asks directly.
     'rdap' => [
         'base' => env('RDAP_BASE', 'https://rdap.org'),
+        'bootstrap' => env('RDAP_BOOTSTRAP', 'https://data.iana.org/rdap/dns.json'),
     ],
 
 ];
