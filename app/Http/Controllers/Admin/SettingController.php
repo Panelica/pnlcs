@@ -147,7 +147,7 @@ class SettingController extends Controller
         'FreeSubdomains', 'DisallowedSubdomainPrefixes',
         // How many RDAP lookups one domain sync run makes to fill a missing
         // registration date (0 disables; default 100).
-        'DomainSyncRdapMaxPerRun',
+        'DomainSyncRdapMaxPerRun', 'DomainSyncBatchSize', 'DomainSyncDelayMs',
         // Paying renewal invoices with a card the customer has already stored.
         // Off by default; read through App\Support\AutoCharge so the screen
         // and the code cannot disagree about what a blank setting means.
@@ -182,6 +182,8 @@ class SettingController extends Controller
             'AutoChargeRetryDays' => 'sometimes|nullable|integer|min:'.\App\Support\AutoCharge::MINIMUM_RETRY_DAYS,
             'DomainSuggestionCount' => 'sometimes|nullable|integer|between:1,12',
             'DomainSyncRdapMaxPerRun' => 'sometimes|nullable|integer|min:0|max:10000',
+            'DomainSyncBatchSize' => 'sometimes|nullable|integer|min:1|max:1000',
+            'DomainSyncDelayMs' => 'sometimes|nullable|integer|min:0|max:10000',
             'RegistrarBalanceThreshold' => 'sometimes|nullable|numeric|min:0',
             'TaxExemptionNotice' => 'sometimes|nullable|string|max:500',
         ]);

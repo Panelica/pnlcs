@@ -43,7 +43,7 @@ Times are the server's time zone.
 
 | Command | When | What it does |
 |---|---|---|
-| `pnlcs:domain-sync` | daily 03:00 | Reads expiry, status and nameservers from the registrars |
+| `pnlcs:domain-sync` | 03:00–06:00 every 15 min | Reads expiry, status and nameservers from the registrars; batches domains, oldest first |
 | `pnlcs:domain-renewal-reminders` | daily 09:15 | Emails customers whose domains are about to expire |
 | `pnlcs:registrar-balance` | 08:00 and 20:00 | Warns when the prepaid balance at the watched registrar falls to the floor |
 | `pnlcs:ssl-status-poll` | every 5 minutes | Checks pending certificate orders with the SSL provider |

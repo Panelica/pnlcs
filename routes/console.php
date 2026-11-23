@@ -48,7 +48,10 @@ Schedule::command('pnlcs:auto-charge --rescue')->everyFifteenMinutes()->withoutO
 Schedule::command('pnlcs:auto-suspend')->daily()->at('07:00');
 // No-op until AutoTerminationEnabled is switched on in Settings -> Automation.
 Schedule::command('pnlcs:auto-terminate')->daily()->at('08:00');
-Schedule::command('pnlcs:domain-sync')->daily()->at('03:00');
+Schedule::command('pnlcs:domain-sync')
+    ->everyFifteenMinutes()
+    ->between('03:00', '06:00')
+    ->withoutOverlapping(30);
 Schedule::command('pnlcs:payment-reminders')->daily()->at('08:00');
 Schedule::command('pnlcs:domain-renewal-reminders')->daily()->at('09:15');
 // The registrar float, twice a day. An account that runs dry refuses renewals

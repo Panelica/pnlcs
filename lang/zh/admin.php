@@ -2904,6 +2904,10 @@ return [
     'settings.default_nameservers_hint' => '在注册或转入域名时，未提供其他域名服务器则使用这些。',
     'settings.domain_sync_rdap_max' => '每次同步最多 RDAP 查询次数',
     'settings.domain_sync_rdap_max_hint' => '域名缺少注册日期时，每日同步会从 RDAP 补填。此项限制单次运行的查询次数；0 表示关闭。默认 100。',
+    'settings.domain_sync_batch' => '每次同步的域名数量',
+    'settings.domain_sync_batch_hint' => '一批检查多少个域名；其余等待下一个 15 分钟运行。默认 100。',
+    'settings.domain_sync_delay_ms' => '域名间延迟（毫秒）',
+    'settings.domain_sync_delay_ms_hint' => '批处理中每次注册商请求后的等待时间。默认 500 毫秒。',
     'settings.themes' => '主题',
     'settings.white_label' => '白标',
     'sidebar' => [

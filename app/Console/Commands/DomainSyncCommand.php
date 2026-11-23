@@ -76,23 +76,62 @@ class DomainSyncCommand extends Command
 
     public function handle(ModuleRegistry $registry): int
     {
+        $dryRun = (bool) $this->option('dry-run');
+        $name = $this->option('domain');
+        $batchSetting = Setting::get('DomainSyncBatchSize', '100');
+        $batch = is_numeric($batchSetting) && (int) $batchSetting >= 1
+            ? min(1000, (int) $batchSetting)
+            : 100;
+
+        $delaySetting = Setting::get('DomainSyncDelayMs', '500');
+        $delayMs = is_numeric($delaySetting) ? max(0, min(10000, (int) $delaySetting)) : 500;
+
+        // Only registrars with a sync implementation belong in a batch. Manual
+        // and a module without SyncsDomainData would otherwise occupy a slot on
+        // every run and never leave it.
+        $syncable = [];
+        foreach ($registry->getRegistrarModules() as $key) {
+            if ($registry->getRegistrarModule($key) instanceof SyncsDomainData) {
+                $syncable[] = strtolower((string) $key);
+            }
+        }
+
         $query = Domain::query()
             ->whereNotNull('registrar')
             ->where('registrar', '!=', '')
             ->whereNotIn('status', ['cancelled', 'transferred-away']);
 
-        if ($name = $this->option('domain')) {
+        if ($name) {
             $query->where('domain', $name);
+        } else {
+            if ($syncable === []) {
+                $this->info('Domain sync: nothing to do.');
+
+                return Command::SUCCESS;
+            }
+
+            $query->where(function ($q) use ($syncable) {
+                foreach ($syncable as $registrar) {
+                    $q->orWhereRaw('LOWER(registrar) = ?', [$registrar]);
+                }
+            });
+
+            // A domain is checked once a day at most. The 23-hour window leaves
+            // room for the 03:00–06:00 schedule to drift by a few minutes.
+            $query->where(fn ($q) => $q->whereNull('last_sync_at')
+                ->orWhere('last_sync_at', '<=', now()->subHours(23)))
+                ->orderBy('last_sync_at')
+                ->orderBy('id')
+                ->limit($batch);
         }
 
-        $domains = $query->orderBy('id')->get();
+        $domains = $query->get();
         if ($domains->isEmpty()) {
             $this->info('Domain sync: nothing to do.');
 
             return Command::SUCCESS;
         }
 
-        $dryRun = (bool) $this->option('dry-run');
         $checked = $updated = $skipped = $failed = 0;
 
         foreach ($domains as $domain) {
@@ -136,6 +175,8 @@ class DomainSyncCommand extends Command
                     $domain->update($this->syncStamp('error'));
                 }
 
+                $this->pause($delayMs);
+
                 continue;
             }
 
@@ -157,6 +198,8 @@ class DomainSyncCommand extends Command
                     $this->alertMissingAtRegistrar($domain, (string) $message);
                 }
 
+                $this->pause($delayMs);
+
                 continue;
             }
 
@@ -170,6 +213,8 @@ class DomainSyncCommand extends Command
                     $this->line("would update {$domain->domain} ({$summary})");
                 }
 
+                $this->pause($delayMs);
+
                 continue;
             }
 
@@ -179,6 +224,8 @@ class DomainSyncCommand extends Command
                 $updated++;
                 Log::info("Domain sync updated {$domain->domain}: {$summary}");
             }
+
+            $this->pause($delayMs);
         }
 
         $datesFilled = $this->fillMissingRegistrationDates($domains, $dryRun);
@@ -197,6 +244,14 @@ class DomainSyncCommand extends Command
             'last_sync_at' => now(),
             'last_sync_status' => $status,
         ];
+    }
+
+    /** Pace registrar calls; tests do not need to wait for the wall clock. */
+    private function pause(int $milliseconds): void
+    {
+        if ($milliseconds > 0 && ! app()->runningUnitTests()) {
+            usleep($milliseconds * 1000);
+        }
     }
 
     /**

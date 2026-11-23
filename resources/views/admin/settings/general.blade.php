@@ -753,6 +753,18 @@
                 <input type="number" id="domain-sync-rdap-max" name="DomainSyncRdapMaxPerRun" value="{{ $settings['DomainSyncRdapMaxPerRun'] ?? '100' }}" class="form-control" min="0" max="10000" style="max-width:180px;">
                 <div style="font-size:12px;color:#777;margin-top:4px;">{{ __('admin.settings.domain_sync_rdap_max_hint') }}</div>
             </div>
+            <div style="display:grid;grid-template-columns:1fr 1fr;gap:15px;margin-top:18px;">
+                <div class="form-group" style="margin:0;">
+                    <label class="form-label" for="domain-sync-batch">{{ __('admin.settings.domain_sync_batch') }}</label>
+                    <input type="number" id="domain-sync-batch" name="DomainSyncBatchSize" value="{{ $settings['DomainSyncBatchSize'] ?? '100' }}" class="form-control" min="1" max="1000">
+                    <div style="font-size:12px;color:#777;margin-top:4px;">{{ __('admin.settings.domain_sync_batch_hint') }}</div>
+                </div>
+                <div class="form-group" style="margin:0;">
+                    <label class="form-label" for="domain-sync-delay">{{ __('admin.settings.domain_sync_delay_ms') }}</label>
+                    <input type="number" id="domain-sync-delay" name="DomainSyncDelayMs" value="{{ $settings['DomainSyncDelayMs'] ?? '500' }}" class="form-control" min="0" max="10000">
+                    <div style="font-size:12px;color:#777;margin-top:4px;">{{ __('admin.settings.domain_sync_delay_ms_hint') }}</div>
+                </div>
+            </div>
         </div>
     </div>
 
