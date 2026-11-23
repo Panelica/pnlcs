@@ -141,7 +141,7 @@ $tabs = ['summary'=>__('admin.clients.tab_summary'),'services'=>__('admin.client
                     @if($ownerLogin)
                     <tr><td style="padding:5px 0;color:#777;">{{ __('admin.clients.email_verification') }}</td><td style="padding:5px 0;">
                         @if($ownerLogin->hasVerifiedEmail())
-                        <span style="color:#3c763d;font-weight:600;text-decoration:underline;text-decoration-color:#3c763d;">{{ __('admin.clients.email_verified', ['date' => $ownerLogin->email_verified_at->format(date_fmt())]) }}</span>
+                        <span class="badge-active">{{ __('admin.clients.email_verified', ['date' => $ownerLogin->email_verified_at->format(date_fmt())]) }}</span>
                         @else
                         <span style="color:#a94442;">{{ __('admin.clients.email_unverified') }}</span>
                         @if(auth('admin')->user()?->hasPermission('edit_clients'))
