@@ -38,7 +38,7 @@ function domainAtRegistrar(string $registrar = 'enom'): Domain
 it('says the registrar has no credentials rather than blaming the lookup', function () {
     Http::fake();
 
-    domainAtRegistrar();
+    $domain = domainAtRegistrar();
 
     Log::spy();
 
@@ -50,6 +50,10 @@ it('says the registrar has no credentials rather than blaming the lookup', funct
 
     // And it does not call a registrar it has no credentials for.
     Http::assertNothingSent();
+
+    $fresh = $domain->fresh();
+    expect($fresh->last_sync_at)->not->toBeNull()
+        ->and($fresh->last_sync_status)->toBe('error');
 });
 
 it('still syncs a registrar that has credentials', function () {

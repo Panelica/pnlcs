@@ -110,13 +110,16 @@ test('a domain missing from the registrar account is reported, not overwritten',
     expect($domain->fresh()->expiry_date->toDateString())->toBe('2026-01-01');
 });
 
-test('an API error leaves the domain untouched', function () {
+test('an API error leaves the domain data untouched but records the failed check', function () {
     Http::fake(['*namecheap*' => Http::response('boom', 500)]);
     $domain = syncDomainFor('Namecheap');
 
     $this->artisan('pnlcs:domain-sync')->assertSuccessful();
 
-    expect($domain->fresh()->expiry_date->toDateString())->toBe('2026-01-01');
+    $fresh = $domain->fresh();
+    expect($fresh->expiry_date->toDateString())->toBe('2026-01-01')
+        ->and($fresh->last_sync_at)->not->toBeNull()
+        ->and($fresh->last_sync_status)->toBe('error');
 });
 
 // ---------------------------------------------------------------------------
@@ -155,11 +158,13 @@ test('a resellerclub domain syncs expiry, status and nameservers', function () {
 
 test('manual domains are skipped because there is no registry to read', function () {
     Http::fake();
-    syncDomainFor('Manual');
+    $domain = syncDomainFor('Manual');
 
     $this->artisan('pnlcs:domain-sync')->assertSuccessful();
 
     Http::assertNothingSent();
+    expect($domain->fresh()->last_sync_at)->toBeNull()
+        ->and($domain->fresh()->last_sync_status)->toBeNull();
 });
 
 test('dry run reports without writing', function () {
@@ -168,7 +173,10 @@ test('dry run reports without writing', function () {
 
     $this->artisan('pnlcs:domain-sync', ['--dry-run' => true])->assertSuccessful();
 
-    expect($domain->fresh()->expiry_date->toDateString())->toBe('2026-01-01');
+    $fresh = $domain->fresh();
+    expect($fresh->expiry_date->toDateString())->toBe('2026-01-01')
+        ->and($fresh->last_sync_at)->toBeNull()
+        ->and($fresh->last_sync_status)->toBeNull();
 });
 
 test('the domain filter only touches the requested domain', function () {
@@ -248,18 +256,19 @@ test('a dry run reports the due date it would move and writes neither date', fun
         ->and($domain->fresh()->expiry_date->toDateString())->toBe('2027-11-20');
 });
 
-test('an unchanged domain is not rewritten', function () {
+test('an unchanged domain records a successful check without rewriting its data', function () {
     // A date still ahead of us: a domain whose expiry has passed is moved along
     // the lifecycle, which is a change and belongs to its own test.
     $ahead = now()->addYear();
     Http::fake(['*namecheap*' => Http::response(namecheapListXml('sync-example.com', $ahead->format('m/d/Y')), 200)]);
     $domain = syncDomainFor('Namecheap', ['expiry_date' => $ahead->toDateString()]);
-    $before = $domain->updated_at;
 
-    $this->travel(2)->seconds();
     $this->artisan('pnlcs:domain-sync')->assertSuccessful();
 
-    expect($domain->fresh()->updated_at->eq($before))->toBeTrue();
+    $fresh = $domain->fresh();
+    expect($fresh->expiry_date->toDateString())->toBe($ahead->toDateString())
+        ->and($fresh->last_sync_at)->not->toBeNull()
+        ->and($fresh->last_sync_status)->toBe('ok');
 });
 
 // ---------------------------------------------------------------------------

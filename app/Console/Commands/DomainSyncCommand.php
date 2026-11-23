@@ -118,6 +118,10 @@ class DomainSyncCommand extends Command
                 $failed++;
                 Log::warning("Domain sync skipped for {$domain->domain}: {$module->getModuleName()} is not configured (missing ".implode(', ', $missing).').');
 
+                if (! $dryRun) {
+                    $domain->update($this->syncStamp('error'));
+                }
+
                 continue;
             }
 
@@ -127,6 +131,10 @@ class DomainSyncCommand extends Command
                 $failed++;
                 Log::warning("Domain sync failed for {$domain->domain}: {$e->getMessage()}");
                 $this->warn("{$domain->domain}: {$e->getMessage()}");
+
+                if (! $dryRun) {
+                    $domain->update($this->syncStamp('error'));
+                }
 
                 continue;
             }
@@ -141,6 +149,10 @@ class DomainSyncCommand extends Command
                 // sync hiccup: the customer paid and the name is not registered.
                 // That used to leave one log line a day and nothing else.
                 // Reported by ENA Hosting.
+                if (! $dryRun) {
+                    $domain->update($this->syncStamp('error'));
+                }
+
                 if (strtolower((string) $domain->status) === 'active' && self::unknownAtRegistrar((string) $message)) {
                     $this->alertMissingAtRegistrar($domain, (string) $message);
                 }
@@ -149,21 +161,24 @@ class DomainSyncCommand extends Command
             }
 
             $changes = DomainSyncChanges::between($domain, $result);
-            if (! $changes) {
-                continue;
-            }
-
-            $summary = collect($changes)->map(fn ($v, $k) => "{$k}: ".$this->describe($domain->{$k}).' -> '.$this->describe($v))->implode(', ');
+            $summary = $changes
+                ? collect($changes)->map(fn ($v, $k) => "{$k}: ".$this->describe($domain->{$k}).' -> '.$this->describe($v))->implode(', ')
+                : '';
 
             if ($dryRun) {
-                $this->line("would update {$domain->domain} ({$summary})");
+                if ($changes) {
+                    $this->line("would update {$domain->domain} ({$summary})");
+                }
 
                 continue;
             }
 
-            $domain->update($changes);
-            $updated++;
-            Log::info("Domain sync updated {$domain->domain}: {$summary}");
+            $domain->update($changes + $this->syncStamp('ok'));
+
+            if ($changes) {
+                $updated++;
+                Log::info("Domain sync updated {$domain->domain}: {$summary}");
+            }
         }
 
         $datesFilled = $this->fillMissingRegistrationDates($domains, $dryRun);
@@ -173,6 +188,15 @@ class DomainSyncCommand extends Command
         $this->info("Domain sync: {$checked} checked, {$updated} updated, {$skipped} without a syncing module, {$failed} failed, {$datesFilled} registration dates filled from RDAP, {$lapsed} past expiry.");
 
         return Command::SUCCESS;
+    }
+
+    /** The visible record of a nightly sync attempt, successful or not. */
+    private function syncStamp(string $status): array
+    {
+        return [
+            'last_sync_at' => now(),
+            'last_sync_status' => $status,
+        ];
     }
 
     /**
