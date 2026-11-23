@@ -432,13 +432,13 @@ class AddonService
     {
         if ($serviceAddon->isEnded()) {
             throw ValidationException::withMessages([
-                'addon' => __('admin.messages.service_addon_ended'),
+                'addon' => __('admin.addons.service_ended'),
             ]);
         }
 
         if ($serviceAddon->isPending() && $serviceAddon->hasBlockingInvoiceLines()) {
             throw ValidationException::withMessages([
-                'addon' => __('admin.messages.service_addon_pending_locked'),
+                'addon' => __('admin.addons.service_pending_locked'),
             ]);
         }
 
@@ -546,7 +546,7 @@ class AddonService
 
         if (! $serviceAddon->isActive()) {
             throw ValidationException::withMessages([
-                'addon' => __('admin.messages.service_addon_cannot_suspend'),
+                'addon' => __('admin.addons.service_cannot_suspend'),
             ]);
         }
 
@@ -560,7 +560,7 @@ class AddonService
     {
         if (! $serviceAddon->isSuspended()) {
             throw ValidationException::withMessages([
-                'addon' => __('admin.messages.service_addon_not_suspended'),
+                'addon' => __('admin.addons.service_not_suspended'),
             ]);
         }
 
@@ -579,7 +579,7 @@ class AddonService
     {
         if ($serviceAddon->hasBlockingInvoiceLines()) {
             throw ValidationException::withMessages([
-                'addon' => __('admin.messages.service_addon_has_invoices'),
+                'addon' => __('admin.addons.service_has_invoices'),
             ]);
         }
 
