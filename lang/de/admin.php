@@ -3472,7 +3472,7 @@ return [
     'clients.service_provision_failed' => 'Dienst hinzugefügt, aber Bereitstellung fehlgeschlagen: :error',
     'clients.link_existing' => 'Link zu einem bestehenden Konto',
     'clients.link_none' => '— keine (nur Abrechnung) —',
-    'clients.link_existing_hint' => 'Dies sind die Konten, die bereits auf dem ausgewählten Server vorhanden sind – in Panelica die Kundenkonten unter der Benutzerliste des Panels. Wählen Sie den Dienst aus, zu dem dieser Dienst gehört, damit PNLCS ihn verwalten kann (Sperren, Beenden, Passwort). Die Kontoauflistung funktioniert für Panelica-Server; Lassen Sie dieses Feld leer, wenn es sich um einen reinen Abrechnungsdatensatz handelt.',
+    'clients.link_existing_hint' => 'Dies sind die Konten, die bereits auf dem ausgewählten Server vorhanden sind – in Panelica die Kundenkonten unter der Benutzerliste des Panels. Wählen Sie den Dienst aus, zu dem dieser Dienst gehört, damit PNLCS ihn verwalten kann (Sperren, Beenden, Passwort). Konten werden für Panelica-, Plesk- und Proxmox-Server aufgelistet (bei Proxmox die virtuellen Server); Lassen Sie dieses Feld leer, wenn es sich um einen reinen Abrechnungsdatensatz handelt.',
     'clients.service_linked' => 'Dienst hinzugefügt und mit dem vorhandenen Serverkonto verknüpft.',
     'clients.link_taken' => 'Dieses Serverkonto ist bereits mit Dienst #:service verknüpft.',
     'clients.add_domain' => 'Domain hinzufügen',

@@ -3429,7 +3429,7 @@ return [
     'clients.service_provision_failed' => 'Servizio aggiunto, ma l\'attivazione non è riuscita: :error',
     'clients.link_existing' => 'Collega a un account esistente',
     'clients.link_none' => '— nessuno (solo fatturazione) —',
-    'clients.link_existing_hint' => 'Questi sono gli account già esistenti sul server selezionato — in Panelica, gli account cliente sotto l\'elenco Utenti del pannello. Scegli quello a cui appartiene questo servizio così PNLCS può gestirlo (sospensione, terminazione, password). L\'elenco degli account funziona per i server Panelica; lascia vuoto per un record di sola fatturazione.',
+    'clients.link_existing_hint' => 'Questi sono gli account già esistenti sul server selezionato — in Panelica, gli account cliente sotto l\'elenco Utenti del pannello. Scegli quello a cui appartiene questo servizio così PNLCS può gestirlo (sospensione, terminazione, password). Gli account sono elencati per i server Panelica, Plesk e Proxmox (su Proxmox, i server virtuali); lascia vuoto per un record di sola fatturazione.',
     'clients.service_linked' => 'Servizio aggiunto e collegato all\'account esistente sul server.',
     'clients.link_taken' => 'Quell\'account sul server è già collegato al servizio n. :service.',
     'clients.add_domain' => 'Aggiungi dominio',
