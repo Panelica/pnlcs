@@ -80,7 +80,10 @@ class InvoiceService
                 'status' => $options['status'] ?? InvoiceStatus::Unpaid->value,
                 'type' => $options['type'] ?? $this->defaultType(),
                 'source_invoice_id' => $options['source_invoice_id'] ?? null,
-                'payment_method' => $options['payment_method'] ?? null,
+                // A generated invoice (renewal, add-on, upgrade) has no payment
+                // gateway chosen at the till; without this the issued proforma
+                // printed an empty "Payment method" line.
+                'payment_method' => $options['payment_method'] ?? $client->billingPaymentMethod(),
                 'notes' => $options['notes'] ?? null,
                 'subtotal' => 0,
                 'credit' => 0,

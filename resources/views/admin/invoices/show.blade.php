@@ -292,9 +292,7 @@
                     @endif
                     <tr><td style="padding:4px 0;color:#777;">{{ __('admin.invoices.date') }}</td><td style="padding:4px 0;">{{ $invoice->date?->format(date_fmt()) }}</td></tr>
                     <tr><td style="padding:4px 0;color:#777;">{{ __('admin.invoices.due_date') }}</td><td style="padding:4px 0;{{ ($invoice->due_date?->isPast() && $st !== 'paid') ? 'color:#d9534f;font-weight:600;' : '' }}">{{ $invoice->due_date?->format(date_fmt()) }}</td></tr>
-                    @if($invoice->payment_method)
-                    <tr><td style="padding:4px 0;color:#777;">{{ __('admin.invoices.payment') }}</td><td style="padding:4px 0;">{{ payment_method_label((string) $invoice->payment_method) }}</td></tr>
-                    @endif
+                    <tr><td style="padding:4px 0;color:#777;">{{ __('admin.invoices.payment') }}</td><td style="padding:4px 0;">{{ payment_method_label($invoice->displayPaymentMethod()) }}</td></tr>
                     @if($st === 'paid' && $invoice->date_paid)
                     <tr><td style="padding:4px 0;color:#777;">{{ __('admin.invoices.paid_on') }}</td><td style="padding:4px 0;color:#5cb85c;font-weight:600;">{{ $invoice->date_paid->timezone(display_tz())->format(datetime_fmt()) }}</td></tr>
                     @endif

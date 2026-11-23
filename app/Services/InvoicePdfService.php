@@ -347,7 +347,7 @@ class InvoicePdfService
             'due_date' => $invoice->due_date?->format(date_fmt()) ?? '',
             'date_paid' => $invoice->date_paid?->format(date_fmt()) ?? '',
             'status' => invoice_status_label($invoice->status),
-            'payment_method' => $invoice->payment_method ? payment_method_label((string) $invoice->payment_method) : '',
+            'payment_method' => payment_method_label($invoice->displayPaymentMethod()),
             'subtotal' => invoice_money_fmt((float) $invoice->subtotal, $invoice),
             'tax' => invoice_money_fmt((float) $invoice->tax, $invoice),
             'tax2' => invoice_money_fmt((float) $invoice->tax2, $invoice),

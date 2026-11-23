@@ -111,9 +111,7 @@
                 @if($invoice->date_paid)
                 <tr><td class="meta-label">{{ __('pdf.date_paid') }}:</td><td>{{ $invoice->date_paid->format(date_fmt()) }}</td></tr>
                 @endif
-                @if($invoice->payment_method)
-                <tr><td class="meta-label">{{ __('pdf.payment_method') }}:</td><td>{{ payment_method_label((string) $invoice->payment_method) }}</td></tr>
-                @endif
+                <tr><td class="meta-label">{{ __('pdf.payment_method') }}:</td><td>{{ payment_method_label($invoice->displayPaymentMethod()) }}</td></tr>
             </table>
         </div>
     </div>

@@ -266,6 +266,25 @@ class Invoice extends Model {
         return ($this->type ?? 'vat') === 'proforma';
     }
 
+    /**
+     * The payment method a document shows when its own column is empty.
+     *
+     * Invoices issued before the field was filled, and generated proformas
+     * that predate the creation-time default, still name how the customer
+     * expects to pay. The stored value always wins; this only fills the gap
+     * for the reader, it never rewrites the document.
+     */
+    public function displayPaymentMethod(): string
+    {
+        $method = trim((string) $this->payment_method);
+
+        if ($method !== '' && strtolower($method) !== 'none') {
+            return $method;
+        }
+
+        return $this->client?->billingPaymentMethod() ?? 'banktransfer';
+    }
+
     public const TAX_INCLUSIVE = 'inclusive';
     public const TAX_NONE = 'none';
 
