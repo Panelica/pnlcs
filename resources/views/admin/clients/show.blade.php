@@ -121,17 +121,17 @@ $tabs = ['summary'=>__('admin.clients.tab_summary'),'services'=>__('admin.client
                     </div>
                 @endif
                 <table style="width:100%;font-size:13px;border-collapse:collapse;">
-                    <tr><td style="padding:5px 0;color:#777;width:40%;">{{ __('admin.clients.name') }}</td><td style="padding:5px 0;font-weight:600;">{{ $client->full_name }}<x-copy-value :value="$client->full_name" /></td></tr>
+                    <tr><td style="padding:5px 0;color:#777;width:40%;">{{ __('admin.clients.name') }}</td><td style="padding:5px 0;"><div style="display:flex;align-items:center;justify-content:space-between;gap:8px;font-weight:600;"><span>{{ $client->full_name }}</span><x-copy-value :value="$client->full_name" /></div></td></tr>
                     <tr><td style="padding:5px 0;color:#777;">{{ __('admin.clients.billing_type') }}</td><td style="padding:5px 0;">{{ $identityType ? __('admin.clients.billing_type_'.($identityType === 'company' ? 'company' : 'individual')) : '-' }}</td></tr>
-                    <tr><td style="padding:5px 0;color:#777;">{{ __('admin.clients.company') }}</td><td style="padding:5px 0;">{{ $client->company_name ?: '-' }}<x-copy-value :value="$client->company_name" /></td></tr>
+                    <tr><td style="padding:5px 0;color:#777;">{{ __('admin.clients.company') }}</td><td style="padding:5px 0;"><div style="display:flex;align-items:center;justify-content:space-between;gap:8px;"><span>{{ $client->company_name ?: '-' }}</span><x-copy-value :value="$client->company_name" /></div></td></tr>
                     @if($identityType === 'company')
-                    <tr><td style="padding:5px 0;color:#777;">{{ __('admin.clients.billing_tax_office') }}</td><td style="padding:5px 0;">{{ $client->tax_office ?: '-' }}<x-copy-value :value="$client->tax_office" /></td></tr>
+                    <tr><td style="padding:5px 0;color:#777;">{{ __('admin.clients.billing_tax_office') }}</td><td style="padding:5px 0;"><div style="display:flex;align-items:center;justify-content:space-between;gap:8px;"><span>{{ $client->tax_office ?: '-' }}</span><x-copy-value :value="$client->tax_office" /></div></td></tr>
                     @endif
-                    <tr><td style="padding:5px 0;color:#777;">{{ __('common.form.tax_id') }}</td><td style="padding:5px 0;">{{ $client->tax_id ?: '-' }}<x-copy-value :value="$client->tax_id" /></td></tr>
+                    <tr><td style="padding:5px 0;color:#777;">{{ __('common.form.tax_id') }}</td><td style="padding:5px 0;"><div style="display:flex;align-items:center;justify-content:space-between;gap:8px;"><span>{{ $client->tax_id ?: '-' }}</span><x-copy-value :value="$client->tax_id" /></div></td></tr>
                     @if($identityType === 'individual')
                     <tr><td style="padding:5px 0;color:#777;">{{ __('admin.clients.billing_national_id') }}</td><td style="padding:5px 0;">{{ $client->national_id ?: '-' }}</td></tr>
                     @endif
-                    <tr><td style="padding:5px 0;color:#777;">{{ __('admin.clients.email') }}</td><td style="padding:5px 0;"><a href="mailto:{{ $client->email }}" style="color:#337ab7;">{{ $client->email }}</a><x-copy-value :value="$client->email" /></td></tr>
+                    <tr><td style="padding:5px 0;color:#777;">{{ __('admin.clients.email') }}</td><td style="padding:5px 0;"><div style="display:flex;align-items:center;justify-content:space-between;gap:8px;"><span><a href="mailto:{{ $client->email }}" style="color:#337ab7;">{{ $client->email }}</a></span><x-copy-value :value="$client->email" /></div></td></tr>
                     {{-- A block, not @php(...): an inline @php before a later @endphp is read as
                          the start of that block and swallows the rows in between. --}}
                     @php
@@ -141,7 +141,7 @@ $tabs = ['summary'=>__('admin.clients.tab_summary'),'services'=>__('admin.client
                     @if($ownerLogin)
                     <tr><td style="padding:5px 0;color:#777;">{{ __('admin.clients.email_verification') }}</td><td style="padding:5px 0;">
                         @if($ownerLogin->hasVerifiedEmail())
-                        {{ __('admin.clients.email_verified', ['date' => $ownerLogin->email_verified_at->format(date_fmt())]) }}
+                        <span style="color:#3c763d;font-weight:600;text-decoration:underline;text-decoration-color:#3c763d;">{{ __('admin.clients.email_verified', ['date' => $ownerLogin->email_verified_at->format(date_fmt())]) }}</span>
                         @else
                         <span style="color:#a94442;">{{ __('admin.clients.email_unverified') }}</span>
                         @if(auth('admin')->user()?->hasPermission('edit_clients'))
@@ -153,15 +153,15 @@ $tabs = ['summary'=>__('admin.clients.tab_summary'),'services'=>__('admin.client
                         @endif
                     </td></tr>
                     @endif
-                    <tr><td style="padding:5px 0;color:#777;">{{ __('common.form.billing_email') }}</td><td style="padding:5px 0;">@if($client->billing_email)<a href="mailto:{{ $client->billing_email }}" style="color:#337ab7;">{{ $client->billing_email }}</a><x-copy-value :value="$client->billing_email" />@else - @endif</td></tr>
-                    <tr><td style="padding:5px 0;color:#777;">{{ __('admin.clients.phone') }}</td><td style="padding:5px 0;">{{ $client->full_phone ?: '-' }}<x-copy-value :value="$client->full_phone" /></td></tr>
-                    <tr><td style="padding:5px 0;color:#777;">{{ __('admin.clients.address') }}</td><td style="padding:5px 0;">{{ $client->address1 ?: '-' }}@if($client->city)<br>{{ $client->city }}{{ $client->state ? ', '.$client->state : '' }} {{ $client->postcode }}@endif<x-copy-value :value="$addressCopy" /></td></tr>
+                    <tr><td style="padding:5px 0;color:#777;">{{ __('common.form.billing_email') }}</td><td style="padding:5px 0;"><div style="display:flex;align-items:center;justify-content:space-between;gap:8px;"><span>@if($client->billing_email)<a href="mailto:{{ $client->billing_email }}" style="color:#337ab7;">{{ $client->billing_email }}</a>@else - @endif</span><x-copy-value :value="$client->billing_email" /></div></td></tr>
+                    <tr><td style="padding:5px 0;color:#777;">{{ __('admin.clients.phone') }}</td><td style="padding:5px 0;"><div style="display:flex;align-items:center;justify-content:space-between;gap:8px;"><span>{{ $client->full_phone ?: '-' }}</span><x-copy-value :value="$client->full_phone" /></div></td></tr>
+                    <tr><td style="padding:5px 0;color:#777;">{{ __('admin.clients.address') }}</td><td style="padding:5px 0;"><div style="display:flex;align-items:center;justify-content:space-between;gap:8px;"><span>{{ $client->address1 ?: '-' }}@if($client->city)<br>{{ $client->city }}{{ $client->state ? ', '.$client->state : '' }} {{ $client->postcode }}@endif</span><x-copy-value :value="$addressCopy" /></div></td></tr>
                     <tr><td style="padding:5px 0;color:#777;">{{ __('admin.clients.country') }}</td><td style="padding:5px 0;">{{ $client->country ?: '-' }}</td></tr>
                     <tr><td style="padding:5px 0;color:#777;">{{ __('admin.clients.registered') }}</td><td style="padding:5px 0;">{{ $client->created_at->format(date_fmt()) }}</td></tr>
                 </table>
                 <div style="display:flex;align-items:center;justify-content:space-between;gap:8px;margin-top:10px;">
-                    <a href="{{ route('admin.clients.edit', $client) }}" class="btn btn-default btn-sm">{{ __('admin.clients.edit_client') }}</a>
                     <button type="button" class="btn btn-default btn-sm" data-billing-copy data-copy-text="{{ $copyText }}" title="{{ __('admin.clients.billing_copy') }}" aria-label="{{ __('admin.clients.billing_copy') }}"><i class="far fa-copy" aria-hidden="true"></i> {{ __('common.actions.copy') }}</button>
+                    <a href="{{ route('admin.clients.edit', $client) }}" class="btn btn-default btn-sm">{{ __('admin.clients.edit_client') }}</a>
                 </div>
             </div>
         </div>
