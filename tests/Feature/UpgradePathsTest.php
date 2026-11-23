@@ -2,8 +2,13 @@
 
 use App\Models\Admin;
 use App\Models\AdminRole;
+use App\Models\ApiCredential;
 use App\Models\Client;
+use App\Models\ConfigOption;
+use App\Models\ConfigOptionGroup;
+use App\Models\ConfigOptionLink;
 use App\Models\Currency;
+use App\Models\InvoiceItem;
 use App\Models\Pricing;
 use App\Models\Product;
 use App\Models\ProductGroup;
@@ -11,6 +16,8 @@ use App\Models\Service;
 use App\Models\Upgrade;
 use App\Models\User;
 use App\Services\UpgradeService;
+use Database\Factories\ApiCredentialFactory;
+use Illuminate\Support\Facades\Mail;
 
 /*
  * The operator names the packages a product can move to.
@@ -73,6 +80,20 @@ it('offers and allows only the configured packages', function () {
         'new_product_id' => $fx['bigger']->id,
     ])->assertRedirect();
     expect(Upgrade::count())->toBe(1);
+});
+
+it('names the cycle in the customer language on the upgrade invoice line', function () {
+    Mail::fake();
+    $fx = upFixture();
+    $fx['service']->client->update(['language' => 'pl']);
+
+    app(UpgradeService::class)->requestProductChange($fx['service']->fresh(), $fx['bigger']);
+
+    $line = InvoiceItem::where('type', 'Upgrade')->latest('id')->firstOrFail();
+
+    expect($line->description)->toContain('(Miesięcznie)')
+        ->not->toContain('(Monthly)')
+        ->not->toContain('(monthly)');
 });
 
 it('refuses a package outside the paths in requestProductChange itself', function () {
@@ -197,8 +218,8 @@ it('keeps customers on a product that does not allow moving, everywhere they cou
     // Asked for regardless: from the client area and through the API.
     $this->actingAs($fx['user'])->post(route('client.services.upgrade.process', $fx['service']), ['new_product_id' => $fx['bigger']->id])
         ->assertSessionHas('error');
-    $credential = \App\Models\ApiCredential::factory()->create();
-    $this->withHeaders(['X-API-Key' => $credential->identifier, 'X-API-Secret' => \Database\Factories\ApiCredentialFactory::PLAINTEXT_SECRET, 'Accept' => 'application/json'])
+    $credential = ApiCredential::factory()->create();
+    $this->withHeaders(['X-API-Key' => $credential->identifier, 'X-API-Secret' => ApiCredentialFactory::PLAINTEXT_SECRET, 'Accept' => 'application/json'])
         ->post('/api/v1/upgradeproduct', ['serviceid' => $fx['service']->id, 'packageid' => $fx['bigger']->id])
         ->assertStatus(422);
     expect(Upgrade::count())->toBe(0)
@@ -217,9 +238,9 @@ it('keeps customers on a product that does not allow moving, everywhere they cou
 it('still offers the page when packages are closed but the product has options to raise', function () {
     $fx = upFixture();
     $fx['current']->update(['allow_upgrades' => false]);
-    $group = \App\Models\ConfigOptionGroup::create(['name' => 'Resources']);
-    \App\Models\ConfigOptionLink::create(['group_id' => $group->id, 'product_id' => $fx['current']->id]);
-    \App\Models\ConfigOption::create(['group_id' => $group->id, 'option_name' => 'Extra RAM', 'option_type' => 'dropdown', 'sort_order' => 1]);
+    $group = ConfigOptionGroup::create(['name' => 'Resources']);
+    ConfigOptionLink::create(['group_id' => $group->id, 'product_id' => $fx['current']->id]);
+    ConfigOption::create(['group_id' => $group->id, 'option_name' => 'Extra RAM', 'option_type' => 'dropdown', 'sort_order' => 1]);
 
     $this->actingAs($fx['user'])->get(route('client.services.show', $fx['service']))->assertOk()
         ->assertSee(route('client.services.upgrade', $fx['service']), false);
