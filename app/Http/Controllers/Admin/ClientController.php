@@ -24,6 +24,7 @@ use App\Enums\ServiceStatus;
 use App\Services\Module\ModuleRegistry;
 use App\Services\ProvisioningService;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Validation\Rule;
 use Symfony\Component\HttpFoundation\StreamedResponse;
@@ -420,66 +421,94 @@ class ClientController extends Controller
         // service pending; createAccount() activates it when the module says ok.
         $provision = $request->boolean('provision');
 
-        $service = Service::create([
-            'client_id' => $client->id,
-            'product_id' => $validated['product_id'],
-            'server_id' => $validated['server_id'] ?? null,
-            'domain' => $validated['domain'] ?? null,
-            'qty' => 1,
-            'first_payment_amount' => $validated['amount'],
-            'amount' => $validated['amount'],
-            'billing_cycle' => $validated['billing_cycle'],
-            'next_due_date' => $validated['next_due_date'] ?? null,
-            'registration_date' => now()->toDateString(),
-            'status' => $provision ? ServiceStatus::Pending->value : $validated['status'],
-            'auto_renew' => true,
-        ]);
+        // Linking can be refused (the account is gone, or another service
+        // took it): the billing record is then not kept either, or a service
+        // linked to nothing stayed behind under the error.
+        $linking = ! $provision && $linkUserId !== '';
+        if ($linking) {
+            DB::beginTransaction();
+        }
+        try {
+            $service = Service::create([
+                'client_id' => $client->id,
+                'product_id' => $validated['product_id'],
+                'server_id' => $validated['server_id'] ?? null,
+                'domain' => $validated['domain'] ?? null,
+                'qty' => 1,
+                'first_payment_amount' => $validated['amount'],
+                'amount' => $validated['amount'],
+                'billing_cycle' => $validated['billing_cycle'],
+                'next_due_date' => $validated['next_due_date'] ?? null,
+                'registration_date' => now()->toDateString(),
+                'status' => $provision ? ServiceStatus::Pending->value : $validated['status'],
+                'auto_renew' => true,
+            ]);
 
-        $optionService->attachToService($service, $optionPayload);
+            $optionService->attachToService($service, $optionPayload);
 
-        ActivityLog::log(
-            $provision
-                ? "Service #{$service->id} added to client #{$client->id} and provisioned on the server"
-                : "Existing service #{$service->id} added to client #{$client->id} (manual migration)",
-            auth('admin')->user()?->full_name ?: 'admin',
-            $client->id,
-        );
+            ActivityLog::log(
+                $provision
+                    ? "Service #{$service->id} added to client #{$client->id} and provisioned on the server"
+                    : "Existing service #{$service->id} added to client #{$client->id} (manual migration)",
+                auth('admin')->user()?->full_name ?: 'admin',
+                $client->id,
+            );
 
-        // Migration: link this billing record to an account that already exists
-        // on the server so PNLCS can manage it. suspend()/terminate() address the
-        // panel user id stored in module_data; we also copy the username for show.
-        $linked = false;
-        if (! $provision && $linkUserId !== '') {
-            // A virtual server is linked by tagging the guest for this service.
-            $module = $service->server ? app(ModuleRegistry::class)->getServerModule($service->server->type) : null;
-            if ($module instanceof \Modules\Servers\Proxmox\ProxmoxModule) {
-                $claimed = $module->claim($service, (int) $linkUserId);
+            // Migration: link this billing record to an account that already exists
+            // on the server so PNLCS can manage it. suspend()/terminate() address the
+            // panel user id stored in module_data; we also copy the username for show.
+            $linked = false;
+            if (! $provision && $linkUserId !== '') {
+                // A virtual server is linked by tagging the guest for this service.
+                $module = $service->server ? app(ModuleRegistry::class)->getServerModule($service->server->type) : null;
+                if ($module instanceof \Modules\Servers\Proxmox\ProxmoxModule) {
+                    $claimed = $module->claim($service, (int) $linkUserId);
+                    if (! $claimed['success']) {
+                        DB::rollBack();
 
-                return redirect()->route('admin.clients.show', ['client' => $client, 'tab' => 'services'])
-                    ->with($claimed['success'] ? 'success' : 'error', $claimed['message']);
-            }
-            // A module that records its own account ids (Plesk: subscription
-            // and owner) links the service itself.
-            if (is_callable([$module, 'linkAccount'])) {
-                $linkResult = $module->linkAccount($service, $linkUserId);
+                        return back()->withInput()->with('error', $claimed['message']);
+                    }
+                    DB::commit();
 
-                return redirect()->route('admin.clients.show', ['client' => $client, 'tab' => 'services'])
-                    ->with($linkResult['success'] ? 'success' : 'error', $linkResult['message']);
-            }
-            if ($service->server) {
-                $module = app(ModuleRegistry::class)->getServerModule($service->server->type);
-                if ($module && method_exists($module, 'listAccounts')) {
-                    foreach ($module->listAccounts($service->server) as $a) {
-                        if (($a['id'] ?? '') === $linkUserId) {
-                            $service->username = $a['username'] ?? $service->username;
-                            break;
+                    return redirect()->route('admin.clients.show', ['client' => $client, 'tab' => 'services'])
+                        ->with('success', $claimed['message']);
+                }
+                // A module that records its own account ids (Plesk: subscription
+                // and owner) links the service itself.
+                if (is_callable([$module, 'linkAccount'])) {
+                    $linkResult = $module->linkAccount($service, $linkUserId);
+                    if (! $linkResult['success']) {
+                        DB::rollBack();
+
+                        return back()->withInput()->with('error', $linkResult['message']);
+                    }
+                    DB::commit();
+
+                    return redirect()->route('admin.clients.show', ['client' => $client, 'tab' => 'services'])
+                        ->with('success', $linkResult['message']);
+                }
+                if ($service->server) {
+                    $module = app(ModuleRegistry::class)->getServerModule($service->server->type);
+                    if ($module && method_exists($module, 'listAccounts')) {
+                        foreach ($module->listAccounts($service->server) as $a) {
+                            if (($a['id'] ?? '') === $linkUserId) {
+                                $service->username = $a['username'] ?? $service->username;
+                                break;
+                            }
                         }
                     }
                 }
+                $service->module_data = ['panelica_user_id' => $linkUserId];
+                $service->save();
+                $linked = true;
+                DB::commit();
             }
-            $service->module_data = ['panelica_user_id' => $linkUserId];
-            $service->save();
-            $linked = true;
+        } catch (\Throwable $e) {
+            if ($linking) {
+                DB::rollBack();
+            }
+
+            throw $e;
         }
 
         $redirect = redirect()->route('admin.clients.show', ['client' => $client, 'tab' => 'services']);
