@@ -730,7 +730,7 @@ return [
         'email_verification' => 'E-posta doğrulaması',
         'email_verified' => ':date tarihinde doğrulandı',
         'email_unverified' => 'Doğrulanmadı',
-        'verify_email' => 'Doğrulanmış say',
+        'verify_email' => 'Doğrula',
         'verify_email_confirm' => ':email adresi müşteri onaylamadan doğrulanmış sayılsın mı?',
         'verify_email_no_login' => 'Bu müşterinin doğrulanacak bir giriş hesabı yok.',
         'verify_email_already' => ':email zaten doğrulanmış.',

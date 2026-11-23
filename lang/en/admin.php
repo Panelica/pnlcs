@@ -739,7 +739,7 @@ return [
         'email_verification' => 'Email verification',
         'email_verified' => 'Verified on :date',
         'email_unverified' => 'Not verified',
-        'verify_email' => 'Mark as verified',
+        'verify_email' => 'Verify',
         'verify_email_confirm' => 'Mark :email as verified without the customer confirming it?',
         'verify_email_no_login' => 'This client has no login to verify.',
         'verify_email_already' => ':email is already verified.',
