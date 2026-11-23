@@ -81,5 +81,19 @@ php artisan pnlcs:prune-logs --dry-run
 php artisan schedule:list          # everything scheduled, with the next run time
 ```
 
+One command is not scheduled at all and is meant to be run once, after an
+upgrade:
+
+```bash
+php artisan pnlcs:translate-invoice-cycles --dry-run   # report, change nothing
+php artisan pnlcs:translate-invoice-cycles
+```
+
+New invoice lines name the billing cycle in the customer's language. Lines
+written before that carry the English word ("Hosting (monthly)"); this
+rewrites them in the language of the document. It touches **open** invoices
+only — unpaid, overdue and draft — because a settled document's text is part
+of the record.
+
 **Utilities → Automation Status** in the admin area shows when the scheduled
 jobs last ran.
