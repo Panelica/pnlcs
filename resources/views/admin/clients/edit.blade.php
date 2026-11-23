@@ -67,7 +67,7 @@
                 </div>
                 <div class="form-group"><label class="form-label">{{ __('common.form.phone') }}</label>
                     <div style="display:flex;gap:6px;">
-                        <select name="phone_prefix" id="phone_prefix" class="form-control" style="width:90px !important;flex-shrink:0;">
+                        <select name="phone_prefix" id="phone_prefix" class="form-control" style="width:110px !important;flex-shrink:0;">
                             @foreach(\App\Support\Countries::PHONE_PREFIXES as $code => $prefix)
                             <option value="{{ $prefix }}" {{ old('phone_prefix', $client->phone_prefix ?? \App\Support\Countries::phonePrefix($client->country)) == $prefix ? 'selected' : '' }}>{{ $code }} {{ $prefix }}</option>
                             @endforeach
