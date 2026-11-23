@@ -22,7 +22,7 @@ class InvoiceXmlBuilder
     {
         $invoice = $invoice->load('items');
 
-        $sellerName = $this->sellerName();
+        $sellerName = $this->sellerName($invoice);
         $currency = $this->currency($invoice);
 
         $lines = '';
@@ -30,11 +30,12 @@ class InvoiceXmlBuilder
         $issueDate = ($invoice->date ?? now())->format('Y-m-d');
 
         $buyerNip = $invoice->buyer('tax_id');
+        $sellerNip = trim((string) ($invoice->seller('tax_id') ?: $sellerNip));
 
         return '<?xml version="1.0" encoding="UTF-8"?>'
             .'<Faktura xmlns="'.self::NS.'" xmlns:etd="http://crd.gov.pl/xml/schematy/dziedzinowe/mf/2022/01/05/eD/DefinicjeTypy/">'
             .$this->naglowek()
-            .$this->podmiot1($sellerNip, $sellerName)
+            .$this->podmiot1($sellerNip, $sellerName, $invoice)
             .$this->podmiot2($invoice, $buyerNip)
             .'<Fa>'
             .'<KodWaluty>'.e($currency).'</KodWaluty>'
@@ -59,14 +60,14 @@ class InvoiceXmlBuilder
             .'</Naglowek>';
     }
 
-    private function podmiot1(string $nip, string $name): string
+    private function podmiot1(string $nip, string $name, Invoice $invoice): string
     {
         return '<Podmiot1>'
             .'<DaneIdentyfikacyjne>'
             .'<NIP>'.e($nip).'</NIP>'
             .'<Nazwa>'.e($name).'</Nazwa>'
             .'</DaneIdentyfikacyjne>'
-            .'<Adres><KodKraju>PL</KodKraju><AdresL1>'.e($this->sellerAddress()).'</AdresL1></Adres>'
+            .'<Adres><KodKraju>PL</KodKraju><AdresL1>'.e($this->sellerAddress($invoice)).'</AdresL1></Adres>'
             .'</Podmiot1>';
     }
 
@@ -221,41 +222,37 @@ class InvoiceXmlBuilder
         return number_format((float) $value, 0, '.', '');
     }
 
-    private function sellerName(): string
+    private function sellerName(Invoice $invoice): string
     {
-        try {
-            $name = trim((string) Setting::get('whitelabel_company_name', ''))
-                ?: trim((string) Setting::get('CompanyName', ''));
-        } catch (\Throwable) {
-            $name = '';
+        $name = trim((string) $invoice->seller('name'));
+
+        if ($name === '') {
+            try {
+                $name = trim((string) Setting::get('whitelabel_company_name', ''))
+                    ?: trim((string) Setting::get('CompanyName', ''));
+            } catch (\Throwable) {
+                $name = '';
+            }
         }
 
         return $name !== '' ? $name : (string) config('app.name', 'PNLCS');
     }
 
-    private function sellerAddress(): string
+    private function sellerAddress(Invoice $invoice): string
     {
-        // The address General Settings saves (Address, Postcode, CompanyCity),
-        // read the way the invoice PDF reads it. Address1/Address2 are not
-        // written by any screen, so every seller came out as "Polska".
-        try {
-            $company = app(\App\Services\InvoicePdfService::class)->companyDetails();
-            $parts = array_filter([
-                trim((string) preg_replace('/\s*[\r\n]+\s*/', ', ', (string) $company['address'])),
-                trim($company['postcode'].' '.$company['city']),
-            ]);
-            $line = implode(', ', $parts);
-        } catch (\Throwable) {
-            $line = '';
-        }
+        // The seller block frozen on the invoice; old invoices fall back to the
+        // live settings through Invoice::seller().
+        $address = trim((string) preg_replace('/\s*[\r\n]+\s*/', ', ', (string) $invoice->seller('address')));
+        $city = trim((string) $invoice->seller('postcode').' '.(string) $invoice->seller('city'));
+        $line = implode(', ', array_filter([$address, $city]));
 
         return $line !== '' ? $line : 'Polska';
     }
 
     private function currency(Invoice $invoice): string
     {
-        $client = $invoice->client;
-
-        return $client?->currency?->code ?? 'PLN';
+        // The currency the invoice amounts are in, frozen at issue. A live
+        // client currency may have changed since, or the client may be gone.
+        return (string) ($invoice->source_currency ?: 'PLN');
     }
 }

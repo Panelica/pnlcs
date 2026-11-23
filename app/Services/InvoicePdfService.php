@@ -99,7 +99,7 @@ class InvoicePdfService
     {
         $invoice->load('client', 'items', 'ksefInvoice');
 
-        $company = $this->companyDetails();
+        $company = $invoice->sellerDetails();
         $ksef = $this->ksefInfo($invoice);
 
         $template = $this->customTemplate($invoice);
@@ -309,7 +309,7 @@ class InvoicePdfService
      */
     private function placeholderValues(Invoice $invoice, ?array $company, ?array $ksef): array
     {
-        $company ??= $this->companyDetails();
+        $company ??= $invoice->sellerDetails();
         $buyer = fn (string $field) => (string) $invoice->buyer($field);
 
         $logo = $company['logo'] ?? '';
@@ -357,7 +357,7 @@ class InvoicePdfService
             'items' => $this->itemsHtml($invoice),
             'vat_summary' => $this->vatSummaryHtml($invoice),
             'tax_notice' => \App\Support\TaxNotice::forInvoice($invoice) ?? '',
-            'company_bank_accounts' => $this->bankAccountsHtml(),
+            'company_bank_accounts' => $this->bankAccountsHtml($invoice->sellerBankAccounts()),
         ];
 
         // Everything above is text the customer or the operator typed, and it
@@ -540,18 +540,20 @@ class InvoicePdfService
      * no table. Empty when no accounts are configured, so the conditional
      * block {?company_bank_accounts}…{/company_bank_accounts} hides it itself.
      */
-    protected function bankAccountsHtml(): string
+    protected function bankAccountsHtml(?array $accounts = null): string
     {
-        $module = new BankTransferModule;
+        // Without a snapshot (old invoice) the live gateway decides. With one,
+        // the document keeps the accounts it was issued with, even if the
+        // operator has since stopped taking transfers.
+        if ($accounts === null) {
+            $module = new BankTransferModule;
 
-        // The gateway's own switch, the one checkout and the payment QR read.
-        // An operator who stopped taking transfers should not keep printing
-        // the account numbers on every invoice.
-        if (! $module->isActive()) {
-            return '';
+            if (! $module->isActive()) {
+                return '';
+            }
+
+            $accounts = $module->accounts();
         }
-
-        $accounts = $module->accounts();
 
         if ($accounts === []) {
             return '';
