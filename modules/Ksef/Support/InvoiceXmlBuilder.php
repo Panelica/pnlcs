@@ -30,7 +30,14 @@ class InvoiceXmlBuilder
         $issueDate = ($invoice->date ?? now())->format('Y-m-d');
 
         $buyerNip = $invoice->buyer('tax_id');
-        $sellerNip = trim((string) ($invoice->seller('tax_id') ?: $sellerNip));
+
+        // The seller's NIP is not taken from the invoice: it is the number the
+        // KSeF session authenticates with (KsefClient::authenticate signs the
+        // AuthTokenRequest with it). A general-settings tax id written in any
+        // other form - with the PL prefix, with dashes, or simply a different
+        // number - would make the document identify a taxpayer the session is
+        // not, and the operator would see only a rejection. The rest of the
+        // seller block below is the frozen one.
 
         return '<?xml version="1.0" encoding="UTF-8"?>'
             .'<Faktura xmlns="'.self::NS.'" xmlns:etd="http://crd.gov.pl/xml/schematy/dziedzinowe/mf/2022/01/05/eD/DefinicjeTypy/">'

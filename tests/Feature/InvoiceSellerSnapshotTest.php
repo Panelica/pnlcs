@@ -175,6 +175,10 @@ it('prints the frozen seller in the KSeF XML, not the current settings', functio
 
     expect($xml)->toContain('Old Seller')
         ->toContain('Old Street 1')
-        ->toContain('1111111111')
-        ->not->toContain('New Seller');
+        ->not->toContain('New Seller')
+        // The NIP stays the one the session authenticates with, not the tax id
+        // frozen on the document: KSeF would reject a document whose issuer is
+        // not the authenticated taxpayer.
+        ->toContain('<NIP>9999999999</NIP>')
+        ->not->toContain('1111111111');
 });
