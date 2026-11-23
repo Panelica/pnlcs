@@ -302,11 +302,40 @@ class Client extends Model
 
     public function scopeSearch($query, string $term)
     {
-        return $query->where(function ($q) use ($term) {
-            $q->where('first_name', 'like', "%{$term}%")
-                ->orWhere('last_name', 'like', "%{$term}%")
-                ->orWhere('email', 'like', "%{$term}%")
-                ->orWhere('company_name', 'like', "%{$term}%");
+        $term = trim($term);
+
+        if ($term === '') {
+            return $query;
+        }
+
+        $like = "%{$term}%";
+
+        return $query->where(function ($q) use ($like) {
+            $q->where('first_name', 'like', $like)
+                ->orWhere('last_name', 'like', $like)
+                ->orWhere('email', 'like', $like)
+                ->orWhere('company_name', 'like', $like)
+                ->orWhereHas('services', fn ($service) => $service->where('domain', 'like', $like))
+                ->orWhereHas('domains', fn ($domain) => $domain->where('domain', 'like', $like));
         });
+    }
+
+    /**
+     * Every domain this client is known by: the hosting services and the domain
+     * billing records, de-duplicated. The admin search loads both relations in
+     * one query so rendering the results does not fan out.
+     *
+     * @return \Illuminate\Support\Collection<int, string>
+     */
+    public function knownDomains()
+    {
+        $this->loadMissing('services', 'domains');
+
+        return $this->services
+            ->pluck('domain')
+            ->merge($this->domains->pluck('domain'))
+            ->filter(fn ($domain) => filled($domain))
+            ->unique()
+            ->values();
     }
 }

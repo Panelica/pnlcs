@@ -192,7 +192,7 @@ return [
         'enter_password' => 'Passwort eingeben',
         'promo_code' => 'Aktionscode',
         'search' => 'Suchen...',
-        'search_clients' => 'Name, E-Mail, Firma...',
+        'search_clients' => 'Name, E-Mail, Firma, Domain...',
         'type_message' => 'Geben Sie Ihre Nachricht ein...',
     ],
     'priority' => [
