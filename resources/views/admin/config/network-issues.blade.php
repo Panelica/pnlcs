@@ -18,7 +18,7 @@
             <td style="font-weight:600;">{{ $issue->title }}</td>
             <td style="text-transform:capitalize;">{{ $issue->type ?? 'General' }}</td>
             <td style="font-size:12px;">{{ $issue->created_at->timezone(display_tz())->format(datetime_fmt()) }}</td>
-            <td style="font-size:12px;">{{ $issue->end_date?->timezone(display_tz())->format(datetime_fmt()) ?? '&mdash;' }}</td>
+            <td style="font-size:12px;">{{ $issue->end_date?->timezone(display_tz())->format(datetime_fmt()) ?? '—' }}</td>
             <td><span class="badge-{{ $issue->status === 'resolved' ? 'active' : 'open' }}">{{ $issue->status === 'resolved' ? __('admin.network_issues.resolved') : __('admin.network_issues.active') }}</span></td>
             <td style="text-align:right;">
                 <button type="button" class="btn btn-default btn-xs" onclick="document.getElementById('modal-edit-ni-{{ $issue->id }}').style.display='flex'">{{ __('common.actions.edit') }}</button>

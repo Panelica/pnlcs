@@ -16,7 +16,7 @@
         @foreach($bannedIps as $ban)
         <tr>
             <td style="font-family:monospace;font-weight:600;">{{ $ban->ip }}</td>
-            <td style="font-size:13px;">{{ $ban->reason ?: '&mdash;' }}</td>
+            <td style="font-size:13px;">{{ $ban->reason ?: '—' }}</td>
             <td style="font-size:12px;">{{ $ban->created_at->timezone(display_tz())->format(datetime_fmt()) }}</td>
             <td style="font-size:12px;">{{ $ban->expires_at?->timezone(display_tz())->format(datetime_fmt()) ?? __('admin.banned_ips.never') }}</td>
             <td style="text-align:right;">

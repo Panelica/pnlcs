@@ -41,11 +41,11 @@
                 @endphp
                 <tr>
                     <td style="padding:8px;">@if($r->invoice)<a href="{{ route('admin.invoices.show', $r->invoice) }}" style="color:#337ab7;">#{{ $r->invoice->invoice_num ?? $r->invoice->id }}</a>@else&mdash;@endif</td>
-                    <td style="padding:8px;">{{ $r->invoice?->client?->display_name ?? '&mdash;' }}</td>
-                    <td style="padding:8px;text-align:right;">{{ $r->invoice ? money_fmt($r->invoice->total) : '&mdash;' }}</td>
+                    <td style="padding:8px;">{{ $r->invoice?->client?->display_name ?? '—' }}</td>
+                    <td style="padding:8px;text-align:right;">{{ $r->invoice ? money_fmt($r->invoice->total) : '—' }}</td>
                     <td style="padding:8px;"><span style="display:inline-block;padding:2px 8px;border-radius:999px;background:{{ $status['color'] }}1a;color:{{ $status['color'] }};font-weight:600;font-size:12px;">{{ $status['label'] }}</span></td>
-                    <td style="padding:8px;">{{ $r->ksef_number ?? '&mdash;' }}</td>
-                    <td style="padding:8px;">{{ $r->sent_at ? $r->sent_at->format(date_fmt().' H:i') : '&mdash;' }}</td>
+                    <td style="padding:8px;">{{ $r->ksef_number ?? '—' }}</td>
+                    <td style="padding:8px;">{{ $r->sent_at ? $r->sent_at->format(date_fmt().' H:i') : '—' }}</td>
                     <td style="padding:8px;text-align:right;white-space:nowrap;">
                         @if(in_array($r->status, ['pending', 'error', 'rejected'], true))
                         <form method="POST" action="{{ route('admin.ksef.resend', $r) }}" style="display:inline;margin:0;">

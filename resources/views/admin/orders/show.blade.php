@@ -17,7 +17,7 @@
                     <tr><td style="padding:5px 0;color:#777;width:35%;">{{ __('admin.orders.order_number') }}</td><td style="padding:5px 0;font-family:monospace;font-weight:600;">{{ $order->order_num }}</td></tr>
                     <tr><td style="padding:5px 0;color:#777;">{{ __('admin.orders.date') }}</td><td style="padding:5px 0;">{{ $order->date?->format(date_fmt()) }}</td></tr>
                     <tr><td style="padding:5px 0;color:#777;">{{ __('admin.orders.amount') }}</td><td style="padding:5px 0;font-weight:700;font-size:15px;">{{ money_fmt($order->amount) }}</td></tr>
-                    <tr><td style="padding:5px 0;color:#777;">{{ __('admin.orders.payment_method_label') }}</td><td style="padding:5px 0;">{{ $order->payment_method ? payment_method_label((string) $order->payment_method) : '&mdash;' }}</td></tr>
+                    <tr><td style="padding:5px 0;color:#777;">{{ __('admin.orders.payment_method_label') }}</td><td style="padding:5px 0;">{{ $order->payment_method ? payment_method_label((string) $order->payment_method) : '—' }}</td></tr>
                     @if($order->promo_code)
                     <tr><td style="padding:5px 0;color:#777;">{{ __('admin.orders.promo_code_label') }}</td><td style="padding:5px 0;"><span style="background:#fcf8e3;color:#8a6d3b;padding:2px 6px;border-radius:3px;font-family:monospace;font-size:12px;">{{ $order->promo_code }}</span></td></tr>
                     @endif
@@ -43,7 +43,7 @@
                             <button type="submit" class="btn btn-default btn-xs">{{ __('common.actions.save') }}</button>
                         </form>
                         @else
-                        {{ $svc->domain ?? '&mdash;' }}
+                        {{ $svc->domain ?? '—' }}
                         @endif
                     </td>
                     <td>{{ cycle_label($svc->billing_cycle) }}</td>
@@ -66,7 +66,7 @@
                 <tr>
                     <td style="font-family:monospace;font-weight:600;">{{ $dom->domain }}</td>
                     <td style="text-transform:capitalize;">{{ $dom->type }}</td>
-                    <td>{{ $dom->expiry_date?->format(date_fmt()) ?? '&mdash;' }}</td>
+                    <td>{{ $dom->expiry_date?->format(date_fmt()) ?? '—' }}</td>
                     <td><span class="badge-{{ strtolower($dom->status) }}">{{ status_label($dom->status) }}</span></td>
                 </tr>
                 @endforeach
@@ -87,7 +87,7 @@
                     <td>@if($addon->service)<a href="{{ route('admin.services.show', $addon->service) }}" style="color:#337ab7;">{{ $addon->service->domain ?: '#'.$addon->service->id }}</a>@else &mdash; @endif</td>
                     <td style="text-align:right;">{{ number_format((float) $addon->amount, 2) }}</td>
                     <td>{{ cycle_label($addon->billing_cycle) }}</td>
-                    <td>{{ $addon->next_due_date?->format(date_fmt()) ?? '&mdash;' }}</td>
+                    <td>{{ $addon->next_due_date?->format(date_fmt()) ?? '—' }}</td>
                     <td><span class="badge-{{ strtolower($addon->status) }}">{{ status_label($addon->status) }}</span></td>
                 </tr>
                 @endforeach

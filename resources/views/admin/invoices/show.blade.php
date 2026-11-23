@@ -225,7 +225,7 @@
                 <tr>
                     <td>{{ $tx->date?->format(date_fmt()) }}</td>
                     <td>{{ payment_method_label((string) $tx->gateway) }}</td>
-                    <td style="font-family:monospace;font-size:12px;">{{ $tx->transaction_id ?? '&mdash;' }}</td>
+                    <td style="font-family:monospace;font-size:12px;">{{ $tx->transaction_id ?? '—' }}</td>
                     @if((float) $tx->amount_out > 0)
                     {{-- A refund moves money out; amount_in is 0 on it. --}}
                     <td style="text-align:right;color:#d9534f;font-weight:600;">-{{ money_fmt($tx->amount_out) }}</td>

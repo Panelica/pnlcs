@@ -24,7 +24,7 @@
         @foreach($bannedEmails as $ban)
         <tr>
             <td style="font-family:monospace;">{{ $ban->domain }}</td>
-            <td style="font-size:13px;">{{ $ban->reason ?: '&mdash;' }}</td>
+            <td style="font-size:13px;">{{ $ban->reason ?: '—' }}</td>
             <td style="font-size:12px;">{{ $ban->created_at->format(date_fmt()) }}</td>
             <td style="text-align:right;">
                 <form method="POST" action="{{ route('admin.config.banned-emails.destroy', $ban) }}" style="display:inline;" onsubmit="return pnConfirm(event, @js(__('admin.banned_emails.confirm_remove')))">
