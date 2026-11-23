@@ -755,6 +755,10 @@ return [
     'invoices.title' => 'Moje faktury',
     'invoices.total_due' => 'Razem do zapłaty',
     'invoices.unknown_error' => 'Nieznany błąd',
+    'invoices.domain_years' => '1 rok|:count lata|:count lat',
+    'invoices.domain_renewal_line' => 'Odnowienie domeny: :domain',
+    'invoices.domain_registration_line' => 'Rejestracja domeny: :domain',
+    'invoices.domain_transfer_line' => 'Transfer domeny: :domain',
     'kb' => [
         'all_articles' => 'Wszystkie artykuły',
         'articles' => 'Artykuły',
