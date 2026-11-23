@@ -159,8 +159,10 @@ $tabs = ['summary'=>__('admin.clients.tab_summary'),'services'=>__('admin.client
                     <tr><td style="padding:5px 0;color:#777;">{{ __('admin.clients.country') }}</td><td style="padding:5px 0;">{{ $client->country ?: '-' }}</td></tr>
                     <tr><td style="padding:5px 0;color:#777;">{{ __('admin.clients.registered') }}</td><td style="padding:5px 0;">{{ $client->created_at->format(date_fmt()) }}</td></tr>
                 </table>
-                <button type="button" class="btn btn-default btn-sm" style="margin-top:10px;" data-billing-copy data-copy-text="{{ $copyText }}" title="{{ __('admin.clients.billing_copy') }}" aria-label="{{ __('admin.clients.billing_copy') }}"><i class="far fa-copy" aria-hidden="true"></i> {{ __('common.actions.copy') }}</button>
-                <a href="{{ route('admin.clients.edit', $client) }}" class="btn btn-default btn-sm" style="margin-top:6px;">{{ __('admin.clients.edit_client') }}</a>
+                <div style="display:flex;align-items:center;justify-content:space-between;gap:8px;margin-top:10px;">
+                    <a href="{{ route('admin.clients.edit', $client) }}" class="btn btn-default btn-sm">{{ __('admin.clients.edit_client') }}</a>
+                    <button type="button" class="btn btn-default btn-sm" data-billing-copy data-copy-text="{{ $copyText }}" title="{{ __('admin.clients.billing_copy') }}" aria-label="{{ __('admin.clients.billing_copy') }}"><i class="far fa-copy" aria-hidden="true"></i> {{ __('common.actions.copy') }}</button>
+                </div>
             </div>
         </div>
         @if($customFields->isNotEmpty())
