@@ -14,9 +14,10 @@ use Illuminate\Support\Facades\Log;
  *
  * The domain search and the API ask the same question and must get the same
  * answer, so it is answered in one place. The registrar is asked first - it
- * answers from the registry itself, which covers TLDs that run no port-43 WHOIS
- * (.dev, .app) and the .tr family whose WHOIS is unreliable - and WHOIS is the
- * fallback. An unanswered lookup is never "available": checked=false says so.
+ * answers from the registry itself, which covers the .tr family whose WHOIS is
+ * unreliable - and the registry is the fallback: RDAP first, then port-43
+ * WHOIS (WhoisLookup). An unanswered lookup is never "available":
+ * checked=false says so.
  */
 class DomainAvailability
 {
@@ -27,18 +28,22 @@ class DomainAvailability
      * Port-43 WHOIS servers, by the part of the name after the first dot, or by
      * the last label when that longer suffix is not listed (com.tr → tr,
      * co.uk → uk): a registry answers for its second-level names too.
+     *
+     * Asked only when RDAP did not answer (WhoisLookup asks RDAP first). The
+     * servers are the ones IANA lists for each TLD. A gTLD whose registry no
+     * longer runs port-43 WHOIS (.dev, .app, .info, .pro and the Identity
+     * Digital TLDs) is not listed: RDAP answers for it. Switzerland's and
+     * Liechtenstein's server refuses automated queries, so .ch and .li are
+     * left to the registrar.
      */
     public const WHOIS_SERVERS = [
         "com"       => "whois.verisign-grs.com",
         "net"       => "whois.verisign-grs.com",
-        "org"       => "whois.pir.org",
+        "org"       => "whois.publicinterestregistry.org",
         "io"        => "whois.nic.io",
-        "dev"       => "whois.nic.google",
-        "app"       => "whois.nic.google",
         "me"        => "whois.nic.me",
-        "co"        => "whois.nic.co",
-        "info"      => "whois.afilias.net",
-        "biz"       => "whois.biz",
+        "co"        => "whois.registry.co",
+        "biz"       => "whois.nic.biz",
         "xyz"       => "whois.nic.xyz",
         "online"    => "whois.nic.online",
         "site"      => "whois.nic.site",
@@ -52,11 +57,11 @@ class DomainAvailability
         "tv"        => "whois.nic.tv",
         "cc"        => "whois.nic.cc",
         "us"        => "whois.nic.us",
-        "in"        => "whois.registry.in",
+        "in"        => "whois.nixiregistry.in",
         "ca"        => "whois.cira.ca",
         "au"        => "whois.auda.org.au",
         "fr"        => "whois.nic.fr",
-        "nl"        => "whois.sidn.nl",
+        "nl"        => "whois.domain-registry.nl",
         "ru"        => "whois.tcinet.ru",
         "space"     => "whois.nic.space",
         "club"      => "whois.nic.club",
@@ -64,23 +69,18 @@ class DomainAvailability
         "shop"      => "whois.nic.shop",
         "cloud"     => "whois.nic.cloud",
         "host"      => "whois.nic.host",
-        "pro"       => "whois.nic.pro",
-        "agency"    => "whois.nic.agency",
-        "digital"   => "whois.nic.digital",
-        "media"     => "whois.nic.media",
-        "zone"      => "whois.nic.zone",
-        "life"      => "whois.donuts.co",
-        "live"      => "whois.donuts.co",
-        "world"     => "whois.donuts.co",
-        "today"     => "whois.donuts.co",
-        "center"    => "whois.donuts.co",
-        "network"   => "whois.donuts.co",
-        "solutions" => "whois.donuts.co",
-        "systems"   => "whois.donuts.co",
-        "studio"    => "whois.donuts.co",
-        "design"    => "whois.donuts.co",
-        "email"     => "whois.donuts.co",
+        "design"    => "whois.nic.design",
         "pl"        => "whois.dns.pl",
+        // Country registries without RDAP.
+        "at"        => "whois.nic.at",
+        "be"        => "whois.dns.be",
+        "dk"        => "whois.punktum.dk",
+        "ie"        => "whois.weare.ie",
+        "it"        => "whois.nic.it",
+        "lu"        => "whois.dns.lu",
+        "ro"        => "whois.rotld.ro",
+        "se"        => "whois.iis.se",
+        "sk"        => "whois.sk-nic.sk",
     ];
 
     /**
