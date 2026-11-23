@@ -17,6 +17,7 @@ class Order extends Model {
     public function invoice() { return $this->belongsTo(Invoice::class); }
     public function services() { return $this->hasMany(Service::class, "order_id"); }
     public function domains() { return $this->hasMany(Domain::class, "order_id"); }
+    public function addons() { return $this->hasMany(ServiceAddon::class, "order_id"); }
 
     /**
      * The currency `amount` is in. Orders have no currency column: the amount

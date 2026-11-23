@@ -353,16 +353,49 @@
             <tbody>
             @foreach($service->addons as $addon)
             <tr>
-                <td>{{ $addon->label() }}</td>
+                <td>{{ $addon->label() }}@if($addon->addon?->description)<br><small style="color:#777;">{{ \Illuminate\Support\Str::limit($addon->addon->description, 80) }}</small>@endif</td>
                 <td>{{ number_format((float) $addon->amount, 2) }}</td>
                 <td>{{ cycle_label($addon->billing_cycle) }}</td>
                 <td>{{ $addon->next_due_date?->format(date_fmt()) ?? '-' }}</td>
                 <td><span class="badge badge-{{ strtolower($addon->status) }}">{{ status_label($addon->status) }}</span></td>
-                <td style="text-align:right;">
+                <td style="text-align:right;white-space:nowrap;">
+                    @unless($addon->isEnded())
+                    <a class="btn btn-default btn-xs" href="{{ route('admin.services.addons.edit', [$service, $addon]) }}">{{ __('admin.addons.service_edit') }}</a>
+                    @endunless
+
+                    @if($addon->isDraft())
+                    <form method="POST" action="{{ route('admin.services.addons.accept', [$service, $addon]) }}" style="display:inline;">
+                        @csrf
+                        <button type="submit" class="btn btn-success btn-xs">{{ __('admin.addons.service_accept') }}</button>
+                    </form>
+                    @endif
+
+                    @if($addon->isActive())
+                    <form method="POST" action="{{ route('admin.services.addons.suspend', [$service, $addon]) }}" style="display:inline;">
+                        @csrf
+                        <button type="submit" class="btn btn-warning btn-xs">{{ __('admin.addons.service_suspend') }}</button>
+                    </form>
+                    @elseif($addon->isSuspended())
+                    <form method="POST" action="{{ route('admin.services.addons.resume', [$service, $addon]) }}" style="display:inline;">
+                        @csrf
+                        <button type="submit" class="btn btn-success btn-xs">{{ __('admin.addons.service_resume') }}</button>
+                    </form>
+                    @endif
+
                     @if(in_array(strtolower($addon->status), ['active', 'pending'], true))
                     <form method="POST" action="{{ route('admin.services.addons.cancel', [$service, $addon]) }}" style="display:inline;">
                         @csrf
                         <button type="submit" class="btn btn-danger btn-xs">{{ __('client.services.addon_cancel') }}</button>
+                    </form>
+                    @endif
+
+                    @if($addon->hasBlockingInvoiceLines())
+                    <button type="button" class="btn btn-default btn-xs" disabled title="{{ __('admin.addons.service_has_invoices') }}">{{ __('admin.addons.service_delete') }}</button>
+                    @else
+                    <form method="POST" action="{{ route('admin.services.addons.destroy', [$service, $addon]) }}" style="display:inline;" onsubmit="return confirm(@js($addon->hasInvoiceLines() ? __('admin.addons.service_delete_with_invoice_confirm') : __('admin.addons.service_delete_confirm')));">
+                        @csrf
+                        @method('DELETE')
+                        <button type="submit" class="btn btn-danger btn-xs">{{ __('admin.addons.service_delete') }}</button>
                     </form>
                     @endif
                 </td>
@@ -372,18 +405,42 @@
         </table>
         @endif
 
-        @if(($availableAddons ?? collect())->isNotEmpty())
-        <form method="POST" action="{{ route('admin.services.addons.store', $service) }}" style="display:flex;gap:8px;align-items:center;">
-            @csrf
-            <select name="addon_id" class="form-control" style="max-width:320px;">
-                @foreach($availableAddons as $available)
-                    <option value="{{ $available->id }}">{{ $available->name }} ({{ number_format($available->priceFor($service->billing_cycle ?: 'Monthly'), 2) }})</option>
-                @endforeach
-            </select>
-            <button type="submit" class="btn btn-primary btn-sm">{{ __('client.services.addon_order') }}</button>
-        </form>
+        @if($canAddAddons)
+            @if(($availableAddons ?? collect())->isNotEmpty())
+            <form method="POST" action="{{ route('admin.services.addons.store', $service) }}" style="display:flex;gap:8px;align-items:center;">
+                @csrf
+                <select name="addon_id" class="form-control" style="max-width:480px;">
+                    @foreach($availableAddons as $available)
+                        @php($quote = $addonQuotes[$available->id] ?? null)
+                        <option value="{{ $available->id }}" @disabled(! ($quote['available'] ?? false))>
+                            {{ $available->name }}@if($available->description) — {{ \Illuminate\Support\Str::limit($available->description, 60) }}@endif
+                            @if($quote && $quote['available'])
+                                @if($quote['prorated'])
+                                    — {{ __('admin.addons.first_payment_short', [
+                                        'first' => money_fmt($quote['first_amount']),
+                                        'days' => $quote['remaining_days'],
+                                        'cycle_days' => $quote['cycle_days'],
+                                        'full' => money_fmt($quote['full_amount']),
+                                        'cycle' => cycle_label($quote['cycle']),
+                                    ]) }}
+                                @else
+                                    — {{ money_fmt($quote['full_amount']) }}/{{ cycle_label($quote['cycle']) }}
+                                @endif
+                            @else
+                                — {{ __('admin.addons.service_period_unpaid') }}
+                            @endif
+                        </option>
+                    @endforeach
+                </select>
+                <button type="submit" class="btn btn-primary btn-sm">{{ __('client.services.addon_order') }}</button>
+            </form>
+            <p style="color:#777;margin:10px 0 0;">{{ __('admin.addons.service_add_hint') }}</p>
+            <p style="color:#777;margin:4px 0 0;">{{ __('admin.addons.service_add_proration_hint', ['cycle' => cycle_label($service->billing_cycle ?: 'Monthly')]) }}</p>
+            @else
+                <p style="color:#999;margin:0;">{{ __('admin.addons.no_addons') }}</p>
+            @endif
         @else
-            <p style="color:#999;margin:0;">{{ __('admin.addons.no_addons') }}</p>
+            <p style="color:#999;margin:0;">{{ __('admin.addons.service_only_active') }}</p>
         @endif
     </div>
 </div>

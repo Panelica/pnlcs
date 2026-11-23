@@ -141,4 +141,22 @@ class BillingCycleHelper
             default        => $d->addMonthsNoOverflow(self::months($cycle) ?? 1),
         };
     }
+
+    /** The start of a paid period ending at $from, one cycle earlier.
+     *
+     * The inverse of advance(), used to tell an addon bought at the start of a
+     * service period (full price) from one bought in the middle (prorated). */
+    public static function rewind(Carbon $from, string $cycle): Carbon
+    {
+        $d = $from->copy();
+        return match (self::key($cycle)) {
+            'monthly'      => $d->subMonthsNoOverflow(1),
+            'quarterly'    => $d->subMonthsNoOverflow(3),
+            'semiannually' => $d->subMonthsNoOverflow(6),
+            'annually'     => $d->subYearsNoOverflow(1),
+            'biennially'   => $d->subYearsNoOverflow(2),
+            'triennially'  => $d->subYearsNoOverflow(3),
+            default        => $d->subMonthsNoOverflow(self::months($cycle) ?? 1),
+        };
+    }
 }

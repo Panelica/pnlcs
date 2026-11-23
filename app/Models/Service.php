@@ -107,9 +107,17 @@ class Service extends Model
                 return;
             }
 
+            // Match the way the service ended: a provider termination (or
+            // fraud) terminates its addons, a customer cancellation cancels
+            // them. Draft and suspended extras end too - none of them can run
+            // without the service.
+            $addonStatus = in_array(strtolower((string) $service->status), ['terminated', 'fraud'], true)
+                ? 'terminated'
+                : 'cancelled';
+
             ServiceAddon::where('service_id', $service->id)
-                ->whereIn('status', ['active', 'pending'])
-                ->update(['status' => 'cancelled', 'next_due_date' => null]);
+                ->whereNotIn('status', ['cancelled', 'terminated'])
+                ->update(['status' => $addonStatus, 'next_due_date' => null]);
         });
     }
 

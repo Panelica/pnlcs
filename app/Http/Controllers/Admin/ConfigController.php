@@ -51,6 +51,7 @@ use App\Models\RegistrarSettings;
 use App\Models\Server;
 use App\Models\ServerGroup;
 use App\Models\Service;
+use App\Models\ServiceAddon;
 use App\Models\Setting;
 use App\Models\SslModuleSettings;
 use App\Models\TaxRule;
@@ -3093,7 +3094,15 @@ class ConfigController extends Controller
 
     public function destroyAddon($id)
     {
-        ProductAddon::findOrFail($id)->delete();
+        $addon = ProductAddon::findOrFail($id);
+
+        // Service addons point at this row by id. Deleting it would leave them
+        // without a name or a price; retiring it keeps the history intact.
+        if (ServiceAddon::where('addon_id', $addon->id)->exists()) {
+            return back()->with('error', __('admin.messages.addon_in_use'));
+        }
+
+        $addon->delete();
 
         return back()->with('success', __('admin.messages.addon_deleted'));
     }

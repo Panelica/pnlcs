@@ -350,18 +350,47 @@ test('a customer can order an addon for a running service', function () {
     $invoice = Invoice::where('client_id', $client->id)->latest('id')->firstOrFail();
 
     expect($serviceAddon->status)->toBe('pending')
-        // Nothing is billed until it is paid for.
-        ->and($serviceAddon->next_due_date)->toBeNull()
+        // The first full cycle renews with the service; nothing is billed while
+        // pending, and activation does not push that date forward.
+        ->and($serviceAddon->next_due_date->toDateString())->toBe($service->next_due_date->toDateString())
         ->and((float) $invoice->total)->toBe(9.0);
 
     app(PaymentService::class)->applyPayment($invoice, 'banktransfer', 'TXN-LATER', 9.0);
 
     $serviceAddon->refresh();
     expect($serviceAddon->status)->toBe('active')
-        // One month on, the way BillingCycleHelper counts it: addMonthsNoOverflow,
-        // so a monthly addon activated on the 31st falls due on the 30th and not
-        // in the month after next (which is what Carbon's addMonth() would say).
-        ->and($serviceAddon->next_due_date->toDateString())->toBe(now()->addMonthsNoOverflow(1)->toDateString());
+        ->and($serviceAddon->next_due_date->toDateString())->toBe($service->next_due_date->toDateString());
+});
+
+test('the service page shows the prorated first payment', function () {
+    $fx = addonShop(monthly: 9.0);
+    $user = User::factory()->create();
+    $client = Client::factory()->create();
+    $user->clients()->attach($client->id);
+    $service = Service::factory()->create([
+        'client_id' => $client->id,
+        'product_id' => $fx['product']->id,
+        'status' => 'active',
+        'billing_cycle' => 'Monthly',
+        'next_due_date' => now()->addDays(20),
+        'domain' => 'later-addon.com',
+    ]);
+
+    $quote = app(AddonService::class)->quoteFor($service, $fx['addon']);
+    $expected = __('client.services.addon_first_payment', [
+        'first' => display_money_fmt($quote['first_amount']),
+        'days' => $quote['remaining_days'],
+        'cycle_days' => $quote['cycle_days'],
+        'full' => display_money_fmt($quote['full_amount']),
+        'cycle' => cycle_label($quote['cycle']),
+    ]);
+
+    expect($quote['first_amount'])->toBe(6.0);
+
+    $this->actingAs($user)
+        ->get(route('client.services.show', $service))
+        ->assertOk()
+        ->assertSee($expected);
 });
 
 test('a customer cannot order an addon on somebody else service', function () {
@@ -453,7 +482,7 @@ test('editing an addon keeps its product list', function () {
         ->and($addon->priceFor('monthly'))->toBe(6.0);
 });
 
-test('an operator can put an addon on a service and it gets invoiced', function () {
+test('an operator adds an addon as an order and can accept it by hand', function () {
     Mail::fake();
     $fx = addonShop(monthly: 4.0);
     $admin = Admin::factory()->create();
@@ -463,6 +492,7 @@ test('an operator can put an addon on a service and it gets invoiced', function 
         'product_id' => $fx['product']->id,
         'status' => 'active',
         'billing_cycle' => 'Monthly',
+        'next_due_date' => now()->addMonth(),
         'domain' => 'admin-added.com',
     ]);
 
@@ -471,10 +501,27 @@ test('an operator can put an addon on a service and it gets invoiced', function 
         ->assertRedirect();
 
     $serviceAddon = ServiceAddon::where('service_id', $service->id)->firstOrFail();
+    $order = Order::where('client_id', $client->id)->firstOrFail();
     $invoice = Invoice::where('client_id', $client->id)->latest('id')->firstOrFail();
 
-    expect((float) $serviceAddon->amount)->toBe(4.0)
+    // Like a product: the order and its invoice exist immediately.
+    expect(strtolower((string) $serviceAddon->status))->toBe('pending')
+        ->and($serviceAddon->order_id)->toBe($order->id)
+        ->and(strtolower((string) $order->status))->toBe('pending')
+        ->and($order->invoice_id)->toBe($invoice->id)
         ->and((float) $invoice->total)->toBe(4.0);
+
+    // Staff may accept the order by hand; the invoice stays unpaid.
+    $this->actingAs($admin, 'admin')
+        ->post(route('admin.orders.accept', $order))
+        ->assertRedirect();
+
+    $serviceAddon->refresh();
+    $order->refresh();
+
+    expect(strtolower((string) $order->status))->toBe('active')
+        ->and(strtolower((string) $serviceAddon->status))->toBe('active')
+        ->and($order->invoice_id)->toBe($invoice->id);
 });
 
 test('the service page names the addon instead of showing an id', function () {
@@ -591,14 +638,46 @@ test('an addon on a suspended service is still billed', function () {
     expect(Invoice::where('client_id', $suspended->client_id)->count())->toBe(1);
 });
 
-test('terminating a service stops its addons', function () {
+test('terminating a service terminates its addons', function () {
     $fx = addonShop();
     $addon = addonOnService($fx, 'active');
     $service = Service::findOrFail($addon->service_id);
 
     $service->update(['status' => 'terminated']);
 
+    expect(strtolower($addon->fresh()->status))->toBe('terminated');
+});
+
+test('cancelling a service cancels its addons', function () {
+    $fx = addonShop();
+    $addon = addonOnService($fx, 'active');
+    $service = Service::findOrFail($addon->service_id);
+
+    $service->update(['status' => 'cancelled']);
+
     expect(strtolower($addon->fresh()->status))->toBe('cancelled');
+});
+
+test('terminating a service ends draft and suspended addons too', function () {
+    $fx = addonShop();
+    $addon = addonOnService($fx, 'active');
+    $addon->update(['status' => 'draft']);
+
+    $suspended = ServiceAddon::create([
+        'service_id' => $addon->service_id,
+        'addon_id' => $fx['addon']->id,
+        'client_id' => $addon->client_id,
+        'qty' => 1,
+        'amount' => 5,
+        'billing_cycle' => 'Monthly',
+        'next_due_date' => now()->addMonth(),
+        'status' => 'suspended',
+    ]);
+
+    Service::findOrFail($addon->service_id)->update(['status' => 'terminated']);
+
+    expect(strtolower($addon->fresh()->status))->toBe('terminated')
+        ->and(strtolower($suspended->fresh()->status))->toBe('terminated');
 });
 
 test('an addon cannot be bought for a service that has ended', function () {

@@ -57,7 +57,9 @@ class ServiceController extends Controller
         abort_if($service->client_id !== $this->getClientId(), 403);
         $service->load('product', 'server', 'addons.addon');
 
-        $availableAddons = $service->product
+        $canAddAddons = strtolower((string) $service->status) === 'active';
+
+        $availableAddons = $service->product && $canAddAddons
             ? app(AddonService::class)->availableFor($service->product)
                 ->reject(fn ($addon) => $service->addons
                     ->where('addon_id', $addon->id)
@@ -65,6 +67,12 @@ class ServiceController extends Controller
                     ->isNotEmpty())
                 ->values()
             : collect();
+        $addonQuotes = $availableAddons->mapWithKeys(fn ($addon) => [
+            $addon->id => app(AddonService::class)->quoteFor($service, $addon),
+        ]);
+        $availableAddons = $availableAddons
+            ->filter(fn ($addon) => $addonQuotes[$addon->id]['available'])
+            ->values();
 
         // Hosting self-service tabs this service offers (Panelica-only today).
         // Resolved from the module so a different server type simply returns [].
@@ -125,7 +133,7 @@ class ServiceController extends Controller
             || $service->product->allow_upgrades !== false
             || app(\App\Services\ConfigOptionService::class)->groupsFor($service->product)->isNotEmpty();
 
-        return view('client.services.show', compact('service', 'availableAddons', 'hostingFeatures', 'vpsFeatures', 'reinstallChoices', 'canRenewEarly', 'cycleOptions', 'downloads', 'orderAnswers', 'modulePanel', 'showServerDetails', 'setupDelayed', 'upgradeOffered'));
+        return view('client.services.show', compact('service', 'availableAddons', 'addonQuotes', 'canAddAddons', 'hostingFeatures', 'vpsFeatures', 'reinstallChoices', 'canRenewEarly', 'cycleOptions', 'downloads', 'orderAnswers', 'modulePanel', 'showServerDetails', 'setupDelayed', 'upgradeOffered'));
     }
 
     /**
