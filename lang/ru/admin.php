@@ -2692,6 +2692,7 @@ return [
         'invoice_number_format' => 'Схема нумерации счетов',
         'proforma_enabled' => 'Включить схему проформ',
         'proforma_number_format' => 'Схема нумерации проформ',
+        'proforma_number_last' => 'Последняя проформа',
         'hide_paid_proformas' => 'Скрывать оплаченные проформы',
         'invoice_number_last' => 'Последний счёт',
         'invoice_number_preview' => 'Предпросмотр',

@@ -24,7 +24,11 @@
         <span class="pn-card-title">{{ __('client.invoices.invoice_details') }}</span>
         <div style="font-size:13px;color:var(--muted)">
             {{ __('client.invoices.due') }}: <strong>{{ $invoice->due_date?->format(date_fmt()) ?? "N/A" }}</strong>
-            @if($invoice->payment_method) &nbsp;·&nbsp; {{ __('client.invoices.paid_via') }} {{ payment_method_label((string) $invoice->payment_method) }} @endif
+            @if(strtolower((string) $invoice->status) === 'paid')
+            &nbsp;·&nbsp; {{ __('client.invoices.paid_via') }} {{ payment_method_label($invoice->displayPaymentMethod()) }}
+            @else
+            &nbsp;·&nbsp; {{ __('client.invoices.payment_method') }}: {{ payment_method_label($invoice->displayPaymentMethod()) }}
+            @endif
         </div>
     </div>
     <div class="pn-card-body-flush">

@@ -2781,6 +2781,7 @@ return [
         'invoice_number_format' => 'Rechnungsnummerierungsschema',
         'proforma_enabled' => 'Aktivieren Sie das Proforma-System',
         'proforma_number_format' => 'Proforma-Nummerierungsschema',
+        'proforma_number_last' => 'Letzte Proforma',
         'hide_paid_proformas' => 'Bezahlte Proformas ausblenden',
         'invoice_number_last' => 'Letzte Rechnung',
         'invoice_number_preview' => 'Vorschau',

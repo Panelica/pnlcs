@@ -2700,6 +2700,7 @@ return [
         'invoice_number_format' => 'Схема нумерації рахунків',
         'proforma_enabled' => 'Увімкнути схему проформ',
         'proforma_number_format' => 'Схема нумерації проформ',
+        'proforma_number_last' => 'Остання проформа',
         'hide_paid_proformas' => 'Приховувати оплачені проформи',
         'invoice_number_last' => 'Останній рахунок',
         'invoice_number_preview' => 'Попередній перегляд',

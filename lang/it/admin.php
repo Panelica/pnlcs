@@ -2744,6 +2744,7 @@ return [
         'invoice_number_format' => 'Schema di numerazione delle fatture',
         'proforma_enabled' => 'Abilita lo schema proforma',
         'proforma_number_format' => 'Schema di numerazione delle proforma',
+        'proforma_number_last' => 'Ultima proforma',
         'hide_paid_proformas' => 'Nascondi le proforma pagate',
         'invoice_number_last' => 'Ultima fattura',
         'invoice_number_preview' => 'Anteprima',

@@ -2730,6 +2730,7 @@ return [
     'services.delete_hint' => 'Hizmeti müşteriden ayır ve kalıcı olarak sil',
     'settings' => [
         'proforma_number_format' => 'Proforma numaralandırma düzeni',
+        'proforma_number_last' => 'Son proforma',
         'proforma_enabled' => 'Proforma düzenini etkinleştir',
         'appearance' => 'Görünüm',
         'appearance_settings' => 'Görünüm Ayarları',
