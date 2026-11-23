@@ -2,6 +2,215 @@
 
 All notable changes to PNLCS are documented here. Newest first.
 
+## 1.31.0 — 2026-11-23
+
+A stable release, offered to every installation. Twelve reviewed changes, and
+the four that matter most are about documents and what they are worth later: a
+VAT invoice now keeps the seller that issued it instead of being rewritten by
+every later change to the company details, and it survives the deletion of the
+customer's account; an extra added to a running service is charged for the days
+that service is already paid for, instead of a full cycle whatever is left of
+it, and can be corrected, suspended or removed afterwards; availability is
+asked of the registry over RDAP, so a free .dev, .eu or .at is no longer
+offered as unavailable; and a nightly domain sync is recorded even on a night
+when the registry has nothing new to say.
+
+Thank you [@hedon77](https://github.com/hedon77) for seven (#473, #474, #479,
+#481, #482, #484, #485), [@ertugrulkeyvan](https://github.com/ertugrulkeyvan)
+for four (#475, #476, #477, #480) and
+[@murshed](https://github.com/murshed) for #478, and thank you
+[@Wolfcom](https://github.com/Wolfcom) for the report behind #480 (#472).
+
+Two migrations, both additive; see *Database changes*. Nothing here had time on
+the beta channel; it goes out as it was reviewed, through the same gates.
+
+### Added
+
+- **An invoice keeps the seller that issued it.** The buyer and the money were
+  already frozen when a document was raised; the seller block — company name
+  and legal name, address, tax office and tax id, phone, email, website, the
+  logo and the bank accounts printed under the totals — was still read live at
+  print time. Editing the company details therefore rewrote every invoice ever
+  issued, including ones already filed with a tax authority. All of it is now
+  copied onto the invoice when it is issued (a draft is stamped when it is
+  published, not when it was started), and the logo is copied as a file so
+  replacing the shop logo does not reach into the past. Invoices issued before
+  this release keep printing from the live settings exactly as they do today.
+- **A document outlives the account.** Deleting a customer for good used to
+  take their invoices with them, because the foreign key cascaded. The
+  documents stay, with the buyer snapshot that is already on them; only the
+  link to the account is cleared.
+- **An extra on a running service is charged for the period that is left.**
+  Adding a yearly extra a month before renewal charged twelve months for one.
+  The first invoice now covers the remaining days of the paid period —
+  remaining days divided by the cycle's length, so a service prepaid for two
+  years buys two years of the extra — and the renewal that follows is the full
+  price on the service's own renewal date. The first invoice says what it
+  covered.
+- **An extra can be corrected before it is sold, and managed after.** An extra
+  added by an operator is a draft order first: the price and the notes can be
+  changed, and accepting it is what raises the invoice. On the service screen
+  an extra can be edited, suspended, resumed or deleted; an unpaid extra's
+  invoice line follows a price change, and one whose invoice has been paid is
+  cancelled rather than deleted, so the document keeps pointing at a row that
+  still exists. Ending a service ends its extras the way it ended — terminated
+  or cancelled.
+- **Availability is asked of the registry over RDAP** (RFC 9082/9083) before
+  port-43 WHOIS, using the server IANA's bootstrap file names for the
+  extension. RDAP answers with a status code instead of free text, which
+  matters because several gTLD registries have switched WHOIS off and others
+  word a free name their own way. A WHOIS answer PNLCS does not recognise is
+  now "not checked" instead of "taken", so a free name is never offered as
+  unavailable; and `.at`, `.be`, `.dk`, `.ie`, `.it`, `.lu`, `.ro`, `.se` and
+  `.sk` are in the WHOIS table for the registries that run no RDAP.
+- **Every country in the list has its dialling prefix.** The phone prefix
+  selector carried 66 of the 249 countries, so a customer from Bangladesh,
+  Nigeria or Saudi Arabia had nothing to pick. All 250 are there now, Kosovo
+  (XK) included — it was missing from the country list as well.
+- **A domain's next payment date can be edited** from the domain screen, the
+  way a service's can.
+- **`pnlcs:translate-invoice-cycles`**, run by hand once after updating, writes
+  the billing cycle in the language of the document on invoice lines that were
+  written before this release. It touches open invoices only — unpaid, overdue
+  and draft — and has a `--dry-run`.
+
+### Fixed
+
+- **A Plesk subscription owned by a reseller is no longer deleted as a
+  customer.** Terminating a service asked `DELETE /clients/{id}` with an owner
+  id taken from the subscription, without checking that the owner was a
+  customer. On a server where subscriptions belong to resellers, that deleted
+  the reseller and every other subscription under it. Linking now records an
+  owner only when it is a customer, both removal paths are guarded, and a
+  password change on a subscription with no customer behind it changes the FTP
+  password instead.
+- **A refused link leaves no service behind.** The service row was written
+  before the link was attempted, so a link Plesk refused left a service with no
+  account on the server — and the next attempt failed on the row rather than on
+  the server. The link now runs in a transaction and the form comes back with
+  what was typed.
+- **An unpaid invoice no longer tells the customer it was paid.** The customer's
+  invoice page printed "Paid via …" whenever a payment method was recorded, and
+  a generated proforma now always records one. A paid document says "Paid via",
+  every other one says "Payment method".
+- **A generated proforma records the payment method** the customer will pay
+  with, instead of leaving the field empty for the operator to guess at. What
+  gets collected is unaffected: automatic charging does not read that column.
+- **The invoice numbering page previews the VAT series and the proforma series
+  separately.** Both boxes showed the proforma series, so an operator checking
+  the VAT format saw the wrong number.
+- **An invoice line names the billing cycle in the customer's language.** A
+  document translated everywhere else kept one English word in the middle of
+  each line.
+- **A nightly domain sync is recorded whether or not it changed anything.** The
+  03:00 run wrote only the fields the registry disagreed with, so the domain
+  screen said "Last sync: none" for every domain on a quiet night. Every check
+  of a registrar that can sync is now stamped: `ok` when it answered, `error`
+  when it threw, failed, or had no credentials filled in. A dry run writes
+  nothing, and a manual registrar is left unstamped because there is no
+  registry behind it.
+- **The account-linking and Panelica licence texts say what the code does.**
+- **The seller's NIP in a KSeF submission is the one the session authenticates
+  with**, not a tax id read from the general settings. The number in `Podmiot1`
+  identifies the issuer of the document, and one written in another form — with
+  the `PL` prefix, with dashes, or simply different — would have made every
+  submission identify a taxpayer the session is not.
+- **A document whose customer was deleted for good can still be worked on.**
+  Touching one of its lines recalculated the totals, which read the customer's
+  tax exemption and died on an account that is no longer there.
+- **The add-on errors have texts.** Five of them asked for keys that did not
+  exist, so an operator who tried to suspend an unpaid extra, resume an active
+  one, edit an ended one or delete one with a paid invoice was shown the raw
+  key. Turkish and German were filled in for all 43 of the new texts.
+- **The delete question on the add-on list uses the panel's own dialog**, not
+  the browser's, like every other question in the admin area.
+- **A missing value shows a dash.** Fourteen places wrote `&mdash;` inside an
+  escaped echo, so the KSeF list, the invoice screen, four config tables and
+  the order screen printed the five characters `&mdash;` on every row with an
+  empty value.
+
+### Database changes
+
+Two migrations. Both are additive, both have a working `down()`, and both are
+safe to run twice.
+
+- `invoices` gains fifteen nullable `seller_*` columns and
+  `seller_snapshot_at`. Nothing is backfilled: an invoice issued before this
+  release has no snapshot and keeps printing from the live settings, the same
+  fallback the buyer snapshot has always used.
+- `invoices.client_id` and `invoice_items.client_id` become nullable, and their
+  foreign keys change from "delete the rows with the customer" to "clear the
+  link". This is the part that takes time, and it is the foreign key rather
+  than the column: measured on MySQL 8.4, with 200,000 invoice rows, adding the
+  fifteen columns took 0.03 s, widening `client_id` 1.3 s and putting the
+  foreign key back 14 s; with 600,000 rows, 0.02 s, 3.1 s and 40 s. Each table
+  is done in turn and `invoice_items` carries several rows per invoice, so
+  budget for it accordingly. The updater is in maintenance mode while it runs.
+- `service_addons` gains `prorated`, `proration_days`, `proration_cycle_days`
+  and `first_invoice_date`, each behind a check for the column, all nullable or
+  defaulted.
+
+### For theme and module authors
+
+- `App\Models\Invoice::sellerDetails()` is the seller block as the renderer
+  wants it, `::sellerBankAccounts()` the accounts printed on that document,
+  `::sellerLogoFile()` the logo file it points at, and `::seller($field)` one
+  field — each answering from the snapshot, or from the live settings for an
+  invoice issued before snapshots existed. `::sellerSnapshotFrom($company,
+  $accounts)` builds what is frozen. A custom invoice template that read the
+  settings itself should read these instead, or it will keep rewriting the
+  past.
+- `App\Models\Invoice::displayPaymentMethod()` is the method to show for a
+  document, falling back to the customer's own, and
+  `App\Models\Client::billingPaymentMethod()` is that fallback.
+- `App\Services\RdapAvailability` asks a registry over RDAP: `check($domain)`
+  answers `['available' => bool, 'checked' => true]` or `null` for "not
+  answered", and `serverFor($domain)` gives the base URL from IANA's bootstrap
+  file. `App\Services\WhoisLookup::read($domain, $response)` reads a port-43
+  answer, and the socket call now sits alone in a `protected ask()` a test can
+  replace.
+- `App\Services\DomainAvailability::WHOIS_SERVERS` has changed: the entries for
+  TLDs whose registries no longer run port-43 WHOIS are gone — four of them
+  pointed at hosts that no longer resolve at all — and nine country registries
+  are new. A module reading the map directly sees a different list; RDAP
+  answers for what left it.
+- `App\Services\AddonService::purchaseForService($service, $addon)` no longer
+  takes a cycle: an extra follows the cycle of the service it hangs off.
+  `::draftForService()`, `::accept()`, `::quoteFor()`, `::updateDetails()`,
+  `::suspend()`, `::resume()` and `::delete()` are new.
+  `::lineItem($addon, ?float $amount, bool $firstPeriod)` and
+  `::describe($addon, ?string $name, ?string $suffix)` gained optional
+  parameters and behave as before without them.
+- `App\Models\ServiceAddon` has two new statuses, `draft` and `suspended`, and
+  with them `isDraft()`, `isPending()`, `isSuspended()`, `isEnded()`,
+  `isProrated()`, `firstPeriodAmount()`, `invoiceLines()`, `hasInvoiceLines()`,
+  `hasBlockingInvoiceLines()` and an `order()` relation. Anything that lists
+  extras by status should know the two new ones.
+  `App\Models\Order::addons()` is the other side of that relation.
+- `App\Services\BillingCycleHelper::rewind($from, $cycle)` is the inverse of
+  `advance()`: the start of the paid period that ends at a date.
+- `cycle_label($cycle, ?string $locale = null)` takes the language to write the
+  cycle in; without it, nothing changes.
+- `App\Support\Countries::PHONE_PREFIXES` covers all 250 codes, and `XK` is in
+  `::all()`.
+- A registrar module that implements `SyncsDomainData` now has every nightly
+  check recorded on the domain (`last_sync_at`, `last_sync_status`), including
+  the ones it answers with no changes and the ones it refuses.
+
+### Views a theme may override that changed
+
+- `client/invoices/show` — the payment-method line, which now says whether the
+  document was paid.
+- `client/services/show` — the list of extras, the first-payment line on an
+  extra that will be prorated, and the extras offered only while the service is
+  active.
+
+### For anyone running the test suite
+
+- A new test refuses an HTML entity inside a `{{ }}` echo, which Blade escapes
+  and the page then prints as text. An entity is still fine in plain HTML and
+  inside `{!! !!}`.
+
 ## 1.30.0 — 2026-11-18
 
 A stable release, offered to every installation. Thirteen reviewed changes:
