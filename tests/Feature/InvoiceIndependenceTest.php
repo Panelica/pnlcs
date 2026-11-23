@@ -115,3 +115,29 @@ it('keeps the document when the client is hard-deleted', function () {
         ->and(InvoiceItem::whereKey($itemId)->value('client_id'))->toBeNull()
         ->and((float) InvoiceItem::whereKey($itemId)->value('amount'))->toBe(100.0);
 });
+
+/*
+ * A document whose customer is gone still has to be workable: the totals are
+ * recalculated whenever a line is touched (an addon removed, a line edited),
+ * and that read the customer's tax exemption through a plain ->client->, which
+ * is fatal once the row can be NULL.
+ */
+it('recalculates an invoice whose client was hard-deleted', function () {
+    $client = Client::factory()->create();
+
+    $invoice = app(InvoiceService::class)->createInvoice($client, [
+        ['description' => 'Hosting', 'amount' => 100, 'taxed' => true],
+    ]);
+
+    // A stored rate of zero is what sends recalculateTotals to the customer.
+    $invoice->update(['tax_rate' => 0]);
+
+    $client->forceDelete();
+    $invoice->refresh();
+
+    $recalculated = app(InvoiceService::class)->recalculateTotals($invoice);
+
+    expect($recalculated->client_id)->toBeNull()
+        ->and((float) $recalculated->subtotal)->toBe(100.0)
+        ->and((float) $recalculated->total)->toBe(100.0);
+});

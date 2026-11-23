@@ -319,7 +319,10 @@ class InvoiceService
 
             $taxRate = (float) $invoice->tax_rate;
 
-            if ($taxRate === 0.0 && ! $invoice->client->tax_exempt) {
+            // client?-> : a hard-deleted customer leaves the document behind
+            // with a NULL client_id (2026_11_22_000001), and the totals are still
+            // recalculated whenever one of its lines is touched.
+            if ($taxRate === 0.0 && ! $invoice->client?->tax_exempt) {
                 $taxRate = $this->calculateTax($taxableAmount, $invoice->client_id)['tax_rate'];
             }
 
