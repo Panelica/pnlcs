@@ -159,7 +159,7 @@ $tabs = ['summary'=>__('admin.clients.tab_summary'),'services'=>__('admin.client
                     <tr><td style="padding:5px 0;color:#777;">{{ __('admin.clients.country') }}</td><td style="padding:5px 0;">{{ $client->country ?: '-' }}</td></tr>
                     <tr><td style="padding:5px 0;color:#777;">{{ __('admin.clients.registered') }}</td><td style="padding:5px 0;">{{ $client->created_at->format(date_fmt()) }}</td></tr>
                 </table>
-                <button type="button" class="btn btn-default btn-sm" style="margin-top:10px;" data-billing-copy data-copy-text="{{ $copyText }}">{{ __('admin.clients.billing_copy') }}</button>
+                <button type="button" class="btn btn-default btn-sm" style="margin-top:10px;" data-billing-copy data-copy-text="{{ $copyText }}" title="{{ __('admin.clients.billing_copy') }}" aria-label="{{ __('admin.clients.billing_copy') }}"><i class="far fa-copy" aria-hidden="true"></i> {{ __('common.actions.copy') }}</button>
                 <a href="{{ route('admin.clients.edit', $client) }}" class="btn btn-default btn-sm" style="margin-top:6px;">{{ __('admin.clients.edit_client') }}</a>
             </div>
         </div>
@@ -722,9 +722,9 @@ $tabs = ['summary'=>__('admin.clients.tab_summary'),'services'=>__('admin.client
 (function () {
     function done(button) {
         if (button.hasAttribute('data-billing-copy')) {
-            var was = button.textContent;
-            button.textContent = @json(__('admin.clients.billing_copied'));
-            setTimeout(function () { button.textContent = was; }, 1500);
+            var was = button.innerHTML;
+            button.innerHTML = '<i class="fas fa-check" aria-hidden="true"></i> ' + @json(__('admin.clients.billing_copied'));
+            setTimeout(function () { button.innerHTML = was; }, 1500);
             return;
         }
 
