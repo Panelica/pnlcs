@@ -110,6 +110,7 @@ $tabs = ['summary'=>__('admin.clients.tab_summary'),'services'=>__('admin.client
             $copyLines[] = $client->full_phone;
             $copyLines[] = $client->email;
             $copyText = implode("\n", array_filter($copyLines));
+            $addressCopy = trim(($client->address1 ?: '').' '.($client->city ?: '').($client->state ? ', '.$client->state : '').' '.($client->postcode ?: '').' '.($client->country ?: ''));
         @endphp
         <div class="panel">
             <div class="panel-heading panel-primary">{{ __('admin.clients.client_information') }}</div>
@@ -120,17 +121,17 @@ $tabs = ['summary'=>__('admin.clients.tab_summary'),'services'=>__('admin.client
                     </div>
                 @endif
                 <table style="width:100%;font-size:13px;border-collapse:collapse;">
-                    <tr><td style="padding:5px 0;color:#777;width:40%;">{{ __('admin.clients.name') }}</td><td style="padding:5px 0;font-weight:600;">{{ $client->full_name }}</td></tr>
+                    <tr><td style="padding:5px 0;color:#777;width:40%;">{{ __('admin.clients.name') }}</td><td style="padding:5px 0;font-weight:600;">{{ $client->full_name }}<x-copy-value :value="$client->full_name" /></td></tr>
                     <tr><td style="padding:5px 0;color:#777;">{{ __('admin.clients.billing_type') }}</td><td style="padding:5px 0;">{{ $identityType ? __('admin.clients.billing_type_'.($identityType === 'company' ? 'company' : 'individual')) : '-' }}</td></tr>
-                    <tr><td style="padding:5px 0;color:#777;">{{ __('admin.clients.company') }}</td><td style="padding:5px 0;">{{ $client->company_name ?: '-' }}</td></tr>
+                    <tr><td style="padding:5px 0;color:#777;">{{ __('admin.clients.company') }}</td><td style="padding:5px 0;">{{ $client->company_name ?: '-' }}<x-copy-value :value="$client->company_name" /></td></tr>
                     @if($identityType === 'company')
-                    <tr><td style="padding:5px 0;color:#777;">{{ __('admin.clients.billing_tax_office') }}</td><td style="padding:5px 0;">{{ $client->tax_office ?: '-' }}</td></tr>
+                    <tr><td style="padding:5px 0;color:#777;">{{ __('admin.clients.billing_tax_office') }}</td><td style="padding:5px 0;">{{ $client->tax_office ?: '-' }}<x-copy-value :value="$client->tax_office" /></td></tr>
                     @endif
-                    <tr><td style="padding:5px 0;color:#777;">{{ __('common.form.tax_id') }}</td><td style="padding:5px 0;">{{ $client->tax_id ?: '-' }}</td></tr>
+                    <tr><td style="padding:5px 0;color:#777;">{{ __('common.form.tax_id') }}</td><td style="padding:5px 0;">{{ $client->tax_id ?: '-' }}<x-copy-value :value="$client->tax_id" /></td></tr>
                     @if($identityType === 'individual')
                     <tr><td style="padding:5px 0;color:#777;">{{ __('admin.clients.billing_national_id') }}</td><td style="padding:5px 0;">{{ $client->national_id ?: '-' }}</td></tr>
                     @endif
-                    <tr><td style="padding:5px 0;color:#777;">{{ __('admin.clients.email') }}</td><td style="padding:5px 0;"><a href="mailto:{{ $client->email }}" style="color:#337ab7;">{{ $client->email }}</a></td></tr>
+                    <tr><td style="padding:5px 0;color:#777;">{{ __('admin.clients.email') }}</td><td style="padding:5px 0;"><a href="mailto:{{ $client->email }}" style="color:#337ab7;">{{ $client->email }}</a><x-copy-value :value="$client->email" /></td></tr>
                     {{-- A block, not @php(...): an inline @php before a later @endphp is read as
                          the start of that block and swallows the rows in between. --}}
                     @php
@@ -152,16 +153,13 @@ $tabs = ['summary'=>__('admin.clients.tab_summary'),'services'=>__('admin.client
                         @endif
                     </td></tr>
                     @endif
-                    <tr><td style="padding:5px 0;color:#777;">{{ __('common.form.billing_email') }}</td><td style="padding:5px 0;">@if($client->billing_email)<a href="mailto:{{ $client->billing_email }}" style="color:#337ab7;">{{ $client->billing_email }}</a>@else - @endif</td></tr>
-                    <tr><td style="padding:5px 0;color:#777;">{{ __('admin.clients.phone') }}</td><td style="padding:5px 0;">{{ $client->full_phone ?: '-' }}</td></tr>
-                    <tr><td style="padding:5px 0;color:#777;">{{ __('admin.clients.address') }}</td><td style="padding:5px 0;">{{ $client->address1 ?: '-' }}@if($client->city)<br>{{ $client->city }}{{ $client->state ? ', '.$client->state : '' }} {{ $client->postcode }}@endif</td></tr>
+                    <tr><td style="padding:5px 0;color:#777;">{{ __('common.form.billing_email') }}</td><td style="padding:5px 0;">@if($client->billing_email)<a href="mailto:{{ $client->billing_email }}" style="color:#337ab7;">{{ $client->billing_email }}</a><x-copy-value :value="$client->billing_email" />@else - @endif</td></tr>
+                    <tr><td style="padding:5px 0;color:#777;">{{ __('admin.clients.phone') }}</td><td style="padding:5px 0;">{{ $client->full_phone ?: '-' }}<x-copy-value :value="$client->full_phone" /></td></tr>
+                    <tr><td style="padding:5px 0;color:#777;">{{ __('admin.clients.address') }}</td><td style="padding:5px 0;">{{ $client->address1 ?: '-' }}@if($client->city)<br>{{ $client->city }}{{ $client->state ? ', '.$client->state : '' }} {{ $client->postcode }}@endif<x-copy-value :value="$addressCopy" /></td></tr>
                     <tr><td style="padding:5px 0;color:#777;">{{ __('admin.clients.country') }}</td><td style="padding:5px 0;">{{ $client->country ?: '-' }}</td></tr>
                     <tr><td style="padding:5px 0;color:#777;">{{ __('admin.clients.registered') }}</td><td style="padding:5px 0;">{{ $client->created_at->format(date_fmt()) }}</td></tr>
                 </table>
-                <textarea id="billing-identity-copy" readonly style="width:100%;margin-top:10px;font-family:monospace;font-size:12px;border:1px solid #ddd;border-radius:4px;padding:8px;resize:vertical;" rows="5">{{ $copyText }}</textarea>
-                {{-- If the copy button is refused clipboard access the text is
-                     selectable above anyway; the button is a convenience. --}}
-                <button type="button" class="btn btn-default btn-sm" style="margin-top:6px;" data-billing-copy>{{ __('admin.clients.billing_copy') }}</button>
+                <button type="button" class="btn btn-default btn-sm" style="margin-top:10px;" data-billing-copy data-copy-text="{{ $copyText }}">{{ __('admin.clients.billing_copy') }}</button>
                 <a href="{{ route('admin.clients.edit', $client) }}" class="btn btn-default btn-sm" style="margin-top:6px;">{{ __('admin.clients.edit_client') }}</a>
             </div>
         </div>
@@ -721,26 +719,52 @@ $tabs = ['summary'=>__('admin.clients.tab_summary'),'services'=>__('admin.client
 
 @push('scripts')
 <script>
-document.querySelectorAll('[data-billing-copy]').forEach(function (button) {
-    button.addEventListener('click', function () {
-        var area = document.getElementById('billing-identity-copy');
-        if (!area) { return; }
-        area.select();
-        var done = function () {
+(function () {
+    function done(button) {
+        if (button.hasAttribute('data-billing-copy')) {
             var was = button.textContent;
             button.textContent = @json(__('admin.clients.billing_copied'));
             setTimeout(function () { button.textContent = was; }, 1500);
-        };
-        // The clipboard API first, execCommand as the fallback: the browser
-        // the panel is opened in may not have granted clipboard access.
-        if (navigator.clipboard && window.isSecureContext) {
-            navigator.clipboard.writeText(area.value).then(done, function () { document.execCommand('copy'); done(); });
-        } else {
-            document.execCommand('copy');
-            done();
+            return;
         }
+
+        var wasIcon = button.innerHTML;
+        button.innerHTML = '<i class="fas fa-check"></i>';
+        setTimeout(function () { button.innerHTML = wasIcon; }, 1500);
+    }
+
+    function copy(text, button) {
+        if (navigator.clipboard && window.isSecureContext) {
+            navigator.clipboard.writeText(text).then(function () { done(button); }, function () { fallback(text, button); });
+            return;
+        }
+
+        fallback(text, button);
+    }
+
+    function fallback(text, button) {
+        // A temporary textarea works without the Clipboard API and without
+        // leaving anything selectable on the page.
+        var area = document.createElement('textarea');
+        area.value = text;
+        area.style.position = 'fixed';
+        area.style.opacity = '0';
+        document.body.appendChild(area);
+        area.select();
+        try { document.execCommand('copy'); } catch (e) {}
+        area.remove();
+        done(button);
+    }
+
+    document.querySelectorAll('[data-copy-value], [data-billing-copy]').forEach(function (button) {
+        button.addEventListener('click', function () {
+            var text = button.hasAttribute('data-copy-value')
+                ? button.getAttribute('data-copy-value')
+                : (button.getAttribute('data-copy-text') || '');
+            copy(text, button);
+        });
     });
-});
+})();
 </script>
 @endpush
 @endsection
