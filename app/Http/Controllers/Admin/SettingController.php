@@ -25,10 +25,14 @@ class SettingController extends Controller
         $invoiceService = app(\App\Services\InvoiceService::class);
         $proformaFormat = trim((string) ($settings['ProformaNumberFormat'] ?? 'PRO-{year}/{month}-{num}'));
         $proformaFormat = $proformaFormat !== '' ? $proformaFormat : 'PRO-{year}/{month}-{num}';
-        $proformaLast = \App\Models\Invoice::where('invoice_num', 'like', 'PRO-%')->orderBy('id', 'desc')->value('invoice_num');
-        $proformaSeq = 1 + (int) \App\Models\Invoice::where('invoice_num', 'like', 'PRO-%')
-            ->selectRaw('MAX(CAST(REGEXP_REPLACE(invoice_num, "^.*[^0-9]", "") AS UNSIGNED)) as seq')
-            ->value('seq');
+
+        // The two schemes are separate series. Reading the last row without a
+        // type made the VAT box name the latest proforma, and asking for the
+        // default type (proforma when the scheme is on) made both previews
+        // show the same number.
+        $vatLast = \App\Models\Invoice::where('type', 'vat')->where('invoice_num', '!=', '')->orderBy('id', 'desc')->value('invoice_num');
+        $proformaLast = \App\Models\Invoice::where('type', 'proforma')->where('invoice_num', '!=', '')->orderBy('id', 'desc')->value('invoice_num');
+        $proformaSeq = $invoiceService->nextInvoiceSequence($proformaFormat, 'proforma');
 
         return view('admin.settings.general', [
             'settings' => $settings,
@@ -37,9 +41,9 @@ class SettingController extends Controller
             'languages' => Language::active()->orderBy('sort_order')->get(),
             'countries' => \App\Support\Countries::all(),
             'paymentMethods' => $this->paymentMethods(),
-            'invoicePreview' => $invoiceService->generateInvoiceNumber(),
-            'invoiceNextSeq' => $invoiceService->nextInvoiceSequence(),
-            'invoiceLast' => \App\Models\Invoice::where('invoice_num', '!=', '')->orderBy('id', 'desc')->value('invoice_num'),
+            'invoicePreview' => $invoiceService->generateInvoiceNumber('vat'),
+            'invoiceNextSeq' => $invoiceService->nextInvoiceSequence(null, 'vat'),
+            'invoiceLast' => $vatLast,
             'proformaEnabled' => ($settings['ProformaEnabled'] ?? '0') === '1',
             'proformaFormat' => $proformaFormat,
             'proformaPreview' => $invoiceService->renderInvoiceNumber($proformaFormat, $proformaSeq),
