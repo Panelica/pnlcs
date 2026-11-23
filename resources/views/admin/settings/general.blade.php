@@ -584,7 +584,7 @@
                     <label class="form-label" for="proforma-number-format">{{ __('admin.settings.proforma_number_format') }}</label>
                     <input type="text" id="proforma-number-format" name="ProformaNumberFormat" value="{{ $proformaFormat }}" class="form-control" placeholder="PRO-{year}/{month}-{num}">
                     <div style="font-size:13px;color:#555;margin-top:6px;">
-                        <span>{{ __('admin.settings.invoice_number_last') }}:</span>
+                        <span>{{ __('admin.settings.proforma_number_last') }}:</span>
                         <code style="background:#f5f5f5;padding:1px 5px;border-radius:3px;">{{ $proformaLast ?? '—' }}</code>
                         <span style="margin-left:14px;">{{ __('admin.settings.invoice_number_preview') }}:</span>
                         <code style="background:#f5f5f5;padding:1px 5px;border-radius:3px;font-weight:600;">{{ $proformaPreview }}</code>
