@@ -129,7 +129,7 @@ $tabs = ['summary'=>__('admin.clients.tab_summary'),'services'=>__('admin.client
                     @endif
                     <tr><td style="padding:5px 0;color:#777;">{{ __('common.form.tax_id') }}</td><td style="padding:5px 0;"><div style="display:flex;align-items:center;justify-content:space-between;gap:8px;"><span>{{ $client->tax_id ?: '-' }}</span><x-copy-value :value="$client->tax_id" /></div></td></tr>
                     @if($identityType === 'individual')
-                    <tr><td style="padding:5px 0;color:#777;">{{ __('admin.clients.billing_national_id') }}</td><td style="padding:5px 0;">{{ $client->national_id ?: '-' }}</td></tr>
+                    <tr><td style="padding:5px 0;color:#777;">{{ __('admin.clients.billing_national_id') }}</td><td style="padding:5px 0;"><div style="display:flex;align-items:center;justify-content:space-between;gap:8px;"><span>{{ $client->national_id ?: '-' }}</span><x-copy-value :value="$client->national_id" /></div></td></tr>
                     @endif
                     <tr><td style="padding:5px 0;color:#777;">{{ __('admin.clients.email') }}</td><td style="padding:5px 0;"><div style="display:flex;align-items:center;justify-content:space-between;gap:8px;"><span><a href="mailto:{{ $client->email }}" style="color:#337ab7;">{{ $client->email }}</a></span><x-copy-value :value="$client->email" /></div></td></tr>
                     {{-- A block, not @php(...): an inline @php before a later @endphp is read as

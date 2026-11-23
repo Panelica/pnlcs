@@ -30,3 +30,22 @@ it('copies the complete billing block from the button and useful fields from ico
         ->toContain('data-copy-text=')
         ->and(substr_count($html, 'data-copy-value='))->toBe(8);
 });
+
+it('offers copy for PESEL on an individual client', function () {
+    $client = Client::factory()->create([
+        'client_type' => 'individual',
+        'national_id' => '90010112345',
+        'billing_email' => 'billing@example.test',
+        'address1' => 'ul. Lipowa 12',
+        'city' => 'Śliwiec',
+        'postcode' => '55-093',
+        'country' => 'PL',
+    ]);
+
+    $html = $this->actingAs(Admin::factory()->create(), 'admin')
+        ->get(route('admin.clients.show', $client))
+        ->assertOk()
+        ->getContent();
+
+    expect($html)->toContain('data-copy-value="90010112345"');
+});
