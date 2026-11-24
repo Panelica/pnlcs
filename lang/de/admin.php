@@ -2903,7 +2903,7 @@ return [
     'settings.default_nameservers' => 'Standard-Nameserver',
     'settings.default_nameservers_hint' => 'Wird bei der Registrierung oder Übertragung von Domains verwendet, wenn keine anderen Nameserver bereitgestellt werden.',
     'settings.domain_sync_rdap_max' => 'Max. RDAP-Abfragen pro Synchronisierungslauf',
-    'settings.domain_sync_rdap_max_hint' => 'Fehlt einer Domain das Registrierungsdatum, ergänzt es die tägliche Synchronisierung aus RDAP. Dies begrenzt die Abfragen pro Lauf; 0 schaltet es ab. Standard 100.',
+    'settings.domain_sync_rdap_max_hint' => 'Fehlt einer Domain das Registrierungsdatum, ergänzt es die Synchronisierung aus RDAP. Dies begrenzt die Abfragen pro Stapel, und ein Stapel läuft zwischen 03:00 und 06:00 alle fünfzehn Minuten; 0 schaltet es ab. Standard 100.',
     'settings.domain_sync_batch' => 'Domains pro Synchronisierungslauf',
     'settings.domain_sync_batch_hint' => 'Wie viele Domains ein Stapel prüft; der Rest wartet auf den nächsten 15-Minuten-Lauf. Standard 100.',
     'settings.domain_sync_delay_ms' => 'Verzögerung zwischen Domains (ms)',

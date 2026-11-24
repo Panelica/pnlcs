@@ -2903,7 +2903,7 @@ return [
     'settings.default_nameservers' => 'Domyślne serwery DNS',
     'settings.default_nameservers_hint' => 'Używane przy rejestracji i transferze domen, gdy nie podano innych serwerów DNS.',
     'settings.domain_sync_rdap_max' => 'Maks. zapytań RDAP na synchronizację',
-    'settings.domain_sync_rdap_max_hint' => 'Gdy domena nie ma daty rejestracji, codzienna synchronizacja uzupełnia ją z RDAP. Limit zapytań w jednym uruchomieniu; 0 wyłącza. Domyślnie 100.',
+    'settings.domain_sync_rdap_max_hint' => 'Gdy domena nie ma daty rejestracji, synchronizacja uzupełnia ją z RDAP. Limit zapytań w jednej partii, a partia uruchamia się co piętnaście minut między 03:00 a 06:00; 0 wyłącza. Domyślnie 100.',
     'settings.domain_sync_batch' => 'Domeny na przebieg synchronizacji',
     'settings.domain_sync_batch_hint' => 'Ile domen sprawdza jedna partia; reszta czeka na kolejny przebieg co 15 minut. Domyślnie 100.',
     'settings.domain_sync_delay_ms' => 'Opóźnienie między domenami (ms)',
