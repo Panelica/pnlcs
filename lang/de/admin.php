@@ -2904,6 +2904,10 @@ return [
     'settings.default_nameservers_hint' => 'Wird bei der Registrierung oder Übertragung von Domains verwendet, wenn keine anderen Nameserver bereitgestellt werden.',
     'settings.domain_sync_rdap_max' => 'Max. RDAP-Abfragen pro Synchronisierungslauf',
     'settings.domain_sync_rdap_max_hint' => 'Fehlt einer Domain das Registrierungsdatum, ergänzt es die tägliche Synchronisierung aus RDAP. Dies begrenzt die Abfragen pro Lauf; 0 schaltet es ab. Standard 100.',
+    'settings.domain_sync_batch' => 'Domains pro Synchronisierungslauf',
+    'settings.domain_sync_batch_hint' => 'Wie viele Domains ein Stapel prüft; der Rest wartet auf den nächsten 15-Minuten-Lauf. Standard 100.',
+    'settings.domain_sync_delay_ms' => 'Verzögerung zwischen Domains (ms)',
+    'settings.domain_sync_delay_ms_hint' => 'Pause nach jeder Registrar-Abfrage in einem Stapel. Standard 500 ms.',
     'settings.themes' => 'Themen',
     'settings.white_label' => 'Eigenmarke',
     'sidebar' => [

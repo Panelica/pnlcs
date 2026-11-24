@@ -2878,6 +2878,10 @@ return [
     'settings.default_nameservers_hint' => 'Başka ad sunucusu sağlanmadığında alan adları kaydedilirken veya aktarılırken kullanılır.',
     'settings.domain_sync_rdap_max' => 'Eşitleme çalışması başına en fazla RDAP sorgusu',
     'settings.domain_sync_rdap_max_hint' => 'Bir alan adının kayıt tarihi yoksa günlük eşitleme onu RDAP\'tan doldurur. Bu, tek çalışmadaki sorguları sınırlar; 0 kapatır. Varsayılan 100.',
+    'settings.domain_sync_batch' => 'Eşitleme çalışması başına alan adı',
+    'settings.domain_sync_batch_hint' => 'Bir partide kaç alan adı denetlenir; geri kalanı 15 dakikalık sonraki çalışmayı bekler. Varsayılan 100.',
+    'settings.domain_sync_delay_ms' => 'Alan adları arası gecikme (ms)',
+    'settings.domain_sync_delay_ms_hint' => 'Parti içinde her kayıt operatörü çağrısından sonra bekleme. Varsayılan 500 ms.',
     'settings.themes' => 'Temalar',
     'settings.white_label' => 'Beyaz Etiket',
     'sidebar' => [

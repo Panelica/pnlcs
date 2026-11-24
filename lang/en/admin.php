@@ -2904,6 +2904,10 @@ return [
     'settings.default_nameservers_hint' => 'Used when registering or transferring domains when no other nameservers are supplied.',
     'settings.domain_sync_rdap_max' => 'Max RDAP lookups per sync run',
     'settings.domain_sync_rdap_max_hint' => 'When a domain has no registration date, the daily sync fills it from RDAP. This caps the lookups in one run; 0 turns it off. Default 100.',
+    'settings.domain_sync_batch' => 'Domains per sync run',
+    'settings.domain_sync_batch_hint' => 'How many domains one batch checks; the rest wait for the next 15-minute run. Default 100.',
+    'settings.domain_sync_delay_ms' => 'Delay between domains (ms)',
+    'settings.domain_sync_delay_ms_hint' => 'Pause after each registrar call inside a batch. Default 500 ms.',
     'settings.themes' => 'Themes',
     'settings.white_label' => 'White-Label',
     'sidebar' => [
