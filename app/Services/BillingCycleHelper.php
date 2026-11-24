@@ -142,6 +142,18 @@ class BillingCycleHelper
         };
     }
 
+    /** The last day covered by a period that starts at $start.
+     *
+     * advance() returns the next due date, which is the first day *not*
+     * covered by the invoice. Customers read "2026/12/01 - 2027/01/01" as a
+     * period that includes New Year's Day, so invoice descriptions use the
+     * day before the next due date instead. Billing dates are unchanged.
+     */
+    public static function periodEnd(Carbon $start, string $cycle): Carbon
+    {
+        return self::advance($start, $cycle)->subDay();
+    }
+
     /** The start of a paid period ending at $from, one cycle earlier.
      *
      * The inverse of advance(), used to tell an addon bought at the start of a

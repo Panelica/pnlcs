@@ -738,13 +738,12 @@ class InvoiceGenerationService
                 : Carbon::parse($service->next_due_date);
 
             // The period the invoice pays for, so the customer can see exactly
-            // what they are buying (2026/08/15 - 2026/09/15). A renewal is paid
+            // what they are buying (2026/08/15 - 2026/09/14). A renewal is paid
             // in advance: it falls due on the day the paid-up period ends, and
             // paying it moves the due date on by one cycle
-            // (RenewOnPaymentListener). So the period starts on the due date,
-            // it does not end there - the months before it are the ones the
-            // previous invoice paid for.
-            $periodEnd = BillingCycleHelper::advance($dueDate, $billingCycle);
+            // (RenewOnPaymentListener). The next due date is therefore the
+            // first day *not* covered, so the displayed end is the day before.
+            $periodEnd = BillingCycleHelper::periodEnd($dueDate, $billingCycle);
             $period = $dueDate->format('Y/m/d').' - '.$periodEnd->format('Y/m/d');
 
             $items[] = [

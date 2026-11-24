@@ -54,7 +54,7 @@ it('writes a renewal cycle in the customer language', function () {
     expect($line->description)->toContain('(Miesięcznie)')
         ->not->toContain('(monthly)')
         ->not->toContain('(Monthly)')
-        ->and($line->description)->toContain('2026/11/18 - 2026/12/18');
+        ->and($line->description)->toContain('2026/11/18 - 2026/12/17');
 });
 
 it('writes an English cycle for an English invoice', function () {
