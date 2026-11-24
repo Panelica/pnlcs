@@ -95,5 +95,18 @@ rewrites them in the language of the document. It touches **open** invoices
 only — unpaid, overdue and draft — because a settled document's text is part
 of the record.
 
+Older domain lines use English wording too ("Domain Registration: ... — 1
+Year(s)"). Translate those labels and year counts with:
+
+```bash
+php artisan pnlcs:translate-domain-lines --dry-run   # report, change nothing
+php artisan pnlcs:translate-domain-lines             # open invoices only
+php artisan pnlcs:translate-domain-lines --include-paid
+```
+
+The command changes only the label and the year count. Domain, period, amounts
+and invoice numbers stay as they were. `--include-paid` is deliberately
+explicit because a paid invoice is a historical document.
+
 **Utilities → Automation Status** in the admin area shows when the scheduled
 jobs last ran.
