@@ -2,6 +2,152 @@
 
 All notable changes to PNLCS are documented here. Newest first.
 
+## 1.32.0 — 2026-11-24
+
+A stable release, offered to every installation. Five reviewed changes, all of
+them about work staff do by hand every day: the nightly domain sync no longer
+walks every domain in one burst at three in the morning, the registrar select
+on a domain offers only the registrars the installation has switched on, an
+operator decides what a recurring invoice line says about the period it pays
+for — and domain lines are written in the customer's language for the first
+time — the billing fields on a client page can be copied one at a time, and a
+client can be found by a domain rather than by remembering whose it is. No
+migration.
+
+Thank you [@hedon77](https://github.com/hedon77) for all five (#486, #487,
+#488, #489, #490).
+
+Nothing here had time on the beta channel; it goes out as it was reviewed,
+through the same gates.
+
+### Added
+
+- **The operator chooses what a recurring invoice line says about its period.**
+  A line could carry the billing cycle, the date range it pays for, or both,
+  and which one it carried depended on which generator wrote it: a renewal
+  wrote both, a new order's service line only the range, a domain line neither.
+  **Invoice line period description** (Settings → General) now decides — cycle,
+  date range, or both, which is the default — and one service builds every
+  line, so a renewal, an add-on, a domain registration and a domain renewal
+  cannot drift apart. Invoices already issued keep the text they were issued
+  with.
+- **Domain lines are written in the customer's language.** "Domain Renewal:
+  example.com (1y)" was English on every invoice, whatever language the
+  document was in. It is now a translated sentence with the term and, in the
+  modes that show it, the period: "Domain renewal: example.com (1 year) —
+  2026/11/24 - 2027/11/24".
+- **The billing fields on a client page can be copied one at a time.** Copying
+  a tax id, a PESEL, a phone number or an address meant selecting it by hand,
+  or taking the whole block out of a read-only textarea that sat on the page
+  for that one purpose. Each field now has a copy icon, the whole block is
+  still one button, and the textarea is gone. The verified-email line is
+  marked like the other active badges.
+- **A client can be found by a domain, and the client list shows which.** Staff
+  are given a domain, not a name: a ticket says the site is down, a question
+  names the invoice's domain. The search now also matches a hosting service's
+  domain and a domain billing record — on the admin screens and on the
+  `getclients` endpoint, which answers from the same search — and the list has
+  a column with the first two domains and a +N for the rest. Both relations are
+  loaded in one query, so the list does not fan out into a query per row.
+- **Two settings for the nightly domain sync**, on the general settings screen:
+  **Domains per sync run** (100 by default, 1–1000) and **Delay between domains**
+  (500 ms by default, 0–10000).
+
+### Changed
+
+- **The nightly domain sync runs in paced batches.** One run at 03:00 walked
+  every domain the installation had and called the registrar for each with
+  nothing in between, which is how an account gets rate-limited or blocked. It
+  now takes a batch, the longest-unchecked domains first, skips a domain
+  checked within the last 23 hours, pauses between registrar calls, and the
+  schedule runs it every fifteen minutes between 03:00 and 06:00 without
+  overlapping. At the defaults that is up to 1300 domains a night; an
+  installation with more raises the batch, and nothing is forgotten in the
+  meantime because the oldest check is always taken first. Only registrars that
+  can sync are batched, so manual domains no longer take a slot they can never
+  use, and `--domain` still ignores both the batch and the 23-hour window.
+  Moving a lapsed domain into grace, redemption or expired is **not** part of
+  the batch: it reads the TLD's periods and writes a status, it calls no
+  registrar, and it runs over every domain past its expiry on every run.
+- **A new order's service line reads like a renewal line.** It used to put the
+  period in the parenthesis and leave the cycle out; both now follow the
+  setting above, so the first invoice and every renewal after it are worded the
+  same way.
+- **The income-by-product report lists domain lines more finely.** That report
+  has no product to group a domain line by, so it groups by the line's text.
+  Lines written from now on carry the period, which means a domain appears
+  once per renewal rather than once overall. The revenue it reports is
+  unchanged; only the number of rows is.
+
+### Fixed
+
+- **The registrar select on a domain offers only the registrars the
+  installation has switched on.** It listed every module shipped, whether the
+  operator had given it credentials or not, so a domain could be moved to a
+  registrar with nothing behind it. The domain list's filter and the client's
+  add-domain form were already active-only; this was the last place that was
+  not. A domain whose registrar has since been switched off keeps that one
+  value, marked inactive, so opening the page and pressing Save does not move
+  the domain to whichever active registrar sorted first.
+- **A copy that did not happen no longer says "Copied".** The clipboard
+  fallback reported success either way: `execCommand` answers false when the
+  browser refuses it rather than throwing. A refused copy now shows a cross and
+  says so.
+- **The RDAP hint stops calling the domain sync daily**, and says that the cap
+  it describes is per batch — an operator who read "100 in one run" as "100 a
+  night" would now get up to thirteen times that.
+
+### Database changes
+
+None.
+
+### For theme and module authors
+
+- `App\Services\InvoiceLineDescription` builds the wording of a recurring
+  invoice line: `service()`, `addon()`, `domainRenewal()` and
+  `domainRegistration()`, with `mode()` answering the setting
+  (`cycle`, `period` or `cycle_and_period`). Anything that wrote its own
+  renewal wording should use it, or the lines it writes will be the only ones
+  that ignore the operator's choice.
+- `App\Services\AddonService::describe()` takes two further optional arguments,
+  the period start and end, and behaves as before without them.
+- `App\Models\Client::knownDomains()` gives the domains a client is known by,
+  from its services and its domain records, de-duplicated.
+  `Client::scopeSearch()` matches those too — including through the public
+  `getclients` endpoint.
+- `pnlcs:domain-sync` honours `DomainSyncBatchSize` and `DomainSyncDelayMs`,
+  and only batches registrars that implement `SyncsDomainData`. A domain
+  checked within the last 23 hours is skipped unless `--domain` names it.
+- A new Blade component, `<x-copy-value :value="…" />`, renders a copy icon for
+  a value and nothing at all for an empty one.
+- New texts a theme may use or override: `client.invoices.domain_renewal_line`,
+  `client.invoices.domain_registration_line`,
+  `client.invoices.domain_transfer_line`, `client.invoices.domain_years`,
+  `common.actions.copy_failed`, and the `admin.settings.invoice_line_period_*`
+  family.
+
+### Views a theme may override that changed
+
+- `admin/clients/show` — the copy icons, the billing copy button (the read-only
+  textarea it used is gone) and the verified-email badge.
+- `admin/clients/index` — the domains column.
+- `admin/domains/show` — the registrar select now renders value and label
+  separately, so an inactive registrar can be marked.
+- `admin/settings/general` — the invoice line period choice and the two domain
+  sync fields.
+- `components/copy-value` — new.
+
+### For anyone running the test suite
+
+- The hardcoded-text scanner reads a tag whose attribute value contains `>`.
+  A Blade component is written `<x-copy-value :value="$client->full_name" />`,
+  and the matcher used to stop at the `>` inside `$client->full_name`, leaving
+  `full_name" />` behind as text a visitor reads. Raw PHP blocks are now
+  stripped on their own, having been swallowed by accident through the same
+  `>`. The total it counts across all views falls from 168 to 147 with no
+  file's budget raised; that difference was the scanner reading its own blind
+  spots.
+
 ## 1.31.0 — 2026-11-23
 
 A stable release, offered to every installation. Twelve reviewed changes, and
