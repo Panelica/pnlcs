@@ -739,7 +739,7 @@ return [
         'email_verification' => 'Weryfikacja adresu e-mail',
         'email_verified' => 'Zweryfikowano :date',
         'email_unverified' => 'Niezweryfikowany',
-        'verify_email' => 'Oznacz jako zweryfikowany',
+        'verify_email' => 'Zweryfikuj',
         'verify_email_confirm' => 'Oznaczyć :email jako zweryfikowany bez potwierdzenia przez klienta?',
         'verify_email_no_login' => 'Ten klient nie ma loginu do zweryfikowania.',
         'verify_email_already' => ':email jest już zweryfikowany.',

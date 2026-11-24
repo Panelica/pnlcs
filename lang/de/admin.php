@@ -739,7 +739,7 @@ return [
         'email_verification' => 'E-Mail-Bestätigung',
         'email_verified' => 'Bestätigt am :date',
         'email_unverified' => 'Nicht bestätigt',
-        'verify_email' => 'Als bestätigt markieren',
+        'verify_email' => 'Bestätigen',
         'verify_email_confirm' => ':email als bestätigt markieren, ohne dass der Kunde sie bestätigt?',
         'verify_email_no_login' => 'Dieser Kunde hat kein Login, das bestätigt werden kann.',
         'verify_email_already' => ':email ist bereits bestätigt.',

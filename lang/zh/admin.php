@@ -739,7 +739,7 @@ return [
         'email_verification' => '邮箱验证',
         'email_verified' => '已于 :date 验证',
         'email_unverified' => '未验证',
-        'verify_email' => '标记为已验证',
+        'verify_email' => '验证',
         'verify_email_confirm' => '无需客户确认，直接将 :email 标记为已验证？',
         'verify_email_no_login' => '该客户没有可验证的登录账户。',
         'verify_email_already' => ':email 已经验证过。',
