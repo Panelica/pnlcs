@@ -20,6 +20,7 @@ return [
         'confirm' => '确认',
         'continue' => '继续',
         'copy' => '复制',
+        'copy_failed' => '无法复制',
         'create' => '创建',
         'deactivate' => '停用',
         'decline' => '拒绝',

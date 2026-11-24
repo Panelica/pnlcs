@@ -20,6 +20,7 @@ return [
         'confirm' => 'Confirm',
         'continue' => 'Continue',
         'copy' => 'Copy',
+        'copy_failed' => 'Could not copy',
         'create' => 'Create',
         'deactivate' => 'Deactivate',
         'decline' => 'Decline',

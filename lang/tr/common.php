@@ -20,6 +20,7 @@ return [
         'confirm' => 'Onayla',
         'continue' => 'Devam Et',
         'copy' => 'Kopyala',
+        'copy_failed' => 'Kopyalanamadı',
         'create' => 'Oluştur',
         'deactivate' => 'Devre Dışı Bırak',
         'decline' => 'Reddet',

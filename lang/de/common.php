@@ -20,6 +20,7 @@ return [
         'confirm' => 'Bestätigen',
         'continue' => 'Weiter',
         'copy' => 'Kopieren',
+        'copy_failed' => 'Kopieren nicht möglich',
         'create' => 'Erstellen',
         'deactivate' => 'Deaktivieren',
         'decline' => 'Ablehnen',

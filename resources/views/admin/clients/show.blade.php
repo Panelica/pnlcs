@@ -722,22 +722,33 @@ $tabs = ['summary'=>__('admin.clients.tab_summary'),'services'=>__('admin.client
 @push('scripts')
 <script>
 (function () {
-    function done(button) {
+    // ok=false is a copy that did not happen: the browser refused the
+    // clipboard and execCommand answered false. Saying "Copied" then would be
+    // a lie the operator only finds out about when they paste.
+    function done(button, ok) {
+        var icon = ok ? 'fa-check' : 'fa-times';
+        var label = ok ? @json(__('admin.clients.billing_copied')) : @json(__('common.actions.copy_failed'));
+
         if (button.hasAttribute('data-billing-copy')) {
             var was = button.innerHTML;
-            button.innerHTML = '<i class="fas fa-check" aria-hidden="true"></i> ' + @json(__('admin.clients.billing_copied'));
+            button.innerHTML = '<i class="fas ' + icon + '" aria-hidden="true"></i> ' + label;
             setTimeout(function () { button.innerHTML = was; }, 1500);
             return;
         }
 
         var wasIcon = button.innerHTML;
-        button.innerHTML = '<i class="fas fa-check"></i>';
-        setTimeout(function () { button.innerHTML = wasIcon; }, 1500);
+        var wasTitle = button.getAttribute('title');
+        button.innerHTML = '<i class="fas ' + icon + '"></i>';
+        if (! ok) { button.setAttribute('title', label); }
+        setTimeout(function () {
+            button.innerHTML = wasIcon;
+            if (wasTitle !== null) { button.setAttribute('title', wasTitle); }
+        }, 1500);
     }
 
     function copy(text, button) {
         if (navigator.clipboard && window.isSecureContext) {
-            navigator.clipboard.writeText(text).then(function () { done(button); }, function () { fallback(text, button); });
+            navigator.clipboard.writeText(text).then(function () { done(button, true); }, function () { fallback(text, button); });
             return;
         }
 
@@ -753,9 +764,12 @@ $tabs = ['summary'=>__('admin.clients.tab_summary'),'services'=>__('admin.client
         area.style.opacity = '0';
         document.body.appendChild(area);
         area.select();
-        try { document.execCommand('copy'); } catch (e) {}
+        var ok = false;
+        // execCommand answers false when it is refused and throws where it has
+        // been removed; both mean nothing reached the clipboard.
+        try { ok = document.execCommand('copy'); } catch (e) { ok = false; }
         area.remove();
-        done(button);
+        done(button, ok);
     }
 
     document.querySelectorAll('[data-copy-value], [data-billing-copy]').forEach(function (button) {
