@@ -754,6 +754,10 @@ return [
     'invoices.title' => 'Faturalarım',
     'invoices.total_due' => 'Toplam Borç',
     'invoices.unknown_error' => 'Bilinmeyen hata',
+    'invoices.domain_years' => '1 yıl|:count yıl',
+    'invoices.domain_renewal_line' => 'Alan adı yenileme: :domain',
+    'invoices.domain_registration_line' => 'Alan adı kaydı: :domain',
+    'invoices.domain_transfer_line' => 'Alan adı transferi: :domain',
     'kb' => [
         'all_articles' => 'Tüm Makaleler',
         'articles' => 'Makaleler',

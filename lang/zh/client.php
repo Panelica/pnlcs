@@ -754,6 +754,10 @@ return [
     'invoices.title' => '我的发票',
     'invoices.total_due' => '应付合计',
     'invoices.unknown_error' => '未知错误',
+    'invoices.domain_years' => '1 年|:count 年',
+    'invoices.domain_renewal_line' => '域名续费：:domain',
+    'invoices.domain_registration_line' => '域名注册：:domain',
+    'invoices.domain_transfer_line' => '域名转移：:domain',
     'kb' => [
         'all_articles' => '全部文章',
         'articles' => '文章',

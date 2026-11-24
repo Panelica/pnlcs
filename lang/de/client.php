@@ -754,6 +754,10 @@ return [
     'invoices.title' => 'Meine Rechnungen',
     'invoices.total_due' => 'Gesamtbetrag fällig',
     'invoices.unknown_error' => 'Unbekannter Fehler',
+    'invoices.domain_years' => '1 Jahr|:count Jahre',
+    'invoices.domain_renewal_line' => 'Domain-Verlängerung: :domain',
+    'invoices.domain_registration_line' => 'Domain-Registrierung: :domain',
+    'invoices.domain_transfer_line' => 'Domain-Transfer: :domain',
     'kb' => [
         'all_articles' => 'Alle Artikel',
         'articles' => 'Artikel',

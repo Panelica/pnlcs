@@ -745,12 +745,18 @@ class InvoiceGenerationService
             // it does not end there - the months before it are the ones the
             // previous invoice paid for.
             $periodEnd = BillingCycleHelper::advance($dueDate, $billingCycle);
-            $period = $dueDate->format('Y/m/d').' - '.$periodEnd->format('Y/m/d');
 
             $items[] = [
                 'type' => 'Hosting',
                 'rel_id' => $service->id,
-                'description' => "{$productName} (".cycle_label($billingCycle, $client->language).") — {$service->domain} — {$period}",
+                'description' => app(InvoiceLineDescription::class)->service(
+                    $productName,
+                    $service->domain,
+                    $billingCycle,
+                    $dueDate,
+                    $periodEnd,
+                    $client->language
+                ),
                 'amount' => (float) $service->amount,
                 'taxed' => $service->product->tax ?? true,
                 'due_date' => $dueDate->toDateString(),
@@ -783,7 +789,7 @@ class InvoiceGenerationService
             $items[] = [
                 'type' => 'Domain',
                 'rel_id' => $domain->id,
-                'description' => 'Domain Renewal: '.$domain->domain.' ('.((int) ($domain->registration_period ?? 1)).'y)',
+                'description' => app(InvoiceLineDescription::class)->domainRenewal($domain),
                 'amount' => (float) $domain->recurring_amount,
                 'taxed' => true,
                 'due_date' => $domain->next_due_date?->toDateString(),

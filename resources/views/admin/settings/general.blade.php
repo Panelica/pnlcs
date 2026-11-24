@@ -575,6 +575,17 @@
                 <span style="margin-left:14px;">{{ __('admin.settings.invoice_number_preview') }}:</span>
                 <code id="invoice-number-preview" style="background:#f5f5f5;padding:1px 5px;border-radius:3px;font-weight:600;">{{ $invoicePreview }}</code>
             </div>
+            <div class="form-group" style="margin-top:14px;max-width:50%;">
+                <label class="form-label" for="invoice-line-period-display">{{ __('admin.settings.invoice_line_period_display') }}</label>
+                <select id="invoice-line-period-display" name="InvoiceLinePeriodDisplay" class="form-control">
+                    @foreach(['cycle', 'period', 'cycle_and_period'] as $linePeriodMode)
+                        <option value="{{ $linePeriodMode }}" @selected(($settings['InvoiceLinePeriodDisplay'] ?? 'cycle_and_period') === $linePeriodMode)>
+                            {{ __('admin.settings.invoice_line_period_'.$linePeriodMode) }}
+                        </option>
+                    @endforeach
+                </select>
+                <div style="font-size:12px;color:#777;margin-top:4px;">{{ __('admin.settings.invoice_line_period_hint') }}</div>
+            </div>
             <label style="font-size:13px;display:flex;align-items:center;gap:6px;cursor:pointer;margin-top:14px;font-weight:600;">
                 <input type="hidden" name="ProformaEnabled" value="0"><input type="checkbox" id="proforma-enabled" name="ProformaEnabled" value="1" onchange="document.getElementById('proforma-scheme').style.display = this.checked ? '' : 'none';" {{ $proformaEnabled ? 'checked' : '' }}>
                 {{ __('admin.settings.proforma_enabled') }}

@@ -102,17 +102,21 @@ class OrderService
 
                 if ($type === 'domain') {
                     $domain = $this->createDomainForOrder($order, $client, $item);
-                    $years = max(1, (int) ($item['registration_period'] ?? 1));
                     $action = strtolower((string) ($item['domain_type'] ?? 'register')) === 'transfer'
-                        ? 'Transfer'
-                        : 'Registration';
+                        ? 'transfer'
+                        : 'register';
+                    $description = app(InvoiceLineDescription::class)->domainRegistration($domain, $action);
+
+                    if (! empty($item['id_protection'])) {
+                        $description .= ' + WHOIS privacy';
+                    }
 
                     $invoiceItems[] = [
                         'type' => 'Domain',
                         // Points at the domain: paying this line is what renews
                         // it, and the renewal generator dedupes on it.
                         'rel_id' => $domain->id,
-                        'description' => "Domain {$action}: ".($item['domain'] ?? '')." — {$years} Year(s)".(! empty($item['id_protection']) ? ' + WHOIS privacy' : ''),
+                        'description' => $description,
                         'amount' => (float) ($item['amount'] ?? 0),
                         'taxed' => true,
                     ];
@@ -184,7 +188,7 @@ class OrderService
                     if (! empty($item['addons'])) {
                         $addonService = app(AddonService::class);
                         foreach ($addonService->attachToService($service, $item['addons'], $order) as $serviceAddon) {
-                            $line = $addonService->lineItem($serviceAddon);
+                            $line = $addonService->lineItem($serviceAddon, null, true);
                             $invoiceItems[] = [
                                 'type' => $line['type'],
                                 'rel_id' => $line['rel_id'],
@@ -1299,21 +1303,25 @@ class OrderService
         $product = $service->product;
         $name = $product?->name ?? ($item['description'] ?? 'Hosting Service');
         $cycle = $service->billing_cycle ?? 'Monthly';
-        $domain = $service->domain ? " — {$service->domain}" : '';
 
         $configured = ! empty($item['config_options'])
             ? app(ConfigOptionService::class)->summarise($item['config_options'])
             : '';
 
-        // The parenthesis shows the paid billing period, not the raw cycle
-        // name, matching the renewal invoices (2026/08/15 - 2026/09/15).
         $dueDate = $service->next_due_date
             ? Carbon::parse($service->next_due_date)
             : Carbon::now()->addMonths(Service::monthsInCycle($cycle));
         $periodStart = $dueDate->copy()->subMonths(Service::monthsInCycle($cycle));
-        $period = $periodStart->format('Y/m/d').' - '.$dueDate->format('Y/m/d');
 
-        return "{$name} ({$period}){$domain}".($configured ? " ({$configured})" : '');
+        return app(InvoiceLineDescription::class)->service(
+            $name,
+            $service->domain,
+            $cycle,
+            $periodStart,
+            $dueDate,
+            $service->client?->language,
+            $configured ?: null
+        );
     }
 
     /**
