@@ -103,13 +103,12 @@ class DomainSyncCommand extends Command
 
         if ($name) {
             $query->where('domain', $name);
+        } elseif ($syncable === []) {
+            // Nothing to ask a registrar, but a domain whose expiry has passed
+            // still has to be moved along, so the run goes on with an empty
+            // batch instead of returning here.
+            $query->whereRaw('1 = 0');
         } else {
-            if ($syncable === []) {
-                $this->info('Domain sync: nothing to do.');
-
-                return Command::SUCCESS;
-            }
-
             $query->where(function ($q) use ($syncable) {
                 foreach ($syncable as $registrar) {
                     $q->orWhereRaw('LOWER(registrar) = ?', [$registrar]);
@@ -126,12 +125,6 @@ class DomainSyncCommand extends Command
         }
 
         $domains = $query->get();
-        if ($domains->isEmpty()) {
-            $this->info('Domain sync: nothing to do.');
-
-            return Command::SUCCESS;
-        }
-
         $checked = $updated = $skipped = $failed = 0;
 
         foreach ($domains as $domain) {
@@ -230,11 +223,35 @@ class DomainSyncCommand extends Command
 
         $datesFilled = $this->fillMissingRegistrationDates($domains, $dryRun);
 
-        $lapsed = $dryRun ? 0 : $this->applyLifecycle($domains);
+        $lapsed = $dryRun ? 0 : $this->applyLifecycle($this->lapsedDomains($name));
 
         $this->info("Domain sync: {$checked} checked, {$updated} updated, {$skipped} without a syncing module, {$failed} failed, {$datesFilled} registration dates filled from RDAP, {$lapsed} past expiry.");
 
         return Command::SUCCESS;
+    }
+
+    /**
+     * The domains the lifecycle may move: every one whose expiry has passed,
+     * not only the ones in this run's batch.
+     *
+     * Moving a lapsed domain along reads the TLD's grace and redemption
+     * periods and writes a status. It calls no registrar, so there is nothing
+     * to pace and no reason to tie it to the batch - and tying it to the batch
+     * is what stopped it: the batch holds only registrars that can sync, so a
+     * manual domain was never moved out of "active" again, and the renewal run
+     * kept invoicing it.
+     *
+     * @return Collection<int, Domain>
+     */
+    private function lapsedDomains(?string $name)
+    {
+        return Domain::query()
+            ->whereNotNull('expiry_date')
+            ->where('expiry_date', '<', now()->startOfDay())
+            ->whereNotIn('status', ['cancelled', 'transferred-away'])
+            ->when($name, fn ($q) => $q->where('domain', $name))
+            ->orderBy('id')
+            ->get();
     }
 
     /** The visible record of a nightly sync attempt, successful or not. */
