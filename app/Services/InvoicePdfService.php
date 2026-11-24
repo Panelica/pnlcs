@@ -397,6 +397,11 @@ class InvoicePdfService
             return $this->plainItemsHtml($invoice);
         }
 
+        // The unit column is empty on most invoices. Keeping an empty column
+        // steals width from the product name, which is the one value that
+        // actually needs room to wrap; omit it when no line has a unit.
+        $hasUnit = $invoice->items->contains(fn (InvoiceItem $item) => trim((string) ($item->unit ?? '')) !== '');
+
         $rows = '';
         $index = 0;
         foreach ($invoice->items as $item) {
@@ -409,10 +414,14 @@ class InvoicePdfService
 
             $rows .= '<tr>'
                 .'<td class="c">'.$index.'</td>'
-                .'<td>'.e((string) $item->description).'</td>'
-                .'<td class="c">'.max(1, (int) ($item->qty ?? 1)).'</td>'
-                .'<td class="c">'.e((string) ($item->unit ?? '')).'</td>'
-                .'<td class="num">'.e($this->lineAmount($invoice, $unitNet)).'</td>'
+                .'<td class="name">'.$this->itemDescriptionHtml($item).'</td>'
+                .'<td class="c">'.max(1, (int) ($item->qty ?? 1)).'</td>';
+
+            if ($hasUnit) {
+                $rows .= '<td class="c">'.e((string) ($item->unit ?? '')).'</td>';
+            }
+
+            $rows .= '<td class="num">'.e($this->lineAmount($invoice, $unitNet)).'</td>'
                 .'<td class="c">'.e($this->vatLabel($item, $rate)).'</td>'
                 .'<td class="num">'.e($this->lineAmount($invoice, $vat)).'</td>'
                 .'<td class="num">'.e($this->lineAmount($invoice, $net)).'</td>'
@@ -420,18 +429,40 @@ class InvoicePdfService
                 .'</tr>';
         }
 
-        return $this->itemsTableStyle()
-            .'<table class="invoice-items"><thead><tr>'
-            .'<th class="lp">'.e(__('pdf.items_lp')).'</th>'
+        $headers = '<th class="lp">'.e(__('pdf.items_lp')).'</th>'
             .'<th class="name">'.e(__('pdf.items_name')).'</th>'
-            .'<th class="qty">'.e(__('pdf.items_qty')).'</th>'
-            .'<th class="unit">'.e(__('pdf.items_unit')).'</th>'
-            .'<th class="net-price">'.e(__('pdf.items_net_price')).'</th>'
+            .'<th class="qty">'.e(__('pdf.items_qty')).'</th>';
+
+        if ($hasUnit) {
+            $headers .= '<th class="unit">'.e(__('pdf.items_unit')).'</th>';
+        }
+
+        $headers .= '<th class="net-price">'.e(__('pdf.items_net_price')).'</th>'
             .'<th class="vat-rate">'.e(__('pdf.items_vat_rate')).'</th>'
             .'<th class="vat-amount">'.e(__('pdf.items_vat_amount')).'</th>'
             .'<th class="net-amount">'.e(__('pdf.items_net_amount')).'</th>'
-            .'<th class="gross-amount">'.e(__('pdf.items_gross_amount')).'</th>'
-            .'</tr></thead><tbody>'.$rows.'</tbody></table>';
+            .'<th class="gross-amount">'.e(__('pdf.items_gross_amount')).'</th>';
+
+        return $this->itemsTableStyle($hasUnit)
+            .'<table class="invoice-items"><thead><tr>'.$headers.'</tr></thead><tbody>'.$rows.'</tbody></table>';
+    }
+
+    /**
+     * A line description is generated as "Product (cycle) — domain — period".
+     * The product is what the customer scans for, so the rest goes on a
+     * second, smaller line. A hand-written description without the separator
+     * is left exactly as it was typed.
+     */
+    protected function itemDescriptionHtml(InvoiceItem $item): string
+    {
+        $parts = preg_split('/\s+—\s+/u', (string) $item->description, 2) ?: [];
+
+        if (count($parts) === 2) {
+            return '<span class="item-name">'.e($parts[0]).'</span>'
+                .'<span class="item-meta">'.e($parts[1]).'</span>';
+        }
+
+        return e((string) $item->description);
     }
 
     /** The line items of an untaxed invoice: description, quantity, price, total. */
@@ -456,25 +487,31 @@ class InvoicePdfService
     }
 
     /** The self-contained stylesheet for the {items} table. */
-    protected function itemsTableStyle(): string
+    protected function itemsTableStyle(bool $hasUnit = true): string
     {
+        // Without the unit column the name gets the freed 5%; the numeric
+        // columns keep the same widths so amounts stay easy to compare.
+        $nameWidth = $hasUnit ? '40%' : '45%';
+
         return '<style>'
-            .'table.invoice-items{width:100%;border-collapse:collapse;font-size:8.5pt;table-layout:fixed;}'
-            .'table.invoice-items th,table.invoice-items td{border:0.5pt solid #111;padding:2pt 4pt;vertical-align:top;}'
-            .'table.invoice-items thead th{background:#eaeaea;text-align:center;font-weight:bold;line-height:1.15;word-wrap:break-word;overflow-wrap:break-word;}'
+            .'table.invoice-items{width:100%;border-collapse:collapse;font-size:8pt;line-height:1.2;table-layout:fixed;}'
+            .'table.invoice-items th,table.invoice-items td{border:0.5pt solid #111;padding:1.5pt 3pt;vertical-align:top;}'
+            .'table.invoice-items thead th{background:#eaeaea;text-align:center;font-size:7.5pt;font-weight:bold;line-height:1.15;word-wrap:break-word;overflow-wrap:break-word;}'
             .'table.invoice-items td{word-wrap:break-word;overflow-wrap:break-word;}'
             .'table.invoice-items tbody tr{page-break-inside:avoid;}'
             .'table.invoice-items th.lp{width:4%;}'
-            .'table.invoice-items th.name{width:29%;}'
-            .'table.invoice-items th.qty{width:7%;}'
-            .'table.invoice-items th.unit{width:6%;}'
-            .'table.invoice-items th.net-price{width:12%;}'
-            .'table.invoice-items th.vat-rate{width:7%;}'
-            .'table.invoice-items th.vat-amount{width:11%;}'
-            .'table.invoice-items th.net-amount{width:11%;}'
-            .'table.invoice-items th.gross-amount{width:13%;}'
+            .'table.invoice-items th.name{width:'.$nameWidth.';}'
+            .'table.invoice-items th.qty{width:5%;}'
+            .'table.invoice-items th.unit{width:5%;}'
+            .'table.invoice-items th.net-price{width:11%;}'
+            .'table.invoice-items th.vat-rate{width:5%;}'
+            .'table.invoice-items th.vat-amount{width:10%;}'
+            .'table.invoice-items th.net-amount{width:10%;}'
+            .'table.invoice-items th.gross-amount{width:10%;}'
+            .'table.invoice-items th.net-price,table.invoice-items th.vat-amount,table.invoice-items th.net-amount,table.invoice-items th.gross-amount{text-align:right;}'
             .'table.invoice-items td.c{text-align:center;}'
-            .'table.invoice-items td.num{text-align:right;}'
+            .'table.invoice-items td.num{text-align:right;white-space:nowrap;}'
+            .'table.invoice-items .item-meta{display:block;margin-top:1pt;font-size:7pt;line-height:1.2;color:#444;}'
             .'</style>';
     }
 

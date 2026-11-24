@@ -234,7 +234,52 @@ it('builds the VAT table when the invoice is taxed', function () {
     $html = app(InvoicePdfService::class)->placeholderVars($invoice)['items'];
 
     expect($html)->toContain(__('pdf.items_vat_rate'))->toContain('23%');
-    expect(preg_match_all('/<th[ >]/', $html))->toBe(9);
+    // No line carries a unit, so the empty JM column is left out.
+    expect(preg_match_all('/<th[ >]/', $html))->toBe(8)
+        ->and($html)->not->toContain(__('pdf.items_unit'));
+});
+
+it('keeps the unit column when a line uses it', function () {
+    $client = Client::factory()->create();
+    $invoice = Invoice::factory()->create(['client_id' => $client->id, 'tax_mode' => null]);
+    InvoiceItem::factory()->create(['invoice_id' => $invoice->id, 'client_id' => $client->id, 'description' => 'Hosting Pro', 'qty' => 1, 'amount' => 100, 'tax_rate' => 23, 'unit' => 'mies.']);
+
+    $html = app(InvoicePdfService::class)->placeholderVars($invoice)['items'];
+
+    expect(preg_match_all('/<th[ >]/', $html))->toBe(9)
+        ->and($html)->toContain(__('pdf.items_unit'))
+        ->and($html)->toContain('mies.');
+});
+
+it('puts the domain and period on a smaller second line', function () {
+    $client = Client::factory()->create();
+    $invoice = Invoice::factory()->create(['client_id' => $client->id, 'tax_mode' => null]);
+    InvoiceItem::factory()->create([
+        'invoice_id' => $invoice->id,
+        'client_id' => $client->id,
+        'description' => 'Hosting Pro (Miesięcznie) — example.test — 2026/12/01 - 2026/12/31',
+        'qty' => 1,
+        'amount' => 100,
+        'tax_rate' => 23,
+    ]);
+
+    $html = app(InvoicePdfService::class)->placeholderVars($invoice)['items'];
+
+    expect($html)->toContain('<span class="item-name">Hosting Pro (Miesięcznie)</span>')
+        ->and($html)->toContain('<span class="item-meta">example.test — 2026/12/01 - 2026/12/31</span>');
+});
+
+it('gives the name more room and uses the compact table type scale', function () {
+    $client = Client::factory()->create();
+    $invoice = Invoice::factory()->create(['client_id' => $client->id, 'tax_mode' => null]);
+    InvoiceItem::factory()->create(['invoice_id' => $invoice->id, 'client_id' => $client->id, 'description' => 'Hosting Pro', 'qty' => 1, 'amount' => 100, 'tax_rate' => 23]);
+
+    $html = app(InvoicePdfService::class)->placeholderVars($invoice)['items'];
+
+    expect($html)->toContain('th.name{width:45%;}')
+        ->and($html)->toContain('font-size:8pt')
+        ->and($html)->toContain('font-size:7.5pt')
+        ->and($html)->toContain('white-space:nowrap');
 });
 
 it('refuses an upload that is not an HTML document', function () {
