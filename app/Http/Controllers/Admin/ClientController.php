@@ -35,7 +35,7 @@ class ClientController extends Controller
 
     public function index(Request $request)
     {
-        $query = Client::with('contacts');
+        $query = Client::with(['contacts', 'services:id,client_id,domain', 'domains:id,client_id,domain']);
         if ($request->filled('search')) {
             $query->search($request->search);
         }

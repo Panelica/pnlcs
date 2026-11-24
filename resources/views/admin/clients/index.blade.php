@@ -61,6 +61,7 @@
                 <th>{{ __('common.table.name') }}</th>
                 <th>{{ __('common.table.email') }}</th>
                 <th>{{ __('common.table.company') }}</th>
+                <th>{{ __('admin.clients.tab_domains') }}</th>
                 <th>{{ __('common.table.status') }}</th>
                 <th>{{ __('common.table.created') }}</th>
                 <th>{{ __('common.table.actions') }}</th>
@@ -82,6 +83,19 @@
                 <td><a href="{{ route("admin.clients.show", $client) }}" style="color:#337ab7;text-decoration:none;font-weight:500;">{{ $client->full_name }}</a></td>
                 <td>{{ $client->email }}</td>
                 <td>{{ $client->company_name ?? "-" }}</td>
+                <td style="font-size:12px;color:#555;max-width:240px;">
+                    @php($knownDomains = $client->knownDomains())
+                    @if($knownDomains->isNotEmpty())
+                        @foreach($knownDomains->take(2) as $knownDomain)
+                            <div style="white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:240px;">{{ $knownDomain }}</div>
+                        @endforeach
+                        @if($knownDomains->count() > 2)
+                            <span style="color:#888;" title="{{ $knownDomains->implode(', ') }}">+{{ $knownDomains->count() - 2 }}</span>
+                        @endif
+                    @else
+                        -
+                    @endif
+                </td>
                 <td><span class="badge {{ $badgeClass }}">{{ status_label($statusVal) }}</span></td>
                 <td style="color:#666;">{{ $client->created_at->format(date_fmt()) }}</td>
                 <td>

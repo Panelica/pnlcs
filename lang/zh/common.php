@@ -193,7 +193,7 @@ return [
         'enter_password' => '请输入密码',
         'promo_code' => '优惠码',
         'search' => '搜索…',
-        'search_clients' => '姓名、电子邮箱、公司…',
+        'search_clients' => '姓名、电子邮箱、公司、域名…',
         'type_message' => '请输入消息…',
     ],
     'priority' => [

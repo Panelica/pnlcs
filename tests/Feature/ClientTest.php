@@ -2,6 +2,8 @@
 
 use App\Enums\ClientStatus;
 use App\Models\Client;
+use App\Models\Domain;
+use App\Models\Service;
 use App\Models\User;
 
 
@@ -133,4 +135,30 @@ test("deleting client cascades to user_client pivot", function () {
     $client->forceDelete();
 
     expect(DB::table("user_client")->where("client_id", $client->id)->count())->toBe(0);
+});
+
+test("client search finds a hosting service domain", function () {
+    $client = Client::factory()->create();
+    Service::factory()->create([
+        'client_id' => $client->id,
+        'domain' => 'service-search.example',
+        'status' => 'terminated',
+    ]);
+    $other = Client::factory()->create();
+
+    $results = Client::search('service-search.example')->pluck('id')->all();
+
+    expect($results)->toContain($client->id)
+        ->not->toContain($other->id);
+});
+
+test("client search finds a domain billing record", function () {
+    $client = Client::factory()->create();
+    Domain::factory()->create([
+        'client_id' => $client->id,
+        'domain' => 'domain-search.example',
+        'status' => 'cancelled',
+    ]);
+
+    expect(Client::search('domain-search.example')->pluck('id')->all())->toContain($client->id);
 });

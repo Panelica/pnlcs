@@ -193,7 +193,7 @@ return [
         'enter_password' => 'Enter password',
         'promo_code' => 'Promo code',
         'search' => 'Search...',
-        'search_clients' => 'Name, email, company...',
+        'search_clients' => 'Name, email, company, domain...',
         'type_message' => 'Type your message...',
     ],
     'priority' => [
