@@ -95,6 +95,13 @@ function hardcodedViewText(string $path): array
     $source = $strip('/<!--.*?-->/s', $source);
     $source = $strip('/@verbatim.*?@endverbatim/s', $source);
     $source = $strip('/@php.*?@endphp/s', $source);
+    /*
+     * Raw PHP written into a view. The old tag matcher swallowed these by
+     * accident: it stopped at the first ">", which in a raw PHP block is the
+     * one that closes it. (Written as a block comment on purpose - the closing
+     * sequence inside a // comment ends PHP mode and breaks this file.)
+     */
+    $source = $strip('/<\?(?:php|=).*?\?>/s', $source);
     $source = $strip('/<script\b[^>]*>.*?<\/script>/is', $source);
     $source = $strip('/<style\b[^>]*>.*?<\/style>/is', $source);
     // A command line or a code sample is copied, not read, and is not
@@ -112,7 +119,13 @@ function hardcodedViewText(string $path): array
 
     // The attributes a visitor reads are kept; every other attribute is thrown
     // away with the tag it sits in.
-    $source = preg_replace_callback('/<[^>]*>/s', function ($match) use (&$found) {
+    //
+    // A quoted attribute value may itself contain ">": a Blade component is
+    // written <x-copy-value :value="$client->full_name" />, and a matcher that
+    // stopped at the first ">" left `full_name" />` behind as text a visitor
+    // reads. So quoted runs are consumed whole.
+    $tag = '/<[a-zA-Z\/!][^>"\']*(?:(?:"[^"]*"|\'[^\']*\')[^>"\']*)*>/s';
+    $source = preg_replace_callback($tag, function ($match) use (&$found) {
         preg_match_all(
             '/\b(?:placeholder|title|alt|aria-label)\s*=\s*"([^"]*)"/i',
             $match[0],

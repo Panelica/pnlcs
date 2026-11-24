@@ -577,7 +577,7 @@ List clients with optional search/filtering.
 
 | Name | Type | Required | Description |
 |---|---|---|---|
-| `search` | string | no | Matches first name, last name, email or company name. |
+| `search` | string | no | Matches first name, last name, email, company name, a service domain or a domain record. |
 | `status` | string | no | active, inactive or closed. |
 | `group_id` | integer | no | Only clients in this client group. |
 | `orderby` | string | no | id (default), first_name, last_name, email, company_name, status or created_at. |

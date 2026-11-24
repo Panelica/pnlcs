@@ -755,6 +755,10 @@ return [
     'invoices.title' => 'My Invoices',
     'invoices.total_due' => 'Total Due',
     'invoices.unknown_error' => 'Unknown error',
+    'invoices.domain_years' => '1 year|:count years',
+    'invoices.domain_renewal_line' => 'Domain renewal: :domain',
+    'invoices.domain_registration_line' => 'Domain registration: :domain',
+    'invoices.domain_transfer_line' => 'Domain transfer: :domain',
     'kb' => [
         'all_articles' => 'All articles',
         'articles' => 'Articles',

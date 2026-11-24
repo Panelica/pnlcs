@@ -20,6 +20,7 @@ return [
         'confirm' => 'Potwierdź',
         'continue' => 'Kontynuuj',
         'copy' => 'Kopiuj',
+        'copy_failed' => 'Nie udało się skopiować',
         'create' => 'Utwórz',
         'deactivate' => 'Dezaktywuj',
         'decline' => 'Odmów',
@@ -192,7 +193,7 @@ return [
         'enter_password' => 'Wprowadź hasło',
         'promo_code' => 'Kod promocyjny',
         'search' => 'Szukaj...',
-        'search_clients' => 'Nazwa, e-mail, firma...',
+        'search_clients' => 'Nazwa, e-mail, firma, domena...',
         'type_message' => 'Wpisz swoją wiadomość...',
     ],
     'priority' => [

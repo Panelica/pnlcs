@@ -33,14 +33,3 @@ it('leaves ordinary dates exactly one cycle ahead', function () {
         ->and(BillingCycleHelper::advance(Carbon::parse('2026-03-15'), 'annually')->toDateString())
         ->toBe('2027-03-15');
 });
-
-it('ends a displayed period on the day before the next due date', function () {
-    expect(BillingCycleHelper::periodEnd(Carbon::parse('2026-12-01'), 'monthly')->toDateString())
-        ->toBe('2026-12-31')
-        ->and(BillingCycleHelper::periodEnd(Carbon::parse('2026-12-01'), 'quarterly')->toDateString())
-        ->toBe('2027-02-28')
-        ->and(BillingCycleHelper::periodEnd(Carbon::parse('2026-12-01'), 'annually')->toDateString())
-        ->toBe('2027-11-30')
-        ->and(BillingCycleHelper::periodEnd(Carbon::parse('2027-01-31'), 'monthly')->toDateString())
-        ->toBe('2027-02-27');
-});

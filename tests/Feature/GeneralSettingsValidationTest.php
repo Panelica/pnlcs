@@ -33,6 +33,9 @@ test('values the rest of the app cannot use are refused and nothing is saved', f
     'time zone' => ['Timezone', 'Europe/Nowhere'],
     'company email' => ['Email', 'not an address'],
     'late fee' => ['LateFeeType', 'sometimes'],
+    'domain sync batch' => ['DomainSyncBatchSize', '0'],
+    'domain sync delay' => ['DomainSyncDelayMs', '-1'],
+    'invoice line period mode' => ['InvoiceLinePeriodDisplay', 'nonsense'],
 ]);
 
 test('a valid form is saved as before', function () {
@@ -40,11 +43,16 @@ test('a valid form is saved as before', function () {
         ->post(route('admin.settings.general.update'), [
             'SMTPPort' => '465', 'AutoSuspensionDays' => '0', 'Timezone' => 'Europe/Istanbul',
             'Email' => 'billing@example.test', 'LateFeeType' => 'flat',
+            'DomainSyncBatchSize' => '250', 'DomainSyncDelayMs' => '750',
+            'InvoiceLinePeriodDisplay' => 'cycle',
         ])
         ->assertSessionHasNoErrors();
 
     expect(Setting::get('SMTPPort'))->toBe('465')
-        ->and(Setting::get('Timezone'))->toBe('Europe/Istanbul');
+        ->and(Setting::get('Timezone'))->toBe('Europe/Istanbul')
+        ->and(Setting::get('DomainSyncBatchSize'))->toBe('250')
+        ->and(Setting::get('DomainSyncDelayMs'))->toBe('750')
+        ->and(Setting::get('InvoiceLinePeriodDisplay'))->toBe('cycle');
 });
 
 test('the form names what was refused', function () {

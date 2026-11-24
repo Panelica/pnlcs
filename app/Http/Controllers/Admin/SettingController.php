@@ -86,7 +86,7 @@ class SettingController extends Controller
         'Country', 'DateFormat', 'DefaultLanguage', 'DefaultPaymentMethod', 'Domain', 'CompanyWebsite',
         'DefaultNameserver1', 'DefaultNameserver2', 'DefaultNameserver3', 'DefaultNameserver4', 'DefaultNameserver5',
         'Email', 'EmailFromName', 'MailCopyTo',
-        'InvoiceNumberFormat', 'InvoiceNumberYearlyReset', 'InvoiceDueDays', 'InvoiceDaysBeforeDue', 'ConsolidatedBillingDay', 'InvoiceRenewalsSeparately',
+        'InvoiceNumberFormat', 'InvoiceNumberYearlyReset', 'InvoiceDueDays', 'InvoiceDaysBeforeDue', 'ConsolidatedBillingDay', 'InvoiceRenewalsSeparately', 'InvoiceLinePeriodDisplay',
         // The invoice document template: the built-in view or an uploaded one.
         // The tax page's two switches (#305).
         'TaxEnabled', 'TaxInclusivePrices',
@@ -147,7 +147,7 @@ class SettingController extends Controller
         'FreeSubdomains', 'DisallowedSubdomainPrefixes',
         // How many RDAP lookups one domain sync run makes to fill a missing
         // registration date (0 disables; default 100).
-        'DomainSyncRdapMaxPerRun',
+        'DomainSyncRdapMaxPerRun', 'DomainSyncBatchSize', 'DomainSyncDelayMs',
         // Paying renewal invoices with a card the customer has already stored.
         // Off by default; read through App\Support\AutoCharge so the screen
         // and the code cannot disagree about what a blank setting means.
@@ -171,6 +171,7 @@ class SettingController extends Controller
             'SMTPPort' => 'sometimes|nullable|integer|between:1,65535',
             'SMTPSecurity' => 'sometimes|nullable|in:tls,ssl,none',
             'InvoiceDueDays' => 'sometimes|nullable|integer|min:0',
+            'InvoiceLinePeriodDisplay' => 'sometimes|nullable|in:cycle,period,cycle_and_period',
             'ConsolidatedBillingDay' => 'sometimes|nullable|integer|between:0,28',
             'AutoSuspensionDays' => 'sometimes|nullable|integer|min:0',
             'AutoTerminationDays' => 'sometimes|nullable|integer|min:1',
@@ -182,6 +183,8 @@ class SettingController extends Controller
             'AutoChargeRetryDays' => 'sometimes|nullable|integer|min:'.\App\Support\AutoCharge::MINIMUM_RETRY_DAYS,
             'DomainSuggestionCount' => 'sometimes|nullable|integer|between:1,12',
             'DomainSyncRdapMaxPerRun' => 'sometimes|nullable|integer|min:0|max:10000',
+            'DomainSyncBatchSize' => 'sometimes|nullable|integer|min:1|max:1000',
+            'DomainSyncDelayMs' => 'sometimes|nullable|integer|min:0|max:10000',
             'RegistrarBalanceThreshold' => 'sometimes|nullable|numeric|min:0',
             'TaxExemptionNotice' => 'sometimes|nullable|string|max:500',
         ]);

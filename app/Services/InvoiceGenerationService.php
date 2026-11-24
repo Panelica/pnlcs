@@ -738,18 +738,25 @@ class InvoiceGenerationService
                 : Carbon::parse($service->next_due_date);
 
             // The period the invoice pays for, so the customer can see exactly
-            // what they are buying (2026/08/15 - 2026/09/14). A renewal is paid
+            // what they are buying (2026/08/15 - 2026/09/15). A renewal is paid
             // in advance: it falls due on the day the paid-up period ends, and
             // paying it moves the due date on by one cycle
-            // (RenewOnPaymentListener). The next due date is therefore the
-            // first day *not* covered, so the displayed end is the day before.
-            $periodEnd = BillingCycleHelper::periodEnd($dueDate, $billingCycle);
-            $period = $dueDate->format('Y/m/d').' - '.$periodEnd->format('Y/m/d');
+            // (RenewOnPaymentListener). So the period starts on the due date,
+            // it does not end there - the months before it are the ones the
+            // previous invoice paid for.
+            $periodEnd = BillingCycleHelper::advance($dueDate, $billingCycle);
 
             $items[] = [
                 'type' => 'Hosting',
                 'rel_id' => $service->id,
-                'description' => "{$productName} (".cycle_label($billingCycle, $client->language).") — {$service->domain} — {$period}",
+                'description' => app(InvoiceLineDescription::class)->service(
+                    $productName,
+                    $service->domain,
+                    $billingCycle,
+                    $dueDate,
+                    $periodEnd,
+                    $client->language
+                ),
                 'amount' => (float) $service->amount,
                 'taxed' => $service->product->tax ?? true,
                 'due_date' => $dueDate->toDateString(),
@@ -782,7 +789,7 @@ class InvoiceGenerationService
             $items[] = [
                 'type' => 'Domain',
                 'rel_id' => $domain->id,
-                'description' => 'Domain Renewal: '.$domain->domain.' ('.((int) ($domain->registration_period ?? 1)).'y)',
+                'description' => app(InvoiceLineDescription::class)->domainRenewal($domain),
                 'amount' => (float) $domain->recurring_amount,
                 'taxed' => true,
                 'due_date' => $domain->next_due_date?->toDateString(),

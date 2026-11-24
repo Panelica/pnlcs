@@ -384,18 +384,44 @@ class AddonService
      */
     public function lineItem(ServiceAddon $serviceAddon, ?float $amount = null, bool $firstPeriod = false): array
     {
+        [$periodStart, $periodEnd] = $this->periodFor($serviceAddon, $firstPeriod);
+
         return [
             'type' => 'Addon',
             'rel_id' => $serviceAddon->id,
             'description' => $this->describe(
                 $serviceAddon,
                 null,
-                $firstPeriod ? $this->firstPeriodNote($serviceAddon) : null
+                $firstPeriod ? $this->firstPeriodNote($serviceAddon) : null,
+                $periodStart,
+                $periodEnd
             ),
             'amount' => $amount ?? (float) $serviceAddon->amount,
             'taxed' => (bool) ($serviceAddon->addon->tax ?? true),
             'due_date' => $serviceAddon->next_due_date?->toDateString(),
         ];
+    }
+
+    /** @return array{0: Carbon, 1: Carbon} */
+    private function periodFor(ServiceAddon $serviceAddon, bool $firstPeriod): array
+    {
+        $cycle = $serviceAddon->billing_cycle ?: 'Monthly';
+
+        if ($firstPeriod) {
+            $start = $serviceAddon->first_invoice_date
+                ? Carbon::parse($serviceAddon->first_invoice_date)->startOfDay()
+                : now()->startOfDay();
+            $end = $serviceAddon->next_due_date
+                ? Carbon::parse($serviceAddon->next_due_date)->startOfDay()
+                : BillingCycleHelper::advance($start, $cycle);
+        } else {
+            $start = $serviceAddon->next_due_date
+                ? Carbon::parse($serviceAddon->next_due_date)->startOfDay()
+                : now()->startOfDay();
+            $end = BillingCycleHelper::advance($start, $cycle);
+        }
+
+        return [$start, $end];
     }
 
     /** The explanatory suffix on a prorated first invoice, if any. */
@@ -634,13 +660,23 @@ class AddonService
     }
 
     /** Invoice line wording, kept in one place so renewals and sales match. */
-    public function describe(ServiceAddon $serviceAddon, ?string $name = null, ?string $suffix = null): string
-    {
-        $name = $name ?: $serviceAddon->label();
-        $domain = $serviceAddon->service?->domain;
-        $cycle = cycle_label($serviceAddon->billing_cycle ?: 'Monthly', $serviceAddon->client?->language);
-        $line = trim("Addon: {$name} ({$cycle})".($domain ? " — {$domain}" : ''));
+    public function describe(
+        ServiceAddon $serviceAddon,
+        ?string $name = null,
+        ?string $suffix = null,
+        ?Carbon $periodStart = null,
+        ?Carbon $periodEnd = null
+    ): string {
+        if ($periodStart === null || $periodEnd === null) {
+            [$periodStart, $periodEnd] = $this->periodFor($serviceAddon, false);
+        }
 
-        return $suffix ? "{$line} — {$suffix}" : $line;
+        return app(InvoiceLineDescription::class)->addon(
+            $serviceAddon,
+            $periodStart,
+            $periodEnd,
+            $suffix,
+            $name
+        );
     }
 }

@@ -20,6 +20,7 @@ return [
         'confirm' => 'Onayla',
         'continue' => 'Devam Et',
         'copy' => 'Kopyala',
+        'copy_failed' => 'Kopyalanamadı',
         'create' => 'Oluştur',
         'deactivate' => 'Devre Dışı Bırak',
         'decline' => 'Reddet',
@@ -192,7 +193,7 @@ return [
         'enter_password' => 'Parola girin',
         'promo_code' => 'İndirim kodu',
         'search' => 'Ara...',
-        'search_clients' => 'Ad, e-posta, firma...',
+        'search_clients' => 'Ad, e-posta, şirket, alan adı...',
         'type_message' => 'Mesajınızı yazın...',
     ],
     'priority' => [

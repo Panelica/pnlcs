@@ -2,6 +2,7 @@
 
 use App\Models\Client;
 use App\Models\Domain;
+use App\Models\DomainPricing;
 use App\Models\RegistrarSettings;
 use App\Models\Setting;
 use App\Services\Module\ModuleRegistry;
@@ -271,6 +272,55 @@ test('an unchanged domain records a successful check without rewriting its data'
         ->and($fresh->last_sync_status)->toBe('ok');
 });
 
+test('a batch checks only the configured number and the next run continues', function () {
+    Setting::set('DomainSyncBatchSize', '2');
+    Http::fake(['*namecheap*' => Http::response(namecheapListXml('someone-else.com', now()->addYear()->format('m/d/Y')), 200)]);
+
+    $domains = collect(range(1, 5))->map(fn ($i) => syncDomainFor('Namecheap', [
+        'domain' => "batch-{$i}.com",
+        'status' => 'pending',
+        'expiry_date' => now()->addYear()->toDateString(),
+    ]));
+
+    $this->artisan('pnlcs:domain-sync')->assertSuccessful();
+    expect(Domain::whereNotNull('last_sync_at')->count())->toBe(2);
+
+    $this->artisan('pnlcs:domain-sync')->assertSuccessful();
+    expect(Domain::whereNotNull('last_sync_at')->count())->toBe(4);
+
+    $this->artisan('pnlcs:domain-sync')->assertSuccessful();
+    expect(Domain::whereNotNull('last_sync_at')->count())->toBe(5)
+        ->and(Domain::where('last_sync_status', 'error')->count())->toBe(5);
+});
+
+test('a recently synced domain waits while an older one is checked', function () {
+    Setting::set('DomainSyncBatchSize', '10');
+    Http::fake(['*namecheap*' => Http::response(namecheapListXml('old-one.com', now()->addYear()->format('m/d/Y')), 200)]);
+
+    $recentAt = now()->subHour()->toDateTimeString();
+    $recent = syncDomainFor('Namecheap', ['domain' => 'recent-one.com', 'last_sync_at' => $recentAt]);
+    $old = syncDomainFor('Namecheap', ['domain' => 'old-one.com', 'last_sync_at' => now()->subDays(2)]);
+
+    $this->artisan('pnlcs:domain-sync')->assertSuccessful();
+
+    expect($recent->fresh()->last_sync_at->toDateTimeString())->toBe($recentAt)
+        ->and($old->fresh()->last_sync_at->greaterThan(now()->subDay()))->toBeTrue();
+    Http::assertSentCount(1);
+});
+
+test('the domain option ignores the batch and the due-date filter', function () {
+    Setting::set('DomainSyncBatchSize', '1');
+    Http::fake(['*namecheap*' => Http::response(namecheapListXml('only-one.com', now()->addYear()->format('m/d/Y')), 200)]);
+
+    $target = syncDomainFor('Namecheap', ['domain' => 'only-one.com', 'last_sync_at' => now()]);
+    $other = syncDomainFor('Namecheap', ['domain' => 'other-one.com']);
+
+    $this->artisan('pnlcs:domain-sync', ['--domain' => 'only-one.com'])->assertSuccessful();
+
+    expect($target->fresh()->last_sync_at)->not->toBeNull()
+        ->and($other->fresh()->last_sync_at)->toBeNull();
+});
+
 // ---------------------------------------------------------------------------
 // Missing registration date filled from RDAP
 // ---------------------------------------------------------------------------
@@ -342,4 +392,39 @@ test('the per-run RDAP limit is read from the setting, and zero disables it', fu
 
     Http::assertNotSent(fn ($request) => str_contains($request->url(), 'rdap.org'));
     expect($domain->fresh()->registration_date)->toBeNull();
+});
+
+/*
+ * Moving a lapsed domain along is a local decision - it reads the TLD's grace
+ * and redemption periods and writes a status - so it must not be limited by
+ * the batch that paces the registrar calls. It was: the batch holds only
+ * registrars that can sync, so a manual domain stopped leaving "active"
+ * altogether, and a domain past the batch waited for its turn to lapse.
+ */
+test('a lapsed domain is moved along even when the batch does not reach it', function () {
+    Setting::set('DomainSyncBatchSize', '1');
+    Http::fake(['*namecheap*' => Http::response(namecheapListXml('in-batch.com', now()->addYear()->format('m/d/Y')), 200)]);
+
+    DomainPricing::updateOrCreate(
+        ['extension' => '.com'],
+        ['register_price' => 10, 'renew_price' => 12, 'transfer_price' => 10, 'min_years' => 1,
+            'max_years' => 5, 'enabled' => true, 'sort_order' => 0,
+            'grace_period' => 30, 'redemption_grace_period' => 30]
+    );
+
+    // Fills the single batch slot.
+    syncDomainFor('Namecheap', ['domain' => 'in-batch.com', 'expiry_date' => now()->addYear()]);
+
+    // Not in the batch: it is manual, and the batch is full anyway.
+    $manual = syncDomainFor('Manual', [
+        'domain' => 'lapsed-manual.com',
+        'status' => 'active',
+        'expiry_date' => now()->subDays(5),
+        'next_due_date' => now()->subDays(5),
+    ]);
+
+    $this->artisan('pnlcs:domain-sync')->assertSuccessful();
+
+    expect($manual->fresh()->status)->toBe('grace')
+        ->and($manual->fresh()->last_sync_at)->toBeNull();
 });

@@ -3604,7 +3604,7 @@
                         "name": "search",
                         "in": "query",
                         "required": false,
-                        "description": "Matches first name, last name, email or company name.",
+                        "description": "Matches first name, last name, email, company name, a service domain or a domain record.",
                         "schema": {
                             "type": "string"
                         }

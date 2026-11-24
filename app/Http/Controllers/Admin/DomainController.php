@@ -100,7 +100,7 @@ class DomainController extends Controller
             }
         }
 
-        $registrarOptions = $this->registrarOptions();
+        $registrarOptions = $this->registrarOptions($domain);
 
         // What staff can do at the registrar on the customer's behalf: the
         // same actions the client area offers, where the registrar can.
@@ -158,20 +158,37 @@ class DomainController extends Controller
     }
 
     /**
-     * The registrar modules this installation has, as select options. Value and
-     * label are both the module's display name so the stored value stays the
-     * same shape the modules themselves write.
+     * The registrar modules this installation has switched on, as select
+     * options. Value and label are the module's display name so the stored
+     * value stays the same shape the modules themselves write.
+     *
+     * A domain whose current registrar is no longer active keeps that one
+     * value, marked as inactive: otherwise opening the page and saving it
+     * unchanged would silently move the domain to whichever active registrar
+     * happened to be first in the list.
      *
      * @return array<string, string>
      */
-    private function registrarOptions(): array
+    private function registrarOptions(?Domain $domain = null): array
     {
+        $active = array_map('strtolower', $this->activeRegistrarKeys());
         $options = [];
 
         foreach (app(ModuleRegistry::class)->getRegistrarModules() as $key) {
+            if (! in_array(strtolower((string) $key), $active, true)) {
+                continue;
+            }
+
             $module = app(ModuleRegistry::class)->getRegistrarModule($key);
             $name = $module ? $module->getModuleName() : ucfirst($key);
             $options[$name] = $name;
+        }
+
+        $current = trim((string) $domain?->registrar);
+        if ($current !== '' && ! $this->hasOption($options, $current)) {
+            $module = app(ModuleRegistry::class)->getRegistrarModule($current);
+            $name = $module ? $module->getModuleName() : $current;
+            $options[$name] = $name.' ('.__('common.status.inactive').')';
         }
 
         ksort($options);
@@ -179,9 +196,21 @@ class DomainController extends Controller
         return $options;
     }
 
+    /** Whether a select option already carries this registrar name, any case. */
+    private function hasOption(array $options, string $registrar): bool
+    {
+        foreach (array_keys($options) as $name) {
+            if (strcasecmp((string) $name, $registrar) === 0) {
+                return true;
+            }
+        }
+
+        return false;
+    }
+
     public function updateRegistrar(Request $request, Domain $domain)
     {
-        $allowed = array_keys($this->registrarOptions());
+        $allowed = array_keys($this->registrarOptions($domain));
 
         $request->validate([
             'registrar' => ['required', 'string', \Illuminate\Validation\Rule::in($allowed)],

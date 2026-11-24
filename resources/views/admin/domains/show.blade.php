@@ -86,8 +86,8 @@
                     <form method="POST" action="{{ route('admin.domains.registrar', $domain) }}" style="display:flex;gap:6px;align-items:center;">
                         @csrf
                         <select name="registrar" class="form-control" style="max-width:220px;font-size:13px;padding:3px 6px;">
-                            @foreach($registrarOptions as $name)
-                            <option value="{{ $name }}" {{ strtolower((string) $domain->registrar) === strtolower($name) ? 'selected' : '' }}>{{ $name }}</option>
+                            @foreach($registrarOptions as $registrarValue => $registrarLabel)
+                            <option value="{{ $registrarValue }}" {{ strtolower((string) $domain->registrar) === strtolower((string) $registrarValue) ? 'selected' : '' }}>{{ $registrarLabel }}</option>
                             @endforeach
                         </select>
                         <button type="submit" class="btn btn-primary btn-xs">{{ __('admin.domains.save') }}</button>

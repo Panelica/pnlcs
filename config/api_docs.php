@@ -348,7 +348,7 @@ return [
         'section' => 'clients',
         'list' => true,
         'params' => [
-            'search' => ['string', 'Matches first name, last name, email or company name.'],
+            'search' => ['string', 'Matches first name, last name, email, company name, a service domain or a domain record.'],
             'status' => ['string', 'active, inactive or closed.'],
             'group_id' => ['integer', 'Only clients in this client group.'],
             'orderby' => ['string', 'id (default), first_name, last_name, email, company_name, status or created_at.'],
