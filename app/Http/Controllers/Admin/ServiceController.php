@@ -292,6 +292,7 @@ class ServiceController extends Controller
         ]);
 
         $service->update(['next_due_date' => $validated['next_due_date']]);
+        app(AddonService::class)->syncDueWithService($service);
 
         return back()->with('success', __('admin.messages.service_next_due_updated'));
     }

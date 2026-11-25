@@ -437,6 +437,25 @@ class AddonService
         ]);
     }
 
+    /**
+     * Keep every addon on the service's renewal date.
+     *
+     * An addon follows its service: the purchase copies the service's
+     * next_due_date, and the edit screen locks it there once the first invoice
+     * exists. A later manual change on the service did not propagate, so the
+     * service could renew on 6 December while its addons were still billed on
+     * 1 December. Called only for deliberate changes; renewal advances each
+     * addon through its own invoice line and must not be double-shifted here.
+     */
+    public function syncDueWithService(Service $service): int
+    {
+        $due = $service->next_due_date?->toDateString();
+
+        return ServiceAddon::where('service_id', $service->id)
+            ->whereNotIn('status', ['cancelled', 'terminated'])
+            ->update(['next_due_date' => $due]);
+    }
+
     /** Stop billing an addon without touching the service it belongs to. */
     public function cancel(ServiceAddon $serviceAddon): void
     {
