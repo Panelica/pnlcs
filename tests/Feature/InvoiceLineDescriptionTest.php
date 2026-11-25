@@ -118,3 +118,16 @@ it('uses the setting on add-on invoice lines', function () {
     expect($line['description'])
         ->toBe('Addon: SEO IP (Miesięcznie) — cncorp.pl — 2026/12/01 - 2026/12/31');
 });
+
+/*
+ * The period is printed inclusively (#491), which on a row whose start and
+ * end fall on the same day would read backwards: "2026/12/01 - 2026/11/30".
+ * An add-on from before first_invoice_date existed can be exactly that.
+ */
+it('does not print a period that runs backwards', function () {
+    Setting::set(InvoiceLineDescription::SETTING, InvoiceLineDescription::PERIOD);
+    $same = Carbon::parse('2026-12-01');
+
+    expect(app(InvoiceLineDescription::class)->service('Hosting', null, 'Monthly', $same, $same->copy(), 'en'))
+        ->toBe('Hosting — 2026/12/01 - 2026/12/01');
+});

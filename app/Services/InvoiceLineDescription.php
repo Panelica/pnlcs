@@ -146,7 +146,18 @@ class InvoiceLineDescription
      */
     private function period(Carbon $start, Carbon $end): string
     {
-        return $start->format('Y/m/d').' - '.$end->copy()->subDay()->format('Y/m/d');
+        $last = $end->copy()->subDay();
+
+        // A period of one day, or a row whose two dates are the same, would
+        // otherwise print a range that runs backwards. An add-on written
+        // before first_invoice_date existed can have its issue date and its
+        // renewal date on the same day, and it is still described when its
+        // open invoice is read.
+        if ($last->lessThan($start)) {
+            $last = $start->copy();
+        }
+
+        return $start->format('Y/m/d').' - '.$last->format('Y/m/d');
     }
 
     private function yearsLabel(int $years, ?string $locale): string
