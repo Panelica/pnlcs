@@ -3,8 +3,10 @@
 use App\Models\ApiCredential;
 use App\Models\Client;
 use App\Models\Product;
+use App\Models\ProductAddon;
 use App\Models\ProductGroup;
 use App\Models\Service;
+use App\Models\ServiceAddon;
 use Database\Factories\ApiCredentialFactory;
 
 /**
@@ -112,4 +114,34 @@ it('still changes the fields it was always free to change', function () {
 
     expect($service->fresh()->domain)->toBe('newshop.test')
         ->and($service->fresh()->notes)->toBe('Moved from the old box.');
+});
+
+test('moves the addons when the API changes the service due date', function () {
+    $service = apiEditableService();
+    $addon = ProductAddon::create([
+        'name' => 'Dodatkowy adres IP',
+        'packages' => null,
+        'hidden' => false,
+        'retired' => false,
+        'sort_order' => 0,
+        'tax' => true,
+    ]);
+    $row = ServiceAddon::create([
+        'service_id' => $service->id,
+        'addon_id' => $addon->id,
+        'client_id' => $service->client_id,
+        'qty' => 1,
+        'amount' => 8,
+        'billing_cycle' => 'monthly',
+        'next_due_date' => $service->next_due_date,
+        'status' => 'active',
+    ]);
+    $when = today()->addMonths(3)->toDateString();
+
+    $this->withHeaders(serviceApiHeaders())->postJson('/api/v1/updateclientproduct', [
+        'serviceid' => $service->id,
+        'next_due_date' => $when,
+    ])->assertSuccessful();
+
+    expect($row->fresh()->next_due_date->toDateString())->toBe($when);
 });

@@ -108,5 +108,17 @@ The command changes only the label and the year count. Domain, period, amounts
 and invoice numbers stay as they were. `--include-paid` is deliberately
 explicit because a paid invoice is a historical document.
 
+An addon follows its service's renewal date. Changing the service date from
+the admin screen now moves its addons with it; older rows may still disagree.
+Repair them with:
+
+```bash
+php artisan pnlcs:sync-addon-due-dates --dry-run
+php artisan pnlcs:sync-addon-due-dates
+```
+
+It updates active, pending and draft addons and leaves cancelled or terminated
+ones alone. Amounts, invoices and first-invoice dates are untouched.
+
 **Utilities → Automation Status** in the admin area shows when the scheduled
 jobs last ran.

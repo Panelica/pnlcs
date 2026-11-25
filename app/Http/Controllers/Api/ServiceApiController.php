@@ -8,6 +8,7 @@ use App\Models\CancellationRequest;
 use App\Models\Product;
 use App\Models\Service;
 use App\Models\ServiceAddon;
+use App\Services\AddonService;
 use App\Services\ProvisioningService;
 use App\Services\UpgradeService;
 use Illuminate\Http\Request;
@@ -75,7 +76,13 @@ class ServiceApiController extends BaseApiController
                 $service->$f = $request->$f;
             }
         }
+
+        $dueChanged = $service->isDirty('next_due_date');
         $service->save();
+
+        if ($dueChanged) {
+            app(AddonService::class)->syncDueWithService($service);
+        }
 
         return $this->success(['serviceid' => $service->id]);
     }
