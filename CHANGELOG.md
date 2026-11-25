@@ -2,6 +2,92 @@
 
 All notable changes to PNLCS are documented here. Newest first.
 
+## 1.32.1 — 2026-11-25
+
+A patch release: four reviewed changes, every one of them corrective, no
+migration, no new setting and nothing new to configure. A printed billing
+period now ends on the last day it pays for, the line table on the PDF gives
+the product name the width it needs, an add-on follows its service when staff
+move the renewal date, and the English domain wording on invoices issued
+before 1.32.0 can be translated.
+
+Thank you [@hedon77](https://github.com/hedon77) for all four (#491, #492,
+#493, #494).
+
+### Fixed
+
+- **A printed billing period ends on the last day it pays for.** The
+  generators work with a half-open period — the end is the next due date, the
+  first day the invoice does not cover — and it was printed as it came, so a
+  monthly renewal from 1 December read `2026/12/01 - 2027/01/01`. The customer
+  reads that as a day they have not been billed for, and for a monthly service
+  the period visibly crosses into the next month. It now reads
+  `2026/12/01 - 2026/12/31`. Every line built by the shared formatter is
+  affected: hosting renewals, the first invoice for an ordered service,
+  add-ons, domain registrations and domain renewals. A term that ends on a
+  month boundary keeps the last day of the paid month (`2027/01/31` monthly
+  becomes `2027/01/31 - 2027/02/27`, because the next due date is 28
+  February). The due dates, the terms, the renewal dates and the proration are
+  untouched, and invoices already issued keep their text.
+- **A period of a single day prints as that day**, instead of a range running
+  backwards. An add-on written before add-ons recorded a first-invoice date can
+  carry its issue date and its renewal date on the same day, and it is still
+  described whenever its open invoice is read.
+- **The line table on the PDF gives the product name the room.** Nine fixed
+  columns at 29% for the name left a product wrapping over four lines while the
+  unit column sat empty — most invoices carry no unit at all. The unit column
+  is left out when no line uses one and its width goes to the name, the type
+  scale is a little smaller, an amount no longer wraps mid-number, and the part
+  of a generated description after the first em dash — the domain and the
+  period — goes on a second, smaller line so the product is what the eye lands
+  on. A description typed by hand, with no em dash in it, is printed exactly as
+  it was typed.
+- **An add-on follows its service when staff move the renewal date.** An add-on
+  copies its service's renewal date when it is bought, and once its first
+  invoice exists the edit screen locks the field to the service's date — so a
+  later change on the service left the add-on behind, and a service renewing on
+  6 December kept add-ons billed on 1 December. Changing the date, on the admin
+  form or through `updateclientproduct`, now moves every add-on that has not
+  ended. A renewal does not: each add-on advances through its own invoice line
+  and would otherwise move twice. Amounts, first-invoice dates and issued
+  invoices are untouched.
+- **The English domain wording on older invoices can be translated.** 1.32.0
+  writes domain lines in the customer's language; lines issued before it still
+  read "Domain Registration: example.test — 1 Year(s)" on a document
+  translated everywhere else.
+
+### Database changes
+
+None.
+
+### For operators
+
+Two commands, both run by hand, both with a `--dry-run`, both documented under
+*Running a command by hand* in [Scheduled
+Commands](https://docs.pnlcs.com/reference/scheduled-commands/):
+
+- `pnlcs:translate-domain-lines` rewrites the label, the year count and the
+  WHOIS privacy note on legacy domain lines in the language of the document,
+  and changes nothing else on the line — not the domain, the period, the
+  amount or the number. Open invoices only unless `--include-paid` is given,
+  which is deliberately explicit because a settled invoice is a historical
+  document.
+- `pnlcs:sync-addon-due-dates` repairs add-ons whose renewal date drifted from
+  their service's before this release, naming each row it would change.
+
+### For theme and module authors
+
+- `App\Services\AddonService::syncDueWithService($service)` sets every add-on
+  that has not ended to the service's renewal date and answers how many it
+  moved. Anything that changes a service's `next_due_date` deliberately — as
+  opposed to a renewal, which advances each add-on through its own invoice
+  line — should call it.
+- `App\Services\InvoicePdfService::itemsTableStyle()` takes an optional
+  `bool $hasUnit`, and `itemDescriptionHtml(InvoiceItem $item)` is new: it
+  splits a generated description at the first em dash and wraps the halves in
+  `.item-name` and `.item-meta`. A custom invoice template that styles the
+  `{items}` table may want those two classes.
+
 ## 1.32.0 — 2026-11-24
 
 A stable release, offered to every installation. Five reviewed changes, all of
