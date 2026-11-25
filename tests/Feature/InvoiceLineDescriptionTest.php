@@ -44,8 +44,8 @@ it('uses the selected cycle and period parts', function (string $mode, string $e
     expect($line)->toBe($expected);
 })->with([
     'cycle' => ['cycle', 'Obsługa i utrzymanie serwerów pocztowego (Miesięcznie) — cncorp.pl'],
-    'period' => ['period', 'Obsługa i utrzymanie serwerów pocztowego — cncorp.pl — 2026/12/01 - 2027/01/01'],
-    'both' => ['cycle_and_period', 'Obsługa i utrzymanie serwerów pocztowego (Miesięcznie) — cncorp.pl — 2026/12/01 - 2027/01/01'],
+    'period' => ['period', 'Obsługa i utrzymanie serwerów pocztowego — cncorp.pl — 2026/12/01 - 2026/12/31'],
+    'both' => ['cycle_and_period', 'Obsługa i utrzymanie serwerów pocztowego (Miesięcznie) — cncorp.pl — 2026/12/01 - 2026/12/31'],
 ]);
 
 it('defaults to cycle and period when the setting is missing or invalid', function (string $setting) {
@@ -54,7 +54,7 @@ it('defaults to cycle and period when the setting is missing or invalid', functi
     expect(app(InvoiceLineDescription::class)->service(
         'Hosting', 'example.test', 'Monthly',
         Carbon::parse('2026-12-01'), Carbon::parse('2027-01-01'), 'en'
-    ))->toBe('Hosting (Monthly) — example.test — 2026/12/01 - 2027/01/01');
+    ))->toBe('Hosting (Monthly) — example.test — 2026/12/01 - 2026/12/31');
 })->with(['missing' => [''], 'invalid' => ['nonsense']]);
 
 it('localises the domain cycle and applies the same three modes', function (string $mode, string $expected) {
@@ -71,8 +71,8 @@ it('localises the domain cycle and applies the same three modes', function (stri
     expect(app(InvoiceLineDescription::class)->domainRenewal($domain))->toBe($expected);
 })->with([
     'cycle' => ['cycle', 'Odnowienie domeny: cncorp.pl (1 rok)'],
-    'period' => ['period', 'Odnowienie domeny: cncorp.pl — 2026/12/01 - 2027/12/01'],
-    'both' => ['cycle_and_period', 'Odnowienie domeny: cncorp.pl (1 rok) — 2026/12/01 - 2027/12/01'],
+    'period' => ['period', 'Odnowienie domeny: cncorp.pl — 2026/12/01 - 2027/11/30'],
+    'both' => ['cycle_and_period', 'Odnowienie domeny: cncorp.pl (1 rok) — 2026/12/01 - 2027/11/30'],
 ]);
 
 it('describes a first domain registration in the same mode', function () {
@@ -87,7 +87,7 @@ it('describes a first domain registration in the same mode', function () {
     ]);
 
     expect(app(InvoiceLineDescription::class)->domainRegistration($domain, 'register'))
-        ->toBe('Rejestracja domeny: cncorp.pl (1 rok) — 2026/01/01 - 2027/01/01');
+        ->toBe('Rejestracja domeny: cncorp.pl (1 rok) — 2026/01/01 - 2026/12/31');
 });
 
 it('uses the setting on add-on invoice lines', function () {
@@ -116,5 +116,5 @@ it('uses the setting on add-on invoice lines', function () {
     $line = app(AddonService::class)->lineItem($addon);
 
     expect($line['description'])
-        ->toBe('Addon: SEO IP (Miesięcznie) — cncorp.pl — 2026/12/01 - 2027/01/01');
+        ->toBe('Addon: SEO IP (Miesięcznie) — cncorp.pl — 2026/12/01 - 2026/12/31');
 });

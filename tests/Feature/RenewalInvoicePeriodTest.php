@@ -8,6 +8,7 @@ use App\Models\ProductGroup;
 use App\Models\Service;
 use App\Services\InvoiceGenerationService;
 use App\Services\InvoiceService;
+use App\Services\OrderService;
 use Carbon\Carbon;
 use Illuminate\Support\Facades\Mail;
 
@@ -17,6 +18,10 @@ use Illuminate\Support\Facades\Mail;
  * named the period before the due date - the one the previous invoice had
  * paid for - so a service due on 27 November was invoiced for "27 October -
  * 27 November" and read as a second bill for a month already settled.
+ *
+ * The end date is inclusive: the next due date is the first day the new
+ * invoice covers, so a monthly period starting 1 December ends 31 December,
+ * not 1 January.
  */
 
 beforeEach(fn () => Mail::fake());
@@ -43,7 +48,7 @@ test('a renewal line names the period being paid for, which starts on the due da
 
     app(InvoiceGenerationService::class)->generateDueInvoices();
 
-    expect(ripLine($service)->description)->toContain('2026/11/27 - 2026/12/27')
+    expect(ripLine($service)->description)->toContain('2026/11/27 - 2026/12/26')
         ->and(ripLine($service)->description)->not->toContain('2026/10/27');
 });
 
@@ -58,7 +63,7 @@ test('the period on the line ends where paying the invoice moves the due date to
     $next = $service->fresh()->next_due_date;
 
     expect(Carbon::parse($next)->toDateString())->toBe('2027-02-27')
-        ->and($line->description)->toContain('2026/11/27 - 2027/02/27');
+        ->and($line->description)->toContain('2026/11/27 - 2027/02/26');
 });
 
 test('a term ending on the last day of a month is not pushed into the month after', function () {
@@ -67,5 +72,33 @@ test('a term ending on the last day of a month is not pushed into the month afte
 
     app(InvoiceGenerationService::class)->generateDueInvoices();
 
-    expect(ripLine($service)->description)->toContain('2027/01/31 - 2027/02/28');
+    expect(ripLine($service)->description)->toContain('2027/01/31 - 2027/02/27');
+});
+
+test('a monthly period ends on the last day before the next renewal', function () {
+    Carbon::setTestNow('2026-11-20 10:00:00');
+    $service = ripService('Monthly', '2026-12-01');
+
+    app(InvoiceGenerationService::class)->generateDueInvoices();
+
+    expect(ripLine($service)->description)->toContain('2026/12/01 - 2026/12/31');
+});
+
+test('the first invoice for a monthly service also ends on the last paid day', function () {
+    Carbon::setTestNow('2026-12-01 10:00:00');
+    $client = Client::factory()->create(['tax_exempt' => true]);
+    $product = Product::factory()->create(['tax' => false]);
+
+    $order = app(OrderService::class)->processOrder($client, [[
+        'type' => 'service',
+        'product_id' => $product->id,
+        'domain' => 'first.example.test',
+        'amount' => 10,
+        'billing_cycle' => 'Monthly',
+    ]], 'banktransfer');
+
+    $service = Service::where('order_id', $order->id)->firstOrFail();
+    $line = InvoiceItem::where('type', 'Hosting')->where('rel_id', $service->id)->firstOrFail();
+
+    expect($line->description)->toContain('2026/12/01 - 2026/12/31');
 });

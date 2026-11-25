@@ -138,9 +138,15 @@ class InvoiceLineDescription
         return in_array($this->mode(), [self::PERIOD, self::BOTH], true);
     }
 
+    /** The period is stored as [start, end), but printed inclusively.
+     *
+     * The end passed by the generators is the next due date - the first day
+     * the invoice does not cover. Printing it directly made a monthly period
+     * read "2026/12/01 - 2027/01/01"; the last paid day is 31 December.
+     */
     private function period(Carbon $start, Carbon $end): string
     {
-        return $start->format('Y/m/d').' - '.$end->format('Y/m/d');
+        return $start->format('Y/m/d').' - '.$end->copy()->subDay()->format('Y/m/d');
     }
 
     private function yearsLabel(int $years, ?string $locale): string
