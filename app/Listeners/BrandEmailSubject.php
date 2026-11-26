@@ -26,7 +26,7 @@ class BrandEmailSubject
             return;
         }
 
-        $brand = trim(company_legal_name());
+        $brand = $this->prefix();
 
         if ($brand === '') {
             return;
@@ -45,6 +45,28 @@ class BrandEmailSubject
         $subject = trim($subject);
 
         $event->message->subject($subject === '' ? $brand : $brand.self::SEPARATOR.$subject);
+    }
+
+    /**
+     * The name that goes in front.
+     *
+     * A white-label name, where the operator set one, comes first: that is
+     * what the shipped contract says customer-facing text carries ("so the
+     * customer-facing site carries your brand, not ours",
+     * docs/guides/themes-and-branding.md), and it is what company_name()
+     * already honours everywhere else. Only without one is the registered
+     * name used, which is the point of this listener - an email that names
+     * the business rather than nobody.
+     */
+    private function prefix(): string
+    {
+        try {
+            $whiteLabel = trim((string) Setting::get('whitelabel_company_name', ''));
+        } catch (\Throwable) {
+            $whiteLabel = '';
+        }
+
+        return $whiteLabel !== '' ? $whiteLabel : trim(company_legal_name());
     }
 
     /** A subject starting with another configured brand loses it. */

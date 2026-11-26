@@ -18,6 +18,10 @@ use Illuminate\Support\Facades\Mail;
  * domain_name and ticket_tid. Nothing matched, so every domain confirmation
  * and every support email went out with the braces still in the subject line —
  * "Domain Registration Confirmation: {domain}".
+ *
+ * What these tests are about is the merge, not the whole line: since #496 the
+ * company name is put in front of every outgoing subject, so they assert that
+ * the merged text is what the subject ENDS with.
  */
 function sentSubjects(): ArrayObject
 {
@@ -42,7 +46,8 @@ test('a domain email says which domain', function () {
     $subjects = sentSubjects();
     Mail::to($client->email)->send(new DomainRegistrationMail($domain));
 
-    expect($subjects->getArrayCopy())->toContain('Domain Registration Confirmation: example-registered.com');
+    expect($subjects->getArrayCopy())->toHaveCount(1)
+        ->and($subjects[0])->toEndWith('Domain Registration Confirmation: example-registered.com');
 });
 
 test('a support email says which ticket', function () {
@@ -62,7 +67,8 @@ test('a support email says which ticket', function () {
     $subjects = sentSubjects();
     Mail::to($client->email)->send(new TicketOpenedMail($ticket));
 
-    expect($subjects->getArrayCopy())->toContain('[482913] Site is down');
+    expect($subjects->getArrayCopy())->toHaveCount(1)
+        ->and($subjects[0])->toEndWith('[482913] Site is down');
 });
 
 test('no subject goes out with braces left in it', function () {
