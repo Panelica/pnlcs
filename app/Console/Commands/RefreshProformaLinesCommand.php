@@ -90,6 +90,12 @@ class RefreshProformaLinesCommand extends Command
             : $this->cycleFor($item, $description, $locale);
         $years = $type === 'Domain' ? $this->domainYears($item, $description, $locale) : null;
 
+        $suffix = $this->addonFirstPeriodSuffix($item, $locale);
+
+        if ($suffix !== null && str_ends_with($description, $suffix)) {
+            $description = rtrim(rtrim(substr($description, 0, -strlen($suffix))), " —");
+        }
+
         $base = preg_replace(self::PERIOD_PATTERN, '', $description) ?? $description;
         $base = trim($base);
 
@@ -111,14 +117,35 @@ class RefreshProformaLinesCommand extends Command
         }
 
         if ($mode === InvoiceLineDescription::CYCLE) {
-            return $base;
+            return $suffix ? $base.' — '.$suffix : $base;
         }
 
         $end = $type === 'Domain'
             ? $start->copy()->addYearsNoOverflow($years)->subDay()
             : BillingCycleHelper::advance($start, $cycle)->subDay();
 
-        return $base.' — '.$start->format('Y/m/d').' - '.$end->format('Y/m/d');
+        $new = $base.' — '.$start->format('Y/m/d').' - '.$end->format('Y/m/d');
+
+        return $suffix ? $new.' — '.$suffix : $new;
+    }
+
+    /** The prorated-first-period note, which belongs after the period. */
+    private function addonFirstPeriodSuffix(\App\Models\InvoiceItem $item, string $locale): ?string
+    {
+        if ((string) $item->type !== 'Addon') {
+            return null;
+        }
+
+        $addon = ServiceAddon::find($item->rel_id);
+
+        if (! $addon?->isProrated()) {
+            return null;
+        }
+
+        return __('client.services.addon_first_period', [
+            'days' => (int) $addon->proration_days,
+            'cycle_days' => (int) $addon->proration_cycle_days,
+        ], $locale);
     }
 
     private function periodStart(string $description): ?Carbon

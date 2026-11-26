@@ -145,3 +145,34 @@ it('keeps only the cycle when that is the selected setting', function () {
 
     expect($line->fresh()->description)->toBe('Hosting (Miesięcznie) — example.test');
 });
+
+it('puts a first-period note after the rebuilt period', function () {
+    $invoice = proformaInvoice();
+    $service = Service::factory()->create(['billing_cycle' => 'Monthly']);
+    $productAddon = ProductAddon::create([
+        'name' => 'Dodatkowy IP SEO',
+        'packages' => null,
+        'hidden' => false,
+        'retired' => false,
+        'sort_order' => 0,
+        'tax' => true,
+    ]);
+    $addon = ServiceAddon::create([
+        'service_id' => $service->id,
+        'addon_id' => $productAddon->id,
+        'client_id' => $service->client_id,
+        'qty' => 1,
+        'amount' => 10,
+        'prorated' => true,
+        'proration_days' => 14,
+        'proration_cycle_days' => 30,
+        'billing_cycle' => 'Monthly',
+        'next_due_date' => '2026-12-06',
+        'status' => 'active',
+    ]);
+    $line = proformaLine($invoice, 'Addon', $addon->id, '2026-12-06', 'Addon: Dodatkowy IP SEO (Miesięcznie) — 24box.pl — pierwszy okres: 14 z 30 dni');
+
+    $this->artisan('pnlcs:refresh-proforma-lines')->assertSuccessful();
+
+    expect($line->fresh()->description)->toBe('Addon: Dodatkowy IP SEO — 24box.pl — 2026/12/06 - 2027/01/05 — pierwszy okres: 14 z 30 dni');
+});
