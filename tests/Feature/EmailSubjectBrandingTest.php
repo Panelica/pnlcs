@@ -21,7 +21,7 @@ use Symfony\Component\Mime\Email;
 beforeEach(function () {
     Setting::set('CompanyLegalName', 'Example Company Sp. z o.o.');
     Setting::set('CompanyName', 'Example Company Sp. z o.o.');
-    Setting::set('whitelabel_company_name', 'BoxHost');
+    Setting::set('whitelabel_company_name', 'Example Brand');
     app()->forgetInstance('pnlcs.company_name');
 });
 
@@ -41,12 +41,12 @@ it('prefixes a subject that has no brand', function () {
 });
 
 it('moves a trailing brand to the front without duplicating it', function () {
-    expect(brandedSubject('Potwierdzenie płatności - BoxHost'))
+    expect(brandedSubject('Potwierdzenie płatności - Example Brand'))
         ->toBe('Example Company Sp. z o.o. — Potwierdzenie płatności');
 });
 
 it('normalises a subject that starts with the white-label brand', function () {
-    expect(brandedSubject('BoxHost — Nowa faktura #123'))
+    expect(brandedSubject('Example Brand — Nowa faktura #123'))
         ->toBe('Example Company Sp. z o.o. — Nowa faktura #123');
 });
 
@@ -63,7 +63,7 @@ it('keeps the ticket token so replies still import', function () {
 });
 
 it('does not double a subject that is only the brand', function () {
-    expect(brandedSubject('BoxHost'))->toBe('Example Company Sp. z o.o.');
+    expect(brandedSubject('Example Brand'))->toBe('Example Company Sp. z o.o.');
 });
 
 it('falls back to CompanyName when the legal name is empty', function () {

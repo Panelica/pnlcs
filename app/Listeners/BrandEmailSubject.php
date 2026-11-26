@@ -47,7 +47,7 @@ class BrandEmailSubject
         $event->message->subject($subject === '' ? $brand : $brand.self::SEPARATOR.$subject);
     }
 
-    /** A subject starting with "BoxHost — ..." loses the old brand. */
+    /** A subject starting with another configured brand loses it. */
     private function stripLeadingBrand(string $subject): string
     {
         $lower = mb_strtolower($subject);
@@ -68,7 +68,7 @@ class BrandEmailSubject
         return $subject;
     }
 
-    /** A subject ending in " - BoxHost" loses the old brand too. */
+    /** A subject ending in another configured brand loses it too. */
     private function stripTrailingBrand(string $subject): string
     {
         $lower = mb_strtolower($subject);
@@ -91,7 +91,7 @@ class BrandEmailSubject
 
     /**
      * Names that mean "this email is already from us". The longest match is
-     * tried first so "24Box Hosting" is not reduced to bare "24Box".
+     * tried first so a longer configured name is not reduced to its prefix.
      *
      * @return list<string>
      */
@@ -110,8 +110,6 @@ class BrandEmailSubject
             $companyName,
             $whiteLabel,
             company_name(),
-            '24Box Hosting',
-            '24Box',
         ];
 
         return collect($values)
