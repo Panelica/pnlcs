@@ -54,7 +54,7 @@
         </div>
         @elseif(! $client?->full_phone)
         <p style="font-size:13px; color:var(--muted); margin:0;">{{ __('client.phone_verify.no_phone') }}</p>
-        @elseif(session('phone_code_sent'))
+        @elseif(session('phone_code_sent') && ($smsVerifyAvailable ?? true))
         <p style="font-size:13px; color:#555; margin-bottom:12px;">{{ __('client.phone_verify.enter_code_hint') }}</p>
         <form method="POST" action="{{ route('client.account.phone.verify_check') }}" style="display:flex; gap:8px; align-items:center; margin:0;">
             @csrf
@@ -65,12 +65,56 @@
         @else
         <div style="display:flex; align-items:center; justify-content:space-between; gap:10px;">
             <span style="font-size:13px; color:var(--muted);">{{ __('client.phone_verify.unverified_label') }} ({{ $client->full_phone }})</span>
+            @if($smsVerifyAvailable ?? true)
             <form method="POST" action="{{ route('client.account.phone.verify') }}" style="margin:0;">
                 @csrf
                 <button type="submit" class="btn btn-primary btn-sm">{{ __('client.phone_verify.send_btn') }}</button>
             </form>
+            @endif
         </div>
         @error('phone')<p style="font-size:12px;color:#a94442;margin:8px 0 0;">{{ $message }}</p>@enderror
+        @if($whatsappVerify ?? null)
+        {{-- WhatsApp: the customer sends us the code, nothing is sent to them. --}}
+        <div data-whatsapp-verify data-status-url="{{ route('client.account.phone.whatsapp_status') }}" style="margin-top:14px; padding-top:14px; border-top:1px solid var(--border, #e5e5e5);">
+            @if($whatsappVerify['pending'])
+            <p style="font-size:13px; color:#555; margin:0 0 10px;">{{ __('client.phone_verify.whatsapp_pending_hint', ['number' => '+'.$whatsappVerify['number'], 'phone' => $client->full_phone]) }}</p>
+            <div style="display:flex; gap:12px; align-items:center; flex-wrap:wrap;">
+                <a href="{{ $whatsappVerify['pending']['link'] }}" target="_blank" rel="noopener" class="btn btn-success btn-sm">{{ __('client.phone_verify.whatsapp_open_btn') }}</a>
+                <span style="font-size:13px;">{{ __('client.phone_verify.whatsapp_code_label') }} <strong style="font-family:monospace; font-size:15px; letter-spacing:2px;">{{ $whatsappVerify['pending']['code'] }}</strong></span>
+            </div>
+            <p data-whatsapp-mismatch style="font-size:12px; color:#a94442; margin:8px 0 0;{{ $whatsappVerify['pending']['state'] === 'mismatch' ? '' : ' display:none;' }}">{{ __('client.phone_verify.whatsapp_mismatch', ['phone' => $client->full_phone]) }}</p>
+            <p style="font-size:12px; color:var(--muted); margin:8px 0 0;">{{ __('client.phone_verify.whatsapp_waiting') }}</p>
+            <script>
+            (function () {
+                var box = document.querySelector('[data-whatsapp-verify]');
+                if (!box || !window.fetch) return;
+                var url = box.getAttribute('data-status-url'), tries = 0;
+                var timer = setInterval(function () {
+                    // The code lives fifteen minutes; stop asking after that.
+                    if (++tries > 225) { clearInterval(timer); return; }
+                    fetch(url, { headers: { 'Accept': 'application/json' }, credentials: 'same-origin' })
+                        .then(function (r) { return r.ok ? r.json() : null; })
+                        .then(function (d) {
+                            if (!d) return;
+                            if (d.verified) { clearInterval(timer); window.location.reload(); return; }
+                            var m = box.querySelector('[data-whatsapp-mismatch]');
+                            if (m) m.style.display = d.state === 'mismatch' ? '' : 'none';
+                        })
+                        .catch(function () {});
+                }, 4000);
+            })();
+            </script>
+            @else
+            <div style="display:flex; align-items:center; justify-content:space-between; gap:10px;">
+                <span style="font-size:13px; color:var(--muted);">{{ __('client.phone_verify.whatsapp_intro') }}</span>
+                <form method="POST" action="{{ route('client.account.phone.whatsapp') }}" style="margin:0;">
+                    @csrf
+                    <button type="submit" class="btn btn-success btn-sm">{{ __('client.phone_verify.whatsapp_btn') }}</button>
+                </form>
+            </div>
+            @endif
+        </div>
+        @endif
         @endif
     </div>
 </div>

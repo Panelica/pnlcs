@@ -42,6 +42,13 @@ Route::withoutMiddleware([\Illuminate\Foundation\Http\Middleware\PreventRequestF
     Route::post('gateway/tpay/webhook', [GatewayWebhookController::class, 'tpay'])->name('gateway.tpay.webhook');
 });
 
+// ===== WhatsApp Cloud API webhook (no CSRF — verified by signature) =====
+// Phone verification codes customers send to the operator's number.
+Route::withoutMiddleware([\Illuminate\Foundation\Http\Middleware\PreventRequestForgery::class])->group(function () {
+    Route::get('webhooks/whatsapp', [\App\Http\Controllers\WhatsappWebhookController::class, 'verify'])->name('webhooks.whatsapp');
+    Route::post('webhooks/whatsapp', [\App\Http\Controllers\WhatsappWebhookController::class, 'receive'])->name('webhooks.whatsapp.receive');
+});
+
 // ===== Legal documents and corporate pages =====
 // Public and readable without an account on purpose: a visitor has to be able
 // to read the terms before opening one, and a crawler has to be able to index

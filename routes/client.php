@@ -345,6 +345,8 @@ Route::prefix('client')->name('client.')->middleware(['banned.ip', 'client.permi
         Route::post('confirm', [\App\Http\Controllers\Client\ConfirmSensitiveController::class, 'verify'])->middleware('throttle:10,1')->name('confirm.verify');
         Route::post('account/phone/verification', [\App\Http\Controllers\Client\PhoneVerificationController::class, 'start'])->middleware('throttle:3,10')->name('account.phone.verify');
         Route::post('account/phone/verification-check', [\App\Http\Controllers\Client\PhoneVerificationController::class, 'check'])->middleware('throttle:10,1')->name('account.phone.verify_check');
+        Route::post('account/phone/whatsapp', [\App\Http\Controllers\Client\PhoneVerificationController::class, 'whatsappStart'])->middleware('throttle:5,10')->name('account.phone.whatsapp');
+        Route::get('account/phone/whatsapp/status', [\App\Http\Controllers\Client\PhoneVerificationController::class, 'whatsappStatus'])->middleware('throttle:60,1')->name('account.phone.whatsapp_status');
         Route::post('account/security/sessions/{sessionId}/logout', [AccountController::class, 'logoutSession'])->name('account.security.logout_session');
         Route::match(['get', 'post'], '2fa/enable', [AuthController::class, 'enable2fa'])->name('2fa.enable');
         Route::post('2fa/disable', [AuthController::class, 'disable2fa'])->name('2fa.disable');

@@ -96,6 +96,7 @@ class SettingController extends Controller
         'FraudLabsApiKey', 'FraudLabsEnabled',
         'MaxMindAccountId', 'MaxMindEnabled', 'MaxMindLicenseKey',
         'TwilioAccountSid', 'TwilioAuthToken', 'TwilioVerifyEnabled', 'TwilioVerifyServiceSid',
+        'WhatsappVerifyEnabled', 'WhatsappBusinessNumber', 'WhatsappAppSecret', 'WhatsappWebhookVerifyToken',
         'ProformaEnabled', 'ProformaNumberFormat', 'HidePaidProformas',
         'LateFeeAmount', 'LateFeeMinDays', 'LateFeeType',
         'MailEnabled', 'MailType', 'MaintenanceMode', 'PhoneNumber',
@@ -230,6 +231,9 @@ class SettingController extends Controller
         }
         if (trim((string) ($data['TwilioAuthToken'] ?? '')) === '') {
             unset($data['TwilioAuthToken']);
+        }
+        if (trim((string) ($data['WhatsappAppSecret'] ?? '')) === '') {
+            unset($data['WhatsappAppSecret']);
         }
         if (trim((string) ($data['OfficialRateApiKey'] ?? '')) === '') {
             unset($data['OfficialRateApiKey']);

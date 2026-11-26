@@ -13,6 +13,8 @@ class Setting extends Model {
     public const SECRETS = [
         'SMTPPassword', 'GoogleClientSecret', 'GithubClientSecret', 'RecaptchaSecretKey',
         'OpenAIApiKey', 'TwilioAuthToken', 'FraudLabsApiKey', 'MaxMindLicenseKey',
+        // Checks the signature on WhatsApp Cloud API webhooks.
+        'WhatsappAppSecret',
         // The key sent to an operator-added official rate publisher (#372).
         'OfficialRateApiKey',
     ];
