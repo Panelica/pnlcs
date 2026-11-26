@@ -120,5 +120,16 @@ php artisan pnlcs:sync-addon-due-dates
 It updates active, pending and draft addons and leaves cancelled or terminated
 ones alone. Amounts, invoices and first-invoice dates are untouched.
 
+Open proformas raised before the period-display setting changed can be
+rewritten to the current choice without touching their amounts or dates:
+
+```bash
+php artisan pnlcs:refresh-proforma-lines --dry-run   # report, change nothing
+php artisan pnlcs:refresh-proforma-lines
+```
+
+It keeps each product name and domain as written, rebuilds only the cycle and
+period, and works on `unpaid` proformas only.
+
 **Utilities → Automation Status** in the admin area shows when the scheduled
 jobs last ran.
