@@ -19,8 +19,8 @@ use Symfony\Component\Mime\Email;
  */
 
 beforeEach(function () {
-    Setting::set('CompanyLegalName', '24BoX Igor Rybicki');
-    Setting::set('CompanyName', '24BoX Igor Rybicki');
+    Setting::set('CompanyLegalName', 'Example Company Sp. z o.o.');
+    Setting::set('CompanyName', 'Example Company Sp. z o.o.');
     Setting::set('whitelabel_company_name', 'BoxHost');
     app()->forgetInstance('pnlcs.company_name');
 });
@@ -37,41 +37,41 @@ function brandedSubject(string $subject): string
 
 it('prefixes a subject that has no brand', function () {
     expect(brandedSubject('Nowa faktura wygenerowana – #PRO-2026/11-000020'))
-        ->toBe('24BoX Igor Rybicki — Nowa faktura wygenerowana – #PRO-2026/11-000020');
+        ->toBe('Example Company Sp. z o.o. — Nowa faktura wygenerowana – #PRO-2026/11-000020');
 });
 
 it('moves a trailing brand to the front without duplicating it', function () {
     expect(brandedSubject('Potwierdzenie płatności - BoxHost'))
-        ->toBe('24BoX Igor Rybicki — Potwierdzenie płatności');
+        ->toBe('Example Company Sp. z o.o. — Potwierdzenie płatności');
 });
 
 it('normalises a subject that starts with the white-label brand', function () {
     expect(brandedSubject('BoxHost — Nowa faktura #123'))
-        ->toBe('24BoX Igor Rybicki — Nowa faktura #123');
+        ->toBe('Example Company Sp. z o.o. — Nowa faktura #123');
 });
 
 it('leaves a subject that already starts with the company name alone', function () {
-    expect(brandedSubject('24BoX Igor Rybicki — Nowa faktura #123'))
-        ->toBe('24BoX Igor Rybicki — Nowa faktura #123');
+    expect(brandedSubject('Example Company Sp. z o.o. — Nowa faktura #123'))
+        ->toBe('Example Company Sp. z o.o. — Nowa faktura #123');
 });
 
 it('keeps the ticket token so replies still import', function () {
     $subject = brandedSubject('Re: [Ticket #123456] Strona nie działa');
 
-    expect($subject)->toBe('24BoX Igor Rybicki — Re: [Ticket #123456] Strona nie działa')
+    expect($subject)->toBe('Example Company Sp. z o.o. — Re: [Ticket #123456] Strona nie działa')
         ->and($subject)->toContain('[Ticket #123456]');
 });
 
 it('does not double a subject that is only the brand', function () {
-    expect(brandedSubject('BoxHost'))->toBe('24BoX Igor Rybicki');
+    expect(brandedSubject('BoxHost'))->toBe('Example Company Sp. z o.o.');
 });
 
 it('falls back to CompanyName when the legal name is empty', function () {
     Setting::set('CompanyLegalName', '');
-    Setting::set('CompanyName', '24BoX Hosting');
+    Setting::set('CompanyName', 'Example Hosting');
     app()->forgetInstance('pnlcs.company_name');
 
-    expect(brandedSubject('Nowa wiadomość'))->toBe('24BoX Hosting — Nowa wiadomość');
+    expect(brandedSubject('Nowa wiadomość'))->toBe('Example Hosting — Nowa wiadomość');
 });
 
 it('brands the subject of a real invoice email', function () {
@@ -88,6 +88,6 @@ it('brands the subject of a real invoice email', function () {
 
     Mail::to($client->email)->send(new InvoiceCreatedMail($invoice));
 
-    expect($sent[0])->toStartWith('24BoX Igor Rybicki — ')
+    expect($sent[0])->toStartWith('Example Company Sp. z o.o. — ')
         ->and($sent[0])->toContain('PRO-2026/11-000020');
 });
