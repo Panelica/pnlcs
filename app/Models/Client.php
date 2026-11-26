@@ -3,6 +3,7 @@
 namespace App\Models;
 
 use App\Enums\ClientStatus;
+use App\Services\Sms\WhatsappPhoneVerifier;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
@@ -114,6 +115,25 @@ class Client extends Model
         static::creating(function (Client $client) {
             if (empty($client->uuid)) {
                 $client->uuid = (string) Str::uuid();
+            }
+        });
+
+        // A verified phone is the number that was verified: a different one
+        // has to be proved again, whoever changes it. Writing the same number
+        // another way ("0532..." for "532...") is not a change.
+        static::updating(function (Client $client) {
+            if (! $client->phone_verified_at || $client->isDirty('phone_verified_at')
+                || ! $client->isDirty(['phone_number', 'phone_prefix'])) {
+                return;
+            }
+
+            $was = (clone $client)->forceFill([
+                'phone_number' => $client->getOriginal('phone_number'),
+                'phone_prefix' => $client->getOriginal('phone_prefix'),
+                'country' => $client->getOriginal('country'),
+            ]);
+            if (WhatsappPhoneVerifier::phoneCandidates($was) !== WhatsappPhoneVerifier::phoneCandidates($client)) {
+                $client->phone_verified_at = null;
             }
         });
 

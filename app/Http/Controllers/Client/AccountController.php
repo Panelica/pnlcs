@@ -435,13 +435,18 @@ class AccountController extends Controller
             : collect();
 
         $client = $this->currentClient();
-        $phoneVerifyAvailable = app(\App\Contracts\PhoneVerifier::class)->enabled();
+        $smsVerifyAvailable = app(\App\Contracts\PhoneVerifier::class)->enabled();
+        $whatsapp = app(\App\Services\Sms\WhatsappPhoneVerifier::class);
+        $whatsappVerify = $whatsapp->enabled()
+            ? ['number' => $whatsapp->businessNumber(), 'pending' => $client ? $whatsapp->pending($client) : null]
+            : null;
+        $phoneVerifyAvailable = $smsVerifyAvailable || $whatsappVerify !== null;
 
         // The last sign-ins and wrong passwords for this login, newest first.
         $logins = \App\Models\UserLogin::where('user_id', $user->id)->orderByDesc('id')->limit(20)->get();
         $ownsAccount = $client && $client->users()->whereKey($user->id)->wherePivot('owner', true)->exists();
 
-        return view('client.account.security', compact('ownsAccount', 'user', 'twoFactorEnabled', 'sessions', 'sessionsSupported', 'client', 'phoneVerifyAvailable', 'logins'));
+        return view('client.account.security', compact('ownsAccount', 'user', 'twoFactorEnabled', 'sessions', 'sessionsSupported', 'client', 'phoneVerifyAvailable', 'smsVerifyAvailable', 'whatsappVerify', 'logins'));
     }
 
     public function logoutSession(string $sessionId)

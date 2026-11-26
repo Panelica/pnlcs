@@ -227,6 +227,38 @@
         </div>
     </div>
 
+    {{-- WhatsApp phone verification. The customer sends the code to the
+         operator's number; nothing is sent from here, so there is no message
+         template and no per-message fee. --}}
+    <div class="card" data-tab="notifications" id="settings-whatsapp_verification" style="margin-bottom:15px;">
+        <div class="card-header"><strong>{{ __('admin.settings.whatsapp_verification') }}</strong></div>
+        <div class="card-body">
+            <label style="font-size:13px;display:flex;align-items:center;gap:6px;cursor:pointer;">
+                <input type="hidden" name="WhatsappVerifyEnabled" value="0"><input type="checkbox" name="WhatsappVerifyEnabled" value="1" {{ !empty($settings['WhatsappVerifyEnabled']) ? 'checked' : '' }}>
+                {{ __('admin.settings.whatsapp_enabled') }}
+            </label>
+            <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:15px;margin-top:8px;">
+                <div class="form-group">
+                    <label class="form-label">{{ __('admin.settings.whatsapp_business_number') }}</label>
+                    <input type="text" name="WhatsappBusinessNumber" value="{{ $settings['WhatsappBusinessNumber'] ?? '' }}" class="form-control" autocomplete="off" placeholder="+905321234567">
+                </div>
+                <div class="form-group">
+                    <label class="form-label">{{ __('admin.settings.whatsapp_app_secret') }}</label>
+                    <input type="password" name="WhatsappAppSecret" value="" class="form-control" autocomplete="new-password" placeholder="{{ !empty($settings['WhatsappAppSecret']) ? '••••••••' : '' }}">
+                </div>
+                <div class="form-group">
+                    <label class="form-label">{{ __('admin.settings.whatsapp_verify_token') }}</label>
+                    <input type="text" name="WhatsappWebhookVerifyToken" value="{{ $settings['WhatsappWebhookVerifyToken'] ?? '' }}" class="form-control" autocomplete="off">
+                </div>
+            </div>
+            <div class="form-group">
+                <label class="form-label">{{ __('admin.settings.whatsapp_webhook_url') }}</label>
+                <input type="text" value="{{ route('webhooks.whatsapp') }}" class="form-control" readonly onclick="this.select()">
+            </div>
+            <div style="font-size:12px;color:#777;margin-top:8px;">{{ __('admin.settings.whatsapp_verification_hint') }}</div>
+        </div>
+    </div>
+
     {{-- Proving the address on a new account. On unless an operator turns it
          off: the safer behaviour is the one you get without reading a
          settings screen. --}}
