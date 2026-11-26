@@ -24,7 +24,13 @@ test('EmailPreSend sees every outgoing mail and can stop it', function () {
     $sentOk = Mail::raw('Hello', fn ($m) => $m->to('a@example.test')->subject('Welcome'));
     $sentBlocked = Mail::raw('Hello', fn ($m) => $m->to('b@example.test')->subject('A blocked one'));
 
-    expect($seen)->toBe(['Welcome', 'A blocked one'])
+    // The hook is registered last on purpose, so what it sees is the message
+    // "exactly as it will be sent" - which since #496 carries the company name
+    // in front of the subject. The subject it was given is what matters here,
+    // not where the brand sits.
+    expect($seen)->toHaveCount(2)
+        ->and($seen[0])->toEndWith('Welcome')
+        ->and($seen[1])->toEndWith('A blocked one')
         ->and($sentOk)->not->toBeNull()
         ->and($sentBlocked)->toBeNull();
 });

@@ -134,5 +134,7 @@ test('a German customer gets a German subject line', function () {
     Event::listen(MessageSent::class, fn ($event) => $subjects->append($event->message->getSubject()));
     Mail::to($client->email)->send(new DomainRegistrationMail($domain));
 
-    expect($subjects->getArrayCopy()[0] ?? '')->toStartWith('Domain example-de.com registriert');
+    // What this asserts is the language of the subject, not its first word:
+    // since #496 the company name comes first.
+    expect($subjects->getArrayCopy()[0] ?? '')->toEndWith('Domain example-de.com registriert');
 });

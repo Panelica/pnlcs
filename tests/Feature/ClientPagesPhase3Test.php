@@ -205,7 +205,9 @@ test('sent mails are logged into the emails table for the client', function () {
         $m->to($client->email)->subject('Log me');
     });
 
-    $email = Email::where('subject', 'Log me')->first();
+    // The logged subject is the one that went out, and since #496 that starts
+    // with the company name.
+    $email = Email::where('subject', 'like', '%Log me')->first();
 
     expect($email)->not->toBeNull()
         ->and($email->client_id)->toBe($client->id)
