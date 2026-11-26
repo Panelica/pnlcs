@@ -243,6 +243,26 @@ if (! function_exists('currency_symbol')) {
         return $name;
     }
 }
+
+if (! function_exists('company_legal_name')) {
+    /**
+     * The registered company name, which is what a legal document and an
+     * email's visible sender must show. It falls back to the trading name and
+     * finally to company_name(), so an installation that never filled the
+     * legal field still has a usable brand.
+     */
+    function company_legal_name(): string
+    {
+        try {
+            $name = trim((string) Setting::get('CompanyLegalName', ''))
+                ?: trim((string) Setting::get('CompanyName', ''));
+        } catch (Throwable) {
+            $name = '';
+        }
+
+        return $name !== '' ? $name : company_name();
+    }
+}
 if (! function_exists('date_fmt')) {
     /**
      * The date format the operator picked in Settings → General.
