@@ -3,6 +3,7 @@
 namespace App\Services;
 
 use App\Models\ScheduledTaskRun;
+use App\Support\ScheduledWindows;
 use Illuminate\Console\Scheduling\Schedule;
 use Illuminate\Contracts\Console\Kernel as ConsoleKernel;
 use Illuminate\Support\Carbon;
@@ -72,13 +73,13 @@ class ScheduleStatusService
                 'command'     => $key,
                 'label'       => $this->label($key),
                 'expression'  => $event->expression,
-                'frequency'   => $this->frequency($event->expression),
-                'next_due'    => $this->nextDue($event->expression),
+                'frequency'   => $this->frequency($key, $event->expression),
+                'next_due'    => $this->nextDue($key, $event->expression),
                 'last_run_at' => $run?->last_run_at,
                 'runtime_ms'  => $run?->runtime_ms,
                 'exit_code'   => $run?->exit_code,
                 'failures'    => (int) ($run->failures ?? 0),
-                'state'       => $this->state($event->expression, $run),
+                'state'       => $this->state($key, $event->expression, $run),
             ];
         }
 
@@ -126,7 +127,7 @@ class ScheduleStatusService
      * operator actually wants flagged, rather than a raw last-run timestamp
      * they have to compare against a cron expression in their head.
      */
-    private function state(string $expression, ?ScheduledTaskRun $run): string
+    private function state(string $command, string $expression, ?ScheduledTaskRun $run): string
     {
         if ($run === null || $run->last_run_at === null) {
             return 'pending';
@@ -136,6 +137,10 @@ class ScheduleStatusService
             return 'failed';
         }
 
+        if (($window = ScheduledWindows::for($command)) !== null) {
+            return $this->windowState($window, $run->last_run_at, now());
+        }
+
         $expected = $this->expectedIntervalMinutes($expression);
 
         // Twice the interval plus five minutes: one missed run is a blip, two
@@ -143,6 +148,39 @@ class ScheduleStatusService
         return $run->last_run_at->diffInMinutes(now()) > ($expected * 2 + 5)
             ? 'overdue'
             : 'ok';
+    }
+
+    /**
+     * A task that only runs inside a daily window cannot be judged by the
+     * bare cron expression says "every fifteen minutes" but
+     * between 03:00 and 06:00 means the task is legitimately silent for the
+     * other twenty-one hours.
+     *
+     * @param  array{start:string,end:string,every:int}  $window
+     */
+    private function windowState(array $window, \Illuminate\Support\Carbon $last, \Illuminate\Support\Carbon $now): string
+    {
+        $start = $now->copy()->setTimeFromTimeString($window['start']);
+        $end = $now->copy()->setTimeFromTimeString($window['end']);
+        $previousStart = $start->copy()->subDay();
+        $previousEnd = $end->copy()->subDay();
+        $interval = (int) $window['every'];
+
+        if ($now->lt($start)) {
+            return $last->betweenIncluded($previousStart, $previousEnd) ? 'ok' : 'overdue';
+        }
+
+        if ($now->gt($end)) {
+            return $last->betweenIncluded($start, $end) ? 'ok' : 'overdue';
+        }
+
+        // Inside the window. The first slot gets one interval of grace, then a
+        // gap longer than two intervals means the scheduler stopped.
+        if ($last->gte($start)) {
+            return $last->diffInMinutes($now) > ($interval * 2 + 5) ? 'overdue' : 'ok';
+        }
+
+        return abs($now->diffInMinutes($start)) > ($interval + 5) ? 'overdue' : 'ok';
     }
 
     private function expectedIntervalMinutes(string $expression): int
@@ -168,8 +206,12 @@ class ScheduleStatusService
         return 60;
     }
 
-    private function nextDue(string $expression): ?Carbon
+    private function nextDue(string $command, string $expression): ?Carbon
     {
+        if (($window = ScheduledWindows::for($command)) !== null) {
+            return $this->windowNextDue($window, now());
+        }
+
         try {
             return Carbon::instance(
                 (new \Cron\CronExpression($expression))->getNextRunDate(now())
@@ -179,10 +221,39 @@ class ScheduleStatusService
         }
     }
 
-    private function frequency(string $expression): string
+    /** @param array{start:string,end:string,every:int} $window */
+    private function windowNextDue(array $window, \Illuminate\Support\Carbon $now): Carbon
     {
+        $start = $now->copy()->setTimeFromTimeString($window['start']);
+        $end = $now->copy()->setTimeFromTimeString($window['end']);
+        $every = max(1, (int) $window['every']);
+
+        if ($now->lt($start)) {
+            return $start;
+        }
+
+        if ($now->lte($end)) {
+            $next = $now->copy()->startOfMinute();
+            $remainder = (int) $next->minute % $every;
+            $next->addMinutes($remainder === 0 ? $every : $every - $remainder);
+
+            return $next->lte($end) ? $next : $start->copy()->addDay();
+        }
+
+        return $start->copy()->addDay();
+    }
+
+    private function frequency(string $command, string $expression): string
+    {
+        $window = ScheduledWindows::for($command);
         $parts = preg_split('/\s+/', trim($expression));
         [$minute, $hour, $dom] = [$parts[0] ?? '*', $parts[1] ?? '*', $parts[2] ?? '*'];
+
+        if ($window !== null) {
+            $base = trans_choice('admin.automation.every_minutes', (int) $window['every'], ['count' => (int) $window['every']]);
+
+            return $base.' '.$window['start'].'–'.$window['end'];
+        }
 
         if ($dom !== '*') {
             return __('admin.automation.monthly');

@@ -50,7 +50,7 @@ Schedule::command('pnlcs:auto-suspend')->daily()->at('07:00');
 Schedule::command('pnlcs:auto-terminate')->daily()->at('08:00');
 Schedule::command('pnlcs:domain-sync')
     ->everyFifteenMinutes()
-    ->between('03:00', '06:00')
+    ->between(\App\Support\ScheduledWindows::DOMAIN_SYNC['start'], \App\Support\ScheduledWindows::DOMAIN_SYNC['end'])
     ->withoutOverlapping(30);
 Schedule::command('pnlcs:payment-reminders')->daily()->at('08:00');
 Schedule::command('pnlcs:domain-renewal-reminders')->daily()->at('09:15');
