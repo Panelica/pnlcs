@@ -67,10 +67,11 @@ These need no setting; they are here so you know what is already covered.
   set a stricter one there.
 - **Credential settings are encrypted at rest**, with `APP_KEY`: the mail
   password, the Google and GitHub client secrets, the reCAPTCHA secret and the
-  OpenAI, Twilio, WhatsApp app secret, FraudLabs, MaxMind and official-rate keys. Gateway, addon,
-  registrar and server credentials already were. A copy of the database — a
-  backup, a dump sent to support — no longer hands them over. The flip side is
-  in the checklist above: a backup without `.env` cannot be read back.
+  OpenAI, Twilio, WhatsApp, FraudLabs, MaxMind and official-rate keys.
+  Gateway, addon, registrar and server credentials already were. A copy of
+  the database — a backup, a dump sent to support — no longer hands them
+  over. The flip side is in the checklist above: a backup without `.env`
+  cannot be read back.
 - **Wrong second-factor codes are counted per account**, not only per visitor:
   five wrong codes and that account waits fifteen minutes, whatever address or
   session the next guess comes from.
