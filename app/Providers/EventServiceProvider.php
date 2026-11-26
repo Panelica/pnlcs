@@ -13,6 +13,7 @@ use App\Events\ServiceTerminated;
 use App\Events\TicketOpened;
 use App\Events\TicketReplied;
 use App\Listeners\ApplyEmailTemplate;
+use App\Listeners\BrandEmailSubject;
 use App\Listeners\ApplyUpgradeListener;
 use App\Listeners\AutoAcceptOrderListener;
 use App\Listeners\AddPlainTextPart;
@@ -40,7 +41,9 @@ class EventServiceProvider extends ServiceProvider
         MessageSending::class => [
             SuppressMailWhenDisabled::class,
             ApplyEmailTemplate::class,
-            // AFTER the template: the text part is made from the final HTML.
+            // AFTER the template: the operator's subject is branded too.
+            BrandEmailSubject::class,
+            // AFTER the subject: the text part is made from the final HTML.
             // Made from the body before the template rewrote it, the customer
             // would get one message in HTML and a different one in text.
             AddPlainTextPart::class,

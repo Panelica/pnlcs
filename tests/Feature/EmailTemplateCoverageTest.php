@@ -193,7 +193,7 @@ it('still delivers an ssl email now that a template stands in front of it', func
     Mail::to('ayse@example.test')->send(new SslCertificateIssuedMail($order));
 
     expect($sent)->toHaveCount(1)
-        ->and($sent[0]->getSubject())->toBe('SSL Certificate Issued - shop.example.test');
+        ->and($sent[0]->getSubject())->toBe(company_legal_name().' — SSL Certificate Issued - shop.example.test');
 });
 
 it('counts the days in an expiring-certificate subject', function () {
@@ -210,7 +210,7 @@ it('counts the days in an expiring-certificate subject', function () {
 
     Mail::to('ayse@example.test')->send(new SslCertificateExpiringMail($order, 14));
 
-    expect($sent[0]->getSubject())->toBe('SSL Certificate Expiring in 14 Days - shop.example.test');
+    expect($sent[0]->getSubject())->toBe(company_legal_name().' — SSL Certificate Expiring in 14 Days - shop.example.test');
 });
 
 it('still fills the invoice subject the operator already had', function () {

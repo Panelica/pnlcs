@@ -96,7 +96,7 @@ test('the subject the operator wrote is the subject that goes out', function () 
 
     Mail::to('ayse@example.com')->send(new InvoiceCreatedMail($invoice));
 
-    expect($sent)->toBe('Fatura INV-2026-77 - Ayse Yilmaz (240.00)');
+    expect($sent)->toBe(company_legal_name().' — Fatura INV-2026-77 - Ayse Yilmaz (240.00)');
 });
 
 test('a copy goes to the address the operator added', function () {
@@ -172,7 +172,7 @@ test('one mail hook does not silently cancel the next', function () {
     Mail::to('ayse@example.com')->send(new InvoiceCreatedMail($invoice));
 
     expect($reachedLast)->toBeTrue()
-        ->and($subject)->toBe('Chained INV-2026-77');
+        ->and($subject)->toBe(company_legal_name().' — Chained INV-2026-77');
 });
 
 /**
@@ -292,7 +292,7 @@ test('the reset link email still takes the subject the operator wrote', function
 
     sendResetMail();
 
-    expect($sent->getArrayCopy())->toBe(['Reset your password - '.company_name()]);
+    expect($sent->getArrayCopy())->toBe([company_legal_name().' — Reset your password']);
 });
 
 test('an ordinary email is still stopped by its switch', function () {
