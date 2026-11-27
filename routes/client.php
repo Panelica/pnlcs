@@ -41,7 +41,7 @@ Route::prefix('client')->name('client.')->middleware(['banned.ip', 'client.permi
         ->middleware(['signed', 'throttle:30,1'])->name('unsubscribe');
     Route::post('unsubscribe/{client}', [\App\Http\Controllers\Client\UnsubscribeController::class, 'store'])
         ->middleware(['signed', 'throttle:30,1'])->name('unsubscribe.store')
-        ->withoutMiddleware([\Illuminate\Foundation\Http\Middleware\ValidateCsrfToken::class]);
+        ->withoutMiddleware([\Illuminate\Foundation\Http\Middleware\PreventRequestForgery::class]);
     Route::get('invite/{token}', [\App\Http\Controllers\Client\InviteController::class, 'show'])
         ->middleware('throttle:30,1')->name('invite.show');
     Route::post('invite/{token}', [\App\Http\Controllers\Client\InviteController::class, 'accept'])
