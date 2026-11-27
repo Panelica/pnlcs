@@ -2,11 +2,10 @@
 @section("title", "#". $ticket->tid ." - ". $ticket->title)
 @section("content")
 
-@php($pl = app()->getLocale() === 'pl')
-<nav class="ds-crumbs" aria-label="{{ $pl ? 'Ścieżka' : 'Breadcrumb' }}">
-    <a href="{{ route('client.home') }}"><i class="ri-home-5-line" aria-hidden="true"></i> {{ $pl ? 'Pulpit' : 'Dashboard' }}</a>
+<nav class="ds-crumbs" aria-label="{{ __('common.misc.breadcrumb') }}">
+    <a href="{{ route('client.home') }}"><i class="ri-home-5-line" aria-hidden="true"></i> {{ __('client.nav.dashboard') }}</a>
     <span aria-hidden="true">/</span>
-    <a href="{{ route('client.tickets.index') }}">{{ $pl ? 'Zgłoszenia' : 'Tickets' }}</a>
+    <a href="{{ route('client.tickets.index') }}">{{ __('client.tickets.page_title') }}</a>
     <span aria-hidden="true">/</span>
     <span aria-current="page">#{{ $ticket->tid }} — {{ Str::limit($ticket->title, 60) }}</span>
 </nav>

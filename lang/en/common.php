@@ -170,6 +170,7 @@ return [
         'all_rights_reserved' => 'All Rights Reserved',
         'all_statuses' => 'All Statuses',
         'and' => 'and',
+        'breadcrumb' => 'Breadcrumb',
         'copyright' => '© :year :company. All Rights Reserved.',
         'dashboard' => 'Dashboard',
         'home' => 'Home',

@@ -170,6 +170,7 @@ return [
         'all_rights_reserved' => 'Wszelkie prawa zastrzeżone',
         'all_statuses' => 'Wszystkie statusy',
         'and' => 'i',
+        'breadcrumb' => 'Ścieżka nawigacji',
         'copyright' => '© :year :company. Wszelkie prawa zastrzeżone.',
         'dashboard' => 'Pulpit',
         'home' => 'Strona główna',

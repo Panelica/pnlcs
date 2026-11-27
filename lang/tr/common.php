@@ -170,6 +170,7 @@ return [
         'all_rights_reserved' => 'Tüm hakları saklıdır',
         'all_statuses' => 'Tüm Durumlar',
         'and' => 've',
+        'breadcrumb' => 'Sayfa yolu',
         'copyright' => '© :year :company. Tüm hakları saklıdır.',
         'dashboard' => 'Kontrol Paneli',
         'home' => 'Ana Sayfa',

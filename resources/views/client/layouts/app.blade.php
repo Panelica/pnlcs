@@ -215,6 +215,9 @@
         .pn-empty p{font-size:14px;margin-bottom:16px}
 
         /* ─── BREADCRUMB ─── */
+        .ds-crumbs{display:flex;align-items:center;flex-wrap:wrap;gap:6px;font-size:12px;color:var(--muted);margin-bottom:12px}
+        .ds-crumbs a{display:inline-flex;align-items:center;gap:4px;color:var(--primary);text-decoration:none}
+        .ds-crumbs a:hover{text-decoration:underline}
         .pn-back{display:inline-flex;align-items:center;gap:6px;color:var(--primary);font-size:13px;font-weight:500;text-decoration:none;margin-bottom:20px}
         .pn-back:hover{text-decoration:underline}
         .pn-back svg{width:14px;height:14px}

@@ -170,6 +170,7 @@ return [
         'all_rights_reserved' => 'Alle Rechte vorbehalten. · Alle Preise Netto zzgl. MwSt.',
         'all_statuses' => 'Alle Status',
         'and' => 'und',
+        'breadcrumb' => 'Navigationspfad',
         'copyright' => '© :year :company. Alle Rechte vorbehalten.',
         'dashboard' => 'Kundenportal',
         'home' => 'Homepage',

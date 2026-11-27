@@ -170,6 +170,7 @@ return [
         'all_rights_reserved' => '保留所有权利',
         'all_statuses' => '全部状态',
         'and' => '和',
+        'breadcrumb' => '面包屑导航',
         'copyright' => '© :year :company。保留所有权利。',
         'dashboard' => '仪表盘',
         'home' => '首页',
