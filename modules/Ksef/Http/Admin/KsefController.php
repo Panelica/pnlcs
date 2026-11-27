@@ -3,7 +3,10 @@
 namespace Modules\Ksef\Http\Admin;
 
 use App\Http\Controllers\Controller;
+use App\Models\KsefImportedInvoice;
 use App\Models\KsefInvoice;
+use Illuminate\Http\Request;
+use Modules\Ksef\Jobs\ImportKsefInvoicesJob;
 use Modules\Ksef\Jobs\SubmitInvoiceJob;
 use Modules\Ksef\KsefClient;
 use Modules\Ksef\KsefService;
@@ -18,13 +21,52 @@ class KsefController extends Controller
     /**
      * The submission status list, shown under Billing → KSeF status.
      */
-    public function index()
+    public function index(Request $request)
     {
-        $records = KsefInvoice::with(['invoice.client', 'correction'])
-            ->orderByDesc('id')
-            ->paginate(20);
+        $tab = in_array($request->input('tab'), ['sent', 'sales', 'costs'], true)
+            ? (string) $request->input('tab')
+            : 'sent';
 
-        return view('admin.ksef.index', ['records' => $records]);
+        $year = (int) $request->input('year', now()->year);
+        $month = (int) $request->input('month', now()->month);
+
+        if ($year < 2000 || $year > (int) now()->year + 1) {
+            $year = (int) now()->year;
+        }
+        if ($month < 1 || $month > 12) {
+            $month = (int) now()->month;
+        }
+
+        if ($tab === 'sent') {
+            $records = KsefInvoice::with(['invoice.client', 'correction'])
+                ->whereYear('sent_at', $year)
+                ->whereMonth('sent_at', $month)
+                ->orderByDesc('sent_at')
+                ->paginate(20);
+        } else {
+            $records = KsefImportedInvoice::query()
+                ->where('direction', $tab === 'sales' ? 'sales' : 'cost')
+                ->whereYear('issue_date', $year)
+                ->whereMonth('issue_date', $month)
+                ->orderByDesc('issue_date')
+                ->paginate(20);
+        }
+
+        return view('admin.ksef.index', [
+            'records' => $records,
+            'tab' => $tab,
+            'year' => $year,
+            'month' => $month,
+            'years' => range((int) now()->year + 1, 2020),
+            'months' => range(1, 12),
+        ]);
+    }
+
+    public function import()
+    {
+        ImportKsefInvoicesJob::dispatch();
+
+        return back()->with('success', __('messages.ksef.import_queued'));
     }
 
     /**
