@@ -6,6 +6,7 @@ use App\Models\Client;
 use App\Models\Invoice;
 use App\Models\Setting;
 use App\Models\Transaction;
+use Carbon\Carbon;
 use Modules\Addons\BankPayments\Models\BankImport;
 use Modules\Addons\BankPayments\Models\BankMailbox;
 use Modules\Addons\BankPayments\Models\BankMatch;
@@ -174,6 +175,7 @@ it('is idempotent when the same match is approved twice', function () {
 });
 
 it('allows automatic booking only for a single full match', function () {
+    $this->travelTo(Carbon::parse('2026-11-27 11:00:00'));
     Setting::set('addon_bank_payments_active', '1', 'addons');
     AddonSetting::setSetting('bank_payments', 'mode', 'auto');
 
@@ -223,4 +225,8 @@ it('refuses to book while the addon is in test mode', function () {
     expect($result['success'])->toBeFalse()
         ->and(Transaction::count())->toBe(0)
         ->and($invoice->fresh()->status)->toBe('unpaid');
+});
+
+beforeEach(function () {
+    config(['bank-payments.banks' => (require base_path('modules/Addons/BankPayments/config/bank-payments.php'))['banks']]);
 });

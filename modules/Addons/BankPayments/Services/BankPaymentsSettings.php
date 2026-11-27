@@ -92,6 +92,21 @@ final class BankPaymentsSettings
         ];
     }
 
+    /** @return array<string, array<string, mixed>> */
+    public static function banks(): array
+    {
+        $banks = config('bank-payments.banks', []);
+
+        return is_array($banks) ? $banks : [];
+    }
+
+    public static function parserForBank(string $bank): ?string
+    {
+        $parser = self::banks()[$bank]['parser'] ?? null;
+
+        return is_string($parser) && $parser !== '' ? $parser : null;
+    }
+
     public static function mode(): string
     {
         return self::resolve()['mode'];

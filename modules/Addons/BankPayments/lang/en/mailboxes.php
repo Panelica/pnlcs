@@ -15,6 +15,7 @@ return [
     'folder' => 'Folder',
     'bank' => 'Bank',
     'parser' => 'Parser',
+    'parser_hint' => 'The parser is selected automatically from the bank.',
     'active' => 'Active',
     'validate_cert' => 'Verify TLS certificate',
     'save' => 'Save',

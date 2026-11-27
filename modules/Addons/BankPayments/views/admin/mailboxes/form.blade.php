@@ -35,7 +35,11 @@
                 </div>
                 <div class="form-group" style="margin:0;">
                     <label class="form-label">{{ __('bank-payments::mailboxes.bank') }} *</label>
-                    <input type="text" name="bank" class="form-control" required maxlength="50" value="{{ old('bank', $mailbox->bank) }}">
+                    <select name="bank" class="form-control" required>
+                        @foreach($banks as $bankKey => $bankConfig)
+                            <option value="{{ $bankKey }}" @selected(old('bank', $mailbox->bank) === $bankKey)>{{ __($bankConfig['label']) }}</option>
+                        @endforeach
+                    </select>
                 </div>
                 <div class="form-group" style="margin:0;">
                     <label class="form-label">{{ __('bank-payments::mailboxes.host') }} *</label>
@@ -69,8 +73,9 @@
                     @endif
                 </div>
                 <div class="form-group" style="margin:0;">
-                    <label class="form-label">{{ __('bank-payments::mailboxes.parser') }} *</label>
-                    <input type="text" name="parser" class="form-control" required maxlength="50" value="{{ old('parser', $mailbox->parser ?: 'nest_bank') }}">
+                    <label class="form-label">{{ __('bank-payments::mailboxes.parser') }}</label>
+                    <input type="text" class="form-control" disabled value="{{ $banks[$mailbox->bank]['parser'] ?? '' }}">
+                    <div style="font-size:12px;color:var(--pn-muted);margin-top:4px;">{{ __('bank-payments::mailboxes.parser_hint') }}</div>
                 </div>
             </div>
 

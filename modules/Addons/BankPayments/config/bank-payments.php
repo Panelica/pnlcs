@@ -34,6 +34,25 @@ return [
     // value but does not delete anything yet.
     'retention_days' => 180,
 
+    'banks' => [
+        'nest_bank' => [
+            'label' => 'bank-payments::banks.nest_bank',
+            'parser' => 'nest_bank',
+
+            // Official Nest Bank incoming Elixir sessions. The addon adds
+            // booking_delay_minutes so the mailbox has time to receive the
+            // notification after the bank posts the transfer.
+            'sessions' => ['10:30', '14:15', '17:00'],
+            'booking_delay_minutes' => 30,
+            'booking_grace_minutes' => 10,
+
+            // Only weekdays for now. Holidays can be added later without
+            // changing the scheduling code.
+            'weekdays_only' => true,
+            'holidays' => [],
+        ],
+    ],
+
     'parsers' => [
         'nest_bank' => NestBankParser::class,
     ],

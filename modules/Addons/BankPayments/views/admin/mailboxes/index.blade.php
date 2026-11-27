@@ -38,7 +38,7 @@
                 <tr>
                     <td>
                         <strong>{{ $mailbox->name }}</strong>
-                        <div style="font-size:11px;color:var(--pn-muted);">{{ $mailbox->bank }} / {{ $mailbox->parser }}</div>
+                        <div style="font-size:11px;color:var(--pn-muted);">{{ __($banks[$mailbox->bank]['label'] ?? '') }}</div>
                     </td>
                     <td>
                         {{ $mailbox->host }}:{{ $mailbox->port }}

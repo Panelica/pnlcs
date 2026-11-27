@@ -26,6 +26,7 @@ class BankPaymentImporter
         private readonly InvoiceMatcher $matcher,
         private readonly PaymentService $payments,
         private readonly AddonManager $addons,
+        private readonly BankBookingSchedule $schedule,
     ) {}
 
     public static function paymentReference(BankTransaction $transaction, Invoice $invoice): string
@@ -101,6 +102,7 @@ class BankPaymentImporter
 
             if ($source === 'auto') {
                 if (BankPaymentsSettings::mode() !== 'auto'
+                    || ! $this->schedule->isBookingWindowOpen($transaction->bank)
                     || $match->rank !== 1
                     || $transaction->matching_status !== 'auto_ready'
                     || $candidate['score'] < 90

@@ -26,6 +26,7 @@ class BankSyncService
         private readonly InvoiceMatcher $matcher,
         private readonly BankPaymentImporter $importer,
         private readonly BankPaymentsReviewNotifier $reviewNotifier,
+        private readonly BankBookingSchedule $schedule,
     ) {}
 
     /**
@@ -80,7 +81,7 @@ class BankSyncService
 
             $uidvalidity = $batch['uidvalidity'] ?? $currentUidvalidity ?? 0;
             $lastUid = $mailbox->last_uid;
-            $parser = $this->parsers->for($mailbox->parser ?: $mailbox->bank);
+            $parser = $this->parsers->forBank($mailbox->bank);
 
             foreach ($batch['messages'] as $item) {
                 $fetched++;
@@ -181,7 +182,9 @@ class BankSyncService
                         try {
                             $matchResult = $this->matcher->match($transaction);
 
-                            if ($settings['mode'] === 'auto' && ($matchResult['status'] ?? null) === 'auto_ready') {
+                            if ($settings['mode'] === 'auto'
+                                && ($matchResult['status'] ?? null) === 'auto_ready'
+                                && $this->schedule->isBookingWindowOpen($mailbox->bank)) {
                                 $match = $transaction->matches()->orderBy('rank')->first();
 
                                 if ($match) {
@@ -209,8 +212,11 @@ class BankSyncService
                             ]);
                         }
 
-                        if ($settings['mode'] !== 'test'
-                            && in_array($transaction->fresh()->matching_status, ['review', 'ambiguous', 'auto_ready', 'error'], true)) {
+                        $matchingStatus = $transaction->fresh()->matching_status;
+                        $needsReview = in_array($matchingStatus, ['review', 'ambiguous', 'error'], true)
+                            || ($settings['mode'] === 'semi_auto' && $matchingStatus === 'auto_ready');
+
+                        if ($settings['mode'] !== 'test' && $needsReview) {
                             $reviewCount++;
                         }
                     }
@@ -240,6 +246,10 @@ class BankSyncService
                 'errors' => $errors,
                 'message' => $message,
             ]);
+
+            if ($settings['mode'] === 'auto' && $this->schedule->isBookingWindowOpen($mailbox->bank)) {
+                $this->sweepAutoReady($mailbox);
+            }
 
             if ($settings['mode'] !== 'test' && $reviewCount > 0) {
                 try {
@@ -276,6 +286,21 @@ class BankSyncService
         } finally {
             $this->client->disconnect();
         }
+    }
+
+    private function sweepAutoReady(BankMailbox $mailbox): void
+    {
+        BankTransaction::query()
+            ->where('matching_status', 'auto_ready')
+            ->whereHas('message', fn ($query) => $query->where('bank_mailbox_id', $mailbox->id))
+            ->orderBy('id')
+            ->each(function (BankTransaction $transaction): void {
+                $match = $transaction->matches()->orderBy('rank')->first();
+
+                if ($match) {
+                    $this->importer->import($match, null, null, 'auto');
+                }
+            });
     }
 
     private function fingerprint(array $data): string

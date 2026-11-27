@@ -79,6 +79,7 @@ function bankPaymentsRealIncomingRaw(): string
 }
 
 beforeEach(function () {
+    config(['bank-payments.banks' => (require base_path('modules/Addons/BankPayments/config/bank-payments.php'))['banks']]);
     $this->travelTo(Carbon::parse('2026-11-27 10:00:00'));
 });
 
@@ -163,6 +164,7 @@ it('matches the real incoming transaction to an open invoice without booking it'
 });
 
 it('auto-books a full match through the sync pipeline', function () {
+    $this->travelTo(Carbon::parse('2026-11-27 11:00:00'));
     Setting::set('addon_bank_payments_active', '1', 'addons');
     AddonSetting::setSetting('bank_payments', 'mode', 'auto');
 
@@ -185,6 +187,40 @@ it('auto-books a full match through the sync pipeline', function () {
     expect($result['status'])->toBe('ok')
         ->and($invoice->fresh()->status)->toBe('paid')
         ->and(BankTransaction::firstOrFail()->matching_status)->toBe('imported')
+        ->and(BankImport::count())->toBe(1)
+        ->and(Transaction::count())->toBe(1);
+});
+
+it('waits outside the booking window and sweeps auto-ready at the next window', function () {
+    Setting::set('addon_bank_payments_active', '1', 'addons');
+    AddonSetting::setSetting('bank_payments', 'mode', 'auto');
+
+    $client = Client::factory()->create(['company_name' => 'Przykładowy Kontrahent Sp. z o.o.']);
+    $invoice = Invoice::factory()->create([
+        'client_id' => $client->id,
+        'invoice_num' => 'PRO-2026/11-000123',
+        'total' => 1234.87,
+        'status' => 'unpaid',
+    ]);
+
+    $mailbox = bankPaymentsSyncMailbox();
+    $fake = new BankPaymentsSyncTestClient;
+    $fake->messages = [['uid' => 12, 'raw' => bankPaymentsRealIncomingRaw()]];
+
+    app()->instance(BankMailboxClient::class, $fake);
+    $sync = app(BankSyncService::class);
+
+    $this->travelTo(Carbon::parse('2026-11-27 10:59:00'));
+    $sync->sync($mailbox);
+
+    expect(BankTransaction::firstOrFail()->matching_status)->toBe('auto_ready')
+        ->and($invoice->fresh()->status)->toBe('unpaid')
+        ->and(Transaction::count())->toBe(0);
+
+    $this->travelTo(Carbon::parse('2026-11-27 11:00:00'));
+    $sync->sync($mailbox->fresh());
+
+    expect($invoice->fresh()->status)->toBe('paid')
         ->and(BankImport::count())->toBe(1)
         ->and(Transaction::count())->toBe(1);
 });

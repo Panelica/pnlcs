@@ -7,6 +7,7 @@ use App\Models\Invoice;
 use App\Models\Setting;
 use App\Providers\AddonServiceProvider;
 use App\Services\AddonManager;
+use Carbon\Carbon;
 use Carbon\CarbonInterface;
 use Modules\Addons\BankPayments\Models\BankImport;
 use Modules\Addons\BankPayments\Models\BankMailbox;
@@ -127,6 +128,37 @@ it('approves a queued match from the admin page', function () {
     expect($invoice->fresh()->status)->toBe('paid')
         ->and(BankImport::count())->toBe(1)
         ->and($match->fresh()->status)->toBe('imported');
+});
+
+it('does not sync automatically outside the bank window', function () {
+    bootBankPaymentsAddonForSyncEndpoint();
+    Setting::set('addon_bank_payments_active', '1', 'addons');
+    AddonSetting::setSetting('bank_payments', 'mode', 'semi_auto');
+
+    BankMailbox::create([
+        'name' => 'Nest Bank window',
+        'host' => 'imap.example.test',
+        'port' => 993,
+        'encryption' => 'ssl',
+        'username' => 'bank@example.test',
+        'password' => 'secret',
+        'folder' => 'INBOX',
+        'bank' => 'nest_bank',
+        'parser' => 'nest_bank',
+        'active' => true,
+        'validate_cert' => true,
+    ]);
+
+    $client = new BankPaymentsSyncEndpointClient;
+    app()->instance(BankMailboxClient::class, $client);
+
+    $this->travelTo(Carbon::parse('2026-11-27 10:59:00'));
+    $this->artisan('pnlcs:bank-payments:sync')->assertSuccessful();
+    expect(BankMessage::count())->toBe(0);
+
+    $this->travelTo(Carbon::parse('2026-11-27 11:00:00'));
+    $this->artisan('pnlcs:bank-payments:sync')->assertSuccessful();
+    expect(BankMessage::count())->toBe(1);
 });
 
 it('runs a manual sync from the admin page', function () {

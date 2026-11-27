@@ -8,6 +8,7 @@ use Illuminate\Validation\Rule;
 use Illuminate\View\View;
 use Modules\Addons\BankPayments\Models\BankMailbox;
 use Modules\Addons\BankPayments\Services\BankMailboxClient;
+use Modules\Addons\BankPayments\Services\BankPaymentsSettings;
 
 class BankMailboxController extends BankPaymentsController
 {
@@ -17,6 +18,7 @@ class BankMailboxController extends BankPaymentsController
 
         return view('bank-payments::admin.mailboxes.index', [
             'mailboxes' => BankMailbox::withCount('messages')->orderBy('name')->get(),
+            'banks' => BankPaymentsSettings::banks(),
         ]);
     }
 
@@ -24,16 +26,19 @@ class BankMailboxController extends BankPaymentsController
     {
         $this->ensureActive();
 
+        $bank = array_key_first(BankPaymentsSettings::banks()) ?: 'nest_bank';
+
         return view('bank-payments::admin.mailboxes.form', [
             'mailbox' => new BankMailbox([
                 'port' => 993,
                 'encryption' => 'ssl',
                 'folder' => 'INBOX',
-                'bank' => 'nest_bank',
-                'parser' => 'nest_bank',
+                'bank' => $bank,
+                'parser' => BankPaymentsSettings::parserForBank($bank),
                 'active' => true,
                 'validate_cert' => true,
             ]),
+            'banks' => BankPaymentsSettings::banks(),
         ]);
     }
 
@@ -43,6 +48,7 @@ class BankMailboxController extends BankPaymentsController
 
         $data = $this->validated($request);
         $data['password'] = (string) $data['password'];
+        $data['parser'] = BankPaymentsSettings::parserForBank((string) $data['bank']);
         $data['active'] = $request->boolean('active');
         $data['validate_cert'] = $request->boolean('validate_cert');
 
@@ -56,7 +62,10 @@ class BankMailboxController extends BankPaymentsController
     {
         $this->ensureActive();
 
-        return view('bank-payments::admin.mailboxes.form', compact('mailbox'));
+        return view('bank-payments::admin.mailboxes.form', [
+            'mailbox' => $mailbox,
+            'banks' => BankPaymentsSettings::banks(),
+        ]);
     }
 
     public function update(Request $request, BankMailbox $mailbox): RedirectResponse
@@ -69,6 +78,7 @@ class BankMailboxController extends BankPaymentsController
             unset($data['password']);
         }
 
+        $data['parser'] = BankPaymentsSettings::parserForBank((string) $data['bank']);
         $data['active'] = $request->boolean('active');
         $data['validate_cert'] = $request->boolean('validate_cert');
 
@@ -124,8 +134,7 @@ class BankMailboxController extends BankPaymentsController
             'username' => ['required', 'string', 'max:255'],
             'password' => [$mailbox ? 'nullable' : 'required', 'string', 'max:1000'],
             'folder' => ['required', 'string', 'max:255'],
-            'bank' => ['required', 'string', 'max:50'],
-            'parser' => ['required', 'string', 'max:50'],
+            'bank' => ['required', 'string', Rule::in(array_keys(BankPaymentsSettings::banks()))],
             'active' => ['nullable', 'boolean'],
             'validate_cert' => ['nullable', 'boolean'],
         ]);

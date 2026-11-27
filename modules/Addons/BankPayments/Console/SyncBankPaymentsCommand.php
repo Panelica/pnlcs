@@ -5,6 +5,8 @@ namespace Modules\Addons\BankPayments\Console;
 use App\Services\AddonManager;
 use Illuminate\Console\Command;
 use Modules\Addons\BankPayments\Models\BankMailbox;
+use Modules\Addons\BankPayments\Services\BankBookingSchedule;
+use Modules\Addons\BankPayments\Services\BankPaymentsSettings;
 use Modules\Addons\BankPayments\Services\BankSyncService;
 
 class SyncBankPaymentsCommand extends Command
@@ -12,11 +14,12 @@ class SyncBankPaymentsCommand extends Command
     protected $signature = 'pnlcs:bank-payments:sync
         {--mailbox= : Mailbox id or name; omit to sync every active mailbox}
         {--days= : First-sync history limit in days}
-        {--limit= : Maximum messages read in this run}';
+        {--limit= : Maximum messages read in this run}
+        {--force : Ignore the bank booking window and sync now}';
 
-    protected $description = 'Read active bank mailboxes and store their transactions in test mode';
+    protected $description = 'Read active bank mailboxes, parse transfers and match open invoices';
 
-    public function handle(AddonManager $addons, BankSyncService $sync): int
+    public function handle(AddonManager $addons, BankSyncService $sync, BankBookingSchedule $schedule): int
     {
         if (! $addons->isActive('bank_payments')) {
             $this->warn(__('bank-payments::messages.addon_inactive'));
@@ -48,7 +51,18 @@ class SyncBankPaymentsCommand extends Command
         $limit = $this->option('limit') !== null ? (int) $this->option('limit') : null;
         $failed = false;
 
+        $force = (bool) $this->option('force');
+        $mode = BankPaymentsSettings::mode();
+
         foreach ($mailboxes as $mailbox) {
+            if (! $force && $mode !== 'test' && ! $schedule->isSyncWindowOpen($mailbox->bank)) {
+                if ($this->output->isVerbose()) {
+                    $this->line($mailbox->name.': skipped outside the bank booking window');
+                }
+
+                continue;
+            }
+
             $result = $sync->sync($mailbox, $days, $limit);
 
             $this->line(sprintf(

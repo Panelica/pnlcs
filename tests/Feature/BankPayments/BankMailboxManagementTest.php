@@ -129,3 +129,36 @@ it('reports a mailbox connection result without exposing the password', function
     $this->post(route('admin.bank-payments.mailboxes.test', $mailbox))
         ->assertSessionHas('error', 'failed');
 });
+
+it('derives the parser from the selected bank and rejects an unknown bank', function () {
+    $this->post(route('admin.bank-payments.mailboxes.store'), [
+        'name' => 'Nest Bank selector',
+        'host' => 'imap.example.test',
+        'port' => 993,
+        'encryption' => 'ssl',
+        'username' => 'bank@example.test',
+        'password' => 'secret',
+        'folder' => 'INBOX',
+        'bank' => 'nest_bank',
+        'active' => '1',
+        'validate_cert' => '1',
+    ])->assertRedirect(route('admin.bank-payments.mailboxes.index'));
+
+    expect(BankMailbox::where('name', 'Nest Bank selector')->firstOrFail()->parser)->toBe('nest_bank');
+
+    $this->from(route('admin.bank-payments.mailboxes.create'))
+        ->post(route('admin.bank-payments.mailboxes.store'), [
+            'name' => 'Unknown bank',
+            'host' => 'imap.example.test',
+            'port' => 993,
+            'encryption' => 'ssl',
+            'username' => 'bank@example.test',
+            'password' => 'secret',
+            'folder' => 'INBOX',
+            'bank' => 'not_a_bank',
+            'active' => '1',
+            'validate_cert' => '1',
+        ])->assertSessionHasErrors('bank');
+
+    expect(BankMailbox::where('name', 'Unknown bank')->exists())->toBeFalse();
+});
