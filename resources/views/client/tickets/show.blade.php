@@ -2,6 +2,15 @@
 @section("title", "#". $ticket->tid ." - ". $ticket->title)
 @section("content")
 
+@php($pl = app()->getLocale() === 'pl')
+<nav class="ds-crumbs" aria-label="{{ $pl ? 'Ścieżka' : 'Breadcrumb' }}">
+    <a href="{{ route('client.home') }}"><i class="ri-home-5-line" aria-hidden="true"></i> {{ $pl ? 'Pulpit' : 'Dashboard' }}</a>
+    <span aria-hidden="true">/</span>
+    <a href="{{ route('client.tickets.index') }}">{{ $pl ? 'Zgłoszenia' : 'Tickets' }}</a>
+    <span aria-hidden="true">/</span>
+    <span aria-current="page">#{{ $ticket->tid }} — {{ Str::limit($ticket->title, 60) }}</span>
+</nav>
+
 <a href="{{ route("client.tickets.index") }}" class="pn-back">
     <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"/></svg>
     {{ __('client.tickets.back_to_tickets') }}
