@@ -172,7 +172,7 @@ class AppServiceProvider extends ServiceProvider
             return;
         }
 
-        URL::forceRootUrl(rtrim($domain, '/'));
+        URL::useOrigin(rtrim($domain, '/'));
 
         // The scheme has to be forced too, not just the root. Laravel takes the
         // scheme from the request, and the console request is built from APP_URL,
