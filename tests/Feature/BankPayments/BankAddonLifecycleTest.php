@@ -40,7 +40,9 @@ it('provides its admin page and sidebar while active', function () {
     $response = $this->actingAs($admin, 'admin')
         ->get(route('admin.bank-payments.index'));
 
-    $response->assertOk()->assertSee('Płatności bankowe');
+    $response->assertOk()
+        ->assertSee('Płatności bankowe')
+        ->assertSee('href="'.route('admin.bank-payments.index').'"', false);
 
     $module = app(AddonManager::class)->find('bank_payments');
     $items = $module->sidebar();
