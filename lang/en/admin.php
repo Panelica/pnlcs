@@ -1959,7 +1959,7 @@ return [
     'nav.fraud' => 'Fraud',
     'nav.general_settings' => 'General Settings',
     'nav.invoices' => 'Invoices',
-    'nav.ksef_status' => 'KSeF Status',
+    'nav.ksef_status' => 'KSeF',
     'nav.knowledge_base' => 'Knowledge Base',
     'nav.languages' => 'Languages',
     'nav.list_all_orders' => 'List All Orders',

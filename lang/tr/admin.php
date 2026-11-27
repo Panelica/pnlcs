@@ -1908,7 +1908,7 @@ return [
         'utilities' => 'Araçlar',
         'view_search_clients' => 'Müşterileri Görüntüle/Ara',
         'whois_lookup' => 'WHOIS Sorgulama',
-        'ksef_status' => 'KSeF Durumu',
+        'ksef_status' => 'KSeF',
     ],
     'nav.active' => 'Aktif',
     'nav.activity_log' => 'İşlem Kayıtları',

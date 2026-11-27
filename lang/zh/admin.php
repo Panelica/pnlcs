@@ -1959,7 +1959,7 @@ return [
     'nav.fraud' => '欺诈',
     'nav.general_settings' => '常规设置',
     'nav.invoices' => '发票',
-    'nav.ksef_status' => 'KSeF 状态',
+    'nav.ksef_status' => 'KSeF',
     'nav.knowledge_base' => '知识库',
     'nav.languages' => '语言',
     'nav.list_all_orders' => '全部订单',

@@ -1896,7 +1896,7 @@ return [
     'nav.fraud' => 'Frode',
     'nav.general_settings' => 'Impostazioni generali',
     'nav.invoices' => 'Fatture',
-    'nav.ksef_status' => 'Stato KSeF',
+    'nav.ksef_status' => 'KSeF',
     'nav.knowledge_base' => 'Knowledge base',
     'nav.languages' => 'Lingue',
     'nav.list_all_orders' => 'Tutti gli ordini',

@@ -1894,7 +1894,7 @@ return [
 	'nav.fraud' => 'Fraude',
 	'nav.general_settings' => 'Configuraciones generales',
 	'nav.invoices' => 'Facturas',
-	'nav.ksef_status' => 'Estado KSeF',
+	'nav.ksef_status' => 'KSeF',
 	'nav.knowledge_base' => 'Base de conocimientos',
 	'nav.languages' => 'Idiomas',
 	'nav.list_all_orders' => 'Listar todos los pedidos',

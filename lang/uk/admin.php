@@ -1868,7 +1868,7 @@ return [
     'nav.fraud' => 'Шахрайство',
     'nav.general_settings' => 'Основні налаштування',
     'nav.invoices' => 'Рахунки',
-    'nav.ksef_status' => 'Статус KSeF',
+    'nav.ksef_status' => 'KSeF',
     'nav.knowledge_base' => 'База знань',
     'nav.languages' => 'Мови',
     'nav.list_all_orders' => 'Усі замовлення',

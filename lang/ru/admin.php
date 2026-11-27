@@ -1863,7 +1863,7 @@ return [
     'nav.fraud' => 'Мошеннические',
     'nav.general_settings' => 'Основные настройки',
     'nav.invoices' => 'Счета',
-    'nav.ksef_status' => 'Статус KSeF',
+    'nav.ksef_status' => 'KSeF',
     'nav.knowledge_base' => 'База знаний',
     'nav.languages' => 'Языки',
     'nav.list_all_orders' => 'Все заказы',
