@@ -151,10 +151,10 @@ class ScheduleStatusService
     }
 
     /**
-     * A task that only runs inside a daily window cannot be judged by the
-     * bare cron expression says "every fifteen minutes" but
-     * between 03:00 and 06:00 means the task is legitimately silent for the
-     * other twenty-one hours.
+     * A task that only runs inside a daily window cannot be judged by its
+     * bare cron expression: that expression says "every fifteen minutes",
+     * while between 03:00 and 06:00 means the task is legitimately silent for
+     * the other twenty-one hours.
      *
      * @param  array{start:string,end:string,every:int}  $window
      */
