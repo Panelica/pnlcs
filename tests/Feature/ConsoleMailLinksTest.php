@@ -52,5 +52,5 @@ it('ignores an unusable value rather than producing broken links', function () {
 });
 
 afterEach(function () {
-    URL::forceRootUrl(null);
+    URL::useOrigin(null);
 });
