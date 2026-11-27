@@ -43,6 +43,10 @@ class ViewServiceProvider extends ServiceProvider
             // Whether the KSeF addon is enabled — gates the billing-menu entry.
             $view->with('ksefActive', app(AddonManager::class)->isActive('ksef'));
 
+            // The bank-payments addon is installed separately; keep its
+            // billing-menu entry absent when it is not active.
+            $view->with('bankPaymentsActive', app(AddonManager::class)->isActive('bank_payments'));
+
             // The admin menu entries active addons declare in sidebar(); shown
             // in the Extensions menu of the top navigation.
             $view->with('addonMenuItems', rescue(fn () => app(AddonManager::class)->getSidebarItems(), []));

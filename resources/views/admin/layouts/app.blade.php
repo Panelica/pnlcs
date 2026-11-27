@@ -115,6 +115,7 @@
                     <li><a href="{{ route('admin.config.transactions') }}">{{ __('admin.nav.transactions') }}</a></li>
                     <li><a href="{{ route('admin.config.billable-items') }}">{{ __('admin.nav.billable_items') }}</a></li>
                     @if($ksefActive ?? false)<li><a href="{{ route('admin.ksef.index') }}">{{ __('admin.nav.ksef_status') }}</a></li>@endif
+                    @if(($bankPaymentsActive ?? false) && \Illuminate\Support\Facades\Route::has('admin.bank-payments.index'))<li><a href="{{ route('admin.bank-payments.index') }}">{{ __('bank-payments::addon.menu') }}</a></li>@endif
                     <li><a href="{{ route('admin.affiliates.index') }}">{{ __('admin.sidebar.affiliates') }}</a></li>
                     <li class="divider"></li>
                     <li><a href="{{ route('admin.quotes.index') }}">{{ __('admin.nav.quotes') }}</a></li>
@@ -392,6 +393,7 @@
             <li><a href="{{ route('admin.config.transactions') }}" @if($routeName === 'admin.config.transactions') class="active" @endif>{{ __('admin.nav.transactions') }}</a></li>
             <li><a href="{{ route('admin.config.billable-items') }}" @if($routeName === 'admin.config.billable-items') class="active" @endif>{{ __('admin.nav.billable_items') }}</a></li>
             @if($ksefActive ?? false)<li><a href="{{ route('admin.ksef.index') }}" @if($routeName === 'admin.ksef.index') class="active" @endif>{{ __('admin.nav.ksef_status') }}</a></li>@endif
+            @if(($bankPaymentsActive ?? false) && \Illuminate\Support\Facades\Route::has('admin.bank-payments.index'))<li><a href="{{ route('admin.bank-payments.index') }}" @if(request()->routeIs('admin.bank-payments.*')) class="active" @endif>{{ __('bank-payments::addon.menu') }}</a></li>@endif
             <li><a href="{{ route('admin.affiliates.index') }}" @if($routeName === 'admin.affiliates.index') class="active" @endif>{{ __('admin.sidebar.affiliates') }}</a></li>
         </ul>
         <div class="sidebar-header"><i class="fas fa-file-signature"></i> {{ __('admin.nav.quotes') }}</div>
