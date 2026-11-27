@@ -6,6 +6,8 @@ use App\Http\Controllers\Controller;
 use App\Models\KsefImportedInvoice;
 use App\Models\KsefInvoice;
 use Illuminate\Http\Request;
+use Illuminate\Http\Response;
+use Illuminate\View\View;
 use Modules\Ksef\Jobs\ImportKsefInvoicesJob;
 use Modules\Ksef\Jobs\SubmitInvoiceJob;
 use Modules\Ksef\KsefClient;
@@ -59,6 +61,21 @@ class KsefController extends Controller
             'month' => $month,
             'years' => range((int) now()->year + 1, 2020),
             'months' => range(1, 12),
+        ]);
+    }
+
+    public function showImported(KsefImportedInvoice $imported): View
+    {
+        return view('admin.ksef.imported-show', ['imported' => $imported]);
+    }
+
+    public function downloadImportedXml(KsefImportedInvoice $imported): Response
+    {
+        abort_unless(filled($imported->xml), 404);
+
+        return response($imported->xml, 200, [
+            'Content-Type' => 'application/xml',
+            'Content-Disposition' => 'attachment; filename="'.$imported->ksef_number.'.xml"',
         ]);
     }
 

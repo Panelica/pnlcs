@@ -127,13 +127,13 @@
                         @else
                             @php($party = $tab === 'sales' ? ($r->buyer_name ?: $r->buyer_nip) : ($r->seller_name ?: $r->seller_nip))
                             <tr>
-                                <td style="padding:8px;">{{ $r->invoice_number ?? '—' }}</td>
+                                <td style="padding:8px;">@if($r->invoice_number)<a href="{{ route('admin.ksef.imported.show', $r) }}" style="color:#337ab7;">{{ $r->invoice_number }}</a>@else—@endif</td>
                                 <td style="padding:8px;">{{ $r->issue_date?->format(date_fmt()) ?? '—' }}</td>
                                 <td style="padding:8px;">{{ $party ?: '—' }}</td>
                                 <td style="padding:8px;text-align:right;">{{ $r->net !== null ? number_format((float) $r->net, 2, ',', ' ') : '—' }}</td>
                                 <td style="padding:8px;text-align:right;">{{ $r->vat !== null ? number_format((float) $r->vat, 2, ',', ' ') : '—' }}</td>
                                 <td style="padding:8px;text-align:right;">{{ $r->gross !== null ? number_format((float) $r->gross, 2, ',', ' ') : '—' }}</td>
-                                <td style="padding:8px;">{{ $r->ksef_number }}</td>
+                                <td style="padding:8px;"><a href="{{ route('admin.ksef.imported.show', $r) }}">{{ $r->ksef_number }}</a></td>
                                 <td style="padding:8px;">{{ $r->imported_at?->format(date_fmt().' H:i') ?? '—' }}</td>
                             </tr>
                         @endif

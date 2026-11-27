@@ -152,3 +152,34 @@ it('does not classify our own invoice as a cost invoice', function () {
     expect(KsefImportedInvoice::where('direction', 'cost')->count())->toBe(0)
         ->and(KsefImportedInvoice::where('direction', 'sales')->count())->toBe(1);
 });
+
+it('opens an imported invoice and downloads its XML', function () {
+    $admin = Admin::factory()->create();
+    $imported = KsefImportedInvoice::create([
+        'ksef_number' => '7777777777-20261120-XML-07',
+        'direction' => 'sales',
+        'invoice_number' => 'XML-SALE-7',
+        'issue_date' => '2026-11-20',
+        'seller_nip' => '6482409327',
+        'seller_name' => 'Our company',
+        'buyer_name' => 'Buyer',
+        'net' => 100,
+        'vat' => 23,
+        'gross' => 123,
+        'currency' => 'PLN',
+        'xml' => '<Faktura><P_2>XML-SALE-7</P_2></Faktura>',
+        'imported_at' => now(),
+    ]);
+
+    $this->actingAs($admin, 'admin')
+        ->get(route('admin.ksef.imported.show', $imported))
+        ->assertOk()
+        ->assertSee('XML-SALE-7')
+        ->assertSee(__('messages.ksef.xml'));
+
+    $this->actingAs($admin, 'admin')
+        ->get(route('admin.ksef.imported.xml', $imported))
+        ->assertOk()
+        ->assertHeader('Content-Type', 'application/xml')
+        ->assertSee('<Faktura>', false);
+});
