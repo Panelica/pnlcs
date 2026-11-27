@@ -1,0 +1,17 @@
+From: Nest Bank <powiadomienia@example.test>
+To: ksiegowosc@example.test
+Subject: Przelew przychodzacy
+Message-ID: <nest-bank-example-001@example.test>
+Date: Thu, 26 Nov 2026 10:15:00 +0100
+MIME-Version: 1.0
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 8bit
+
+Bank: Nest Bank
+Typ operacji: Przelew przychodzący
+Data operacji: 26.11.2026
+Kwota: 1 234,56 PLN
+Nadawca: Acme Sp. z o.o.
+Rachunek nadawcy: 12 3456 7890 1234 5678 9012 3456
+Rachunek odbiorcy: 98 7654 3210 9876 5432 1098 7654
+Tytuł: Faktura R2026/10/NR-161
