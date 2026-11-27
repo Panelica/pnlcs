@@ -63,3 +63,11 @@ it('leaves the choice to the resolver when no IP is recorded', function () {
 
     expect($seen[0]['curl'] ?? [])->not->toHaveKey(CURLOPT_IPRESOLVE);
 });
+
+it('writes an IPv6 address into the URL in brackets', function () {
+    Http::fake(fn () => Http::response('{}', 200));
+
+    (new PleskModule)->testConnection(pleskFamilyServer('2001:db8::10'));
+
+    Http::assertSent(fn ($request) => $request->url() === 'https://[2001:db8::10]:8443/api/v2/server');
+});
