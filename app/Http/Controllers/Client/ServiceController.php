@@ -41,15 +41,27 @@ class ServiceController extends Controller
         $type = in_array($request->query('type'), $types, true) ? $request->query('type') : null;
         $status = in_array($request->query('status'), $statuses, true) ? $request->query('status') : null;
 
+        $sort = in_array($request->query('sort'), ['domain', 'expiry'], true)
+            ? $request->query('sort')
+            : 'expiry';
+        $dir = strtolower((string) $request->query('dir')) === 'desc' ? 'desc' : 'asc';
+
         $services = Service::with('product')
             ->where('client_id', $clientId)
             ->when($type, fn ($q) => $q->whereHas('product', fn ($p) => $p->where('type', $type)))
             ->when($status, fn ($q) => $q->where('status', $status))
-            ->orderBy('id', 'desc')
+            ->when($sort === 'domain', fn ($q) => $q
+                ->orderByRaw('services.domain IS NULL')
+                ->orderBy('services.domain', $dir)
+                ->orderBy('services.id'))
+            ->when($sort === 'expiry', fn ($q) => $q
+                ->orderByRaw('services.next_due_date IS NULL')
+                ->orderBy('services.next_due_date', $dir)
+                ->orderBy('services.id'))
             ->paginate(25)
             ->withQueryString();
 
-        return view('client.services.index', compact('services', 'types', 'statuses', 'type', 'status'));
+        return view('client.services.index', compact('services', 'types', 'statuses', 'type', 'status', 'sort', 'dir'));
     }
 
     public function show(Service $service)

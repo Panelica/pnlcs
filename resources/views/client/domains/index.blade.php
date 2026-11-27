@@ -36,16 +36,24 @@
     @csrf
     <button type="submit" class="btn btn-outline btn-sm">{{ __('client.domains.renew_selected') }}</button>
 </form>
+@php
+$domainSortUrl = fn (string $column) => route('client.domains.index', [
+    'sort' => $column,
+    'dir' => $sort === $column && $dir === 'asc' ? 'desc' : 'asc',
+]);
+$domainSortMark = fn (string $column) => $sort === $column ? ($dir === 'asc' ? ' ↑' : ' ↓') : '';
+@endphp
+
 <div class="pn-card">
     <div class="pn-card-body-flush">
         <table class="pn-table">
             <thead>
                 <tr>
                     <th style="width:28px;"><span class="sr-only">{{ __('client.domains.renew_selected') }}</span></th>
-                    <th>{{ __('client.domains.domain_name') }}</th>
+                    <th aria-sort="{{ $sort === 'name' ? ($dir === 'asc' ? 'ascending' : 'descending') : 'none' }}"><a href="{{ $domainSortUrl('name') }}" style="color:inherit;text-decoration:none;">{{ __('client.domains.domain_name') }}{{ $domainSortMark('name') }}</a></th>
                     <th>{{ __('common.table.status') }}</th>
                     <th>{{ __('client.domains.registration_date_col') }}</th>
-                    <th>{{ __('common.table.expiry_date') }}</th>
+                    <th aria-sort="{{ $sort === 'expiry' ? ($dir === 'asc' ? 'ascending' : 'descending') : 'none' }}"><a href="{{ $domainSortUrl('expiry') }}" style="color:inherit;text-decoration:none;">{{ __('common.table.expiry_date') }}{{ $domainSortMark('expiry') }}</a></th>
                     <th>{{ __('client.domains.auto_renew_col') }}</th>
                     <th style="text-align:right;">{{ __('common.table.actions') }}</th>
                 </tr>

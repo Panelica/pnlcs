@@ -40,16 +40,25 @@
 </form>
 @endif
 
+@php
+$serviceSortQuery = array_filter(['type' => $type, 'status' => $status], fn ($value) => filled($value));
+$serviceSortUrl = fn (string $column) => route('client.services.index', $serviceSortQuery + [
+    'sort' => $column,
+    'dir' => $sort === $column && $dir === 'asc' ? 'desc' : 'asc',
+]);
+$serviceSortMark = fn (string $column) => $sort === $column ? ($dir === 'asc' ? ' ↑' : ' ↓') : '';
+@endphp
+
 <div class="pn-card">
     <div class="pn-card-body-flush">
         <table class="pn-table">
             <thead>
                 <tr>
                     <th>{{ __('common.table.product') }}</th>
-                    <th>{{ __('common.table.domain') }}</th>
+                    <th aria-sort="{{ $sort === 'domain' ? ($dir === 'asc' ? 'ascending' : 'descending') : 'none' }}"><a href="{{ $serviceSortUrl('domain') }}" style="color:inherit;text-decoration:none;">{{ __('common.table.domain') }}{{ $serviceSortMark('domain') }}</a></th>
                     <th>{{ __('common.table.billing_cycle') }}</th>
                     <th>{{ __('common.table.amount') }}</th>
-                    <th>{{ __('common.table.next_due') }}</th>
+                    <th aria-sort="{{ $sort === 'expiry' ? ($dir === 'asc' ? 'ascending' : 'descending') : 'none' }}"><a href="{{ $serviceSortUrl('expiry') }}" style="color:inherit;text-decoration:none;">{{ __('common.table.next_due') }}{{ $serviceSortMark('expiry') }}</a></th>
                     <th>{{ __('common.table.status') }}</th>
                     <th></th>
                 </tr>

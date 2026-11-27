@@ -17,15 +17,30 @@ class DomainController extends Controller
 {
     use ResolvesClient;
 
-    public function index()
+    public function index(Request $request)
     {
-        $domains = Domain::where('client_id', $this->getClientId())->orderBy('id', 'desc')->paginate(25);
+        $sort = in_array($request->query('sort'), ['name', 'expiry'], true)
+            ? $request->query('sort')
+            : 'expiry';
+        $dir = strtolower((string) $request->query('dir')) === 'desc' ? 'desc' : 'asc';
+
+        $domains = Domain::where('client_id', $this->getClientId())
+            ->when($sort === 'name', fn ($q) => $q
+                ->orderByRaw('domains.domain IS NULL')
+                ->orderBy('domains.domain', $dir)
+                ->orderBy('domains.id'))
+            ->when($sort === 'expiry', fn ($q) => $q
+                ->orderByRaw('domains.expiry_date IS NULL')
+                ->orderBy('domains.expiry_date', $dir)
+                ->orderBy('domains.id'))
+            ->paginate(25)
+            ->withQueryString();
 
         // Domains other accounts have offered to this one.
         $incomingMoves = \App\Models\DomainMoveRequest::with('domain', 'fromClient')
             ->where('to_client_id', $this->getClientId())->open()->get();
 
-        return view('client.domains.index', compact('domains', 'incomingMoves'));
+        return view('client.domains.index', compact('domains', 'incomingMoves', 'sort', 'dir'));
     }
 
     public function transfer(Request $request)
