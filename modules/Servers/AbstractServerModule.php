@@ -44,11 +44,11 @@ abstract class AbstractServerModule implements ServerModuleInterface
         $ip = trim((string) $server->ip_address);
 
         if ($hostname === '') {
-            return $ip;
+            return $this->urlHost($ip);
         }
 
         if ($ip === '' || filter_var($hostname, FILTER_VALIDATE_IP)) {
-            return $hostname;
+            return $this->urlHost($hostname);
         }
 
         $resolved = ServerAddress::resolve($hostname);
@@ -60,12 +60,12 @@ abstract class AbstractServerModule implements ServerModuleInterface
                 'ip' => $ip,
             ]);
 
-            return $ip;
+            return $this->urlHost($ip);
         }
 
         if (! in_array($ip, $resolved, true)) {
             if (ServerAddress::behindNat($ip, $resolved)) {
-                return $ip;
+                return $this->urlHost($ip);
             }
 
             Log::warning('Server hostname resolves elsewhere; using the recorded address', [
@@ -75,10 +75,22 @@ abstract class AbstractServerModule implements ServerModuleInterface
                 'ip' => $ip,
             ]);
 
-            return $ip;
+            return $this->urlHost($ip);
         }
 
-        return $hostname;
+        return $this->urlHost($hostname);
+    }
+
+    /**
+     * An IPv6 address in the form a URL takes it: in square brackets.
+     *
+     * Every caller writes the host into "https://{host}:{port}", and a bare
+     * IPv6 address there leaves no telling where the address ends and the port
+     * begins - the call fails before it reaches the server.
+     */
+    private function urlHost(string $host): string
+    {
+        return filter_var($host, FILTER_VALIDATE_IP, FILTER_FLAG_IPV6) ? "[{$host}]" : $host;
     }
 
     protected function getServer(Service $service): ?Server
