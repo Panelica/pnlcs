@@ -22,6 +22,7 @@
         "pragmarx/google2fa-laravel": "^3.0"
     },
     "require-dev": {
+        "baer-software/larabeacon": "^3.6",
         "fakerphp/faker": "^1.23",
         "larastan/larastan": "^3.9",
         "laravel/pail": "^1.2.5",
