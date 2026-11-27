@@ -34,6 +34,7 @@ class KsefInvoiceImporter
         $from = $from ?? ($firstImport
             ? CarbonImmutable::now()->startOfYear()
             : ($last?->to_date?->toImmutable()->subDay() ?? CarbonImmutable::now()->startOfYear()));
+        $from = CarbonImmutable::instance($from);
         $to = CarbonImmutable::now();
         $dateType = $firstImport ? 'Issue' : 'PermanentStorage';
 
@@ -55,61 +56,63 @@ class KsefInvoiceImporter
             $endpoint = rtrim((string) $settings['endpoint'], '/');
 
             foreach ([['Subject1', 'sales'], ['Subject2', 'cost']] as [$subject, $direction]) {
-                $offset = 0;
-                $pages = 0;
+                foreach ($this->ranges($from, $to) as [$rangeFrom, $rangeTo]) {
+                    $offset = 0;
+                    $pages = 0;
 
-                do {
-                    $response = $this->client->queryInvoiceMetadata(
-                        $token,
-                        $endpoint,
-                        $subject,
-                        $from->toIso8601String(),
-                        $to->toIso8601String(),
-                        $dateType,
-                        $offset,
-                        100,
-                    );
+                    do {
+                        $response = $this->client->queryInvoiceMetadata(
+                            $token,
+                            $endpoint,
+                            $subject,
+                            $rangeFrom->toIso8601String(),
+                            $rangeTo->toIso8601String(),
+                            $dateType,
+                            $offset,
+                            100,
+                        );
 
-                    $invoices = $response['invoices'] ?? $response['data'] ?? [];
-                    if (! is_array($invoices)) {
-                        $invoices = [];
-                    }
-
-                    foreach ($invoices as $metadata) {
-                        if (! is_array($metadata)) {
-                            continue;
+                        $invoices = $response['invoices'] ?? $response['data'] ?? [];
+                        if (! is_array($invoices)) {
+                            $invoices = [];
                         }
 
-                        $fetched++;
-                        $ksefNumber = (string) ($metadata['ksefNumber'] ?? $metadata['ksef_number'] ?? '');
+                        foreach ($invoices as $metadata) {
+                            if (! is_array($metadata)) {
+                                continue;
+                            }
 
-                        if ($ksefNumber === '') {
-                            $errors++;
+                            $fetched++;
+                            $ksefNumber = (string) ($metadata['ksefNumber'] ?? $metadata['ksef_number'] ?? '');
 
-                            continue;
+                            if ($ksefNumber === '') {
+                                $errors++;
+
+                                continue;
+                            }
+
+                            try {
+                                $xml = $this->client->downloadInvoice($token, $endpoint, $ksefNumber);
+                            } catch (Throwable $e) {
+                                $xml = null;
+                                $errors++;
+                                Log::warning('KSeF import: XML download failed', ['ksef_number' => $ksefNumber, 'error' => $e->getMessage()]);
+                            }
+
+                            $record = $this->record($metadata, $direction, $xml, $ksefNumber);
+
+                            if ($record->wasRecentlyCreated) {
+                                $created++;
+                            } else {
+                                $updated++;
+                            }
                         }
 
-                        try {
-                            $xml = $this->client->downloadInvoice($token, $endpoint, $ksefNumber);
-                        } catch (Throwable $e) {
-                            $xml = null;
-                            $errors++;
-                            Log::warning('KSeF import: XML download failed', ['ksef_number' => $ksefNumber, 'error' => $e->getMessage()]);
-                        }
-
-                        $record = $this->record($metadata, $direction, $xml, $ksefNumber);
-
-                        if ($record->wasRecentlyCreated) {
-                            $created++;
-                        } else {
-                            $updated++;
-                        }
-                    }
-
-                    $count = count($invoices);
-                    $offset += $count;
-                    $pages++;
-                } while ($count === 100 && $pages < 100);
+                        $count = count($invoices);
+                        $offset += $count;
+                        $pages++;
+                    } while ($count === 100 && $pages < 100);
+                }
             }
 
             $run->update([
@@ -138,6 +141,31 @@ class KsefInvoiceImporter
 
             return $this->result('error', $fetched, $created, $updated, $errors + 1, $e->getMessage());
         }
+    }
+
+    /**
+     * KSeF accepts at most three months in one metadata query. Split a first
+     * import (the current year) and any long incremental gap into safe ranges.
+     *
+     * @return array<int, array{0: CarbonImmutable, 1: CarbonImmutable}>
+     */
+    private function ranges(CarbonImmutable $from, CarbonImmutable $to): array
+    {
+        $ranges = [];
+        $start = $from;
+
+        while ($start->lessThanOrEqualTo($to)) {
+            $end = $start->addMonthsNoOverflow(3)->subSecond();
+
+            if ($end->greaterThan($to)) {
+                $end = $to;
+            }
+
+            $ranges[] = [$start, $end];
+            $start = $end->addSecond();
+        }
+
+        return $ranges;
     }
 
     private function record(array $metadata, string $direction, ?string $xml, string $ksefNumber): KsefImportedInvoice

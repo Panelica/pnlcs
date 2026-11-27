@@ -6,6 +6,7 @@ use App\Models\Client;
 use App\Models\Invoice;
 use App\Models\KsefImportedInvoice;
 use App\Models\KsefInvoice;
+use Carbon\Carbon;
 use Modules\Ksef\KsefClient;
 use Modules\Ksef\KsefInvoiceImporter;
 
@@ -39,8 +40,8 @@ it('imports sales and cost invoices from KSeF without duplicating them', functio
     app()->instance(KsefClient::class, $client);
 
     $importer = app(KsefInvoiceImporter::class);
-    $first = $importer->import();
-    $second = $importer->import();
+    $first = $importer->import(Carbon::parse('2026-11-01'));
+    $second = $importer->import(Carbon::parse('2026-11-01'));
 
     expect($first['status'])->toBe('ok')
         ->and($first['created'])->toBe(2)
@@ -99,4 +100,28 @@ it('shows sent invoices by default and imported invoices in their tabs', functio
         ->get(route('admin.ksef.index', ['tab' => 'costs', 'year' => now()->year, 'month' => now()->month]))
         ->assertOk()
         ->assertSee('COST-1');
+});
+
+it('splits the first KSeF import into ranges of at most three months', function () {
+    ksefImportConfigured();
+
+    $ranges = [];
+    $client = Mockery::mock(KsefClient::class);
+    $client->shouldReceive('authenticate')->once()->andReturn('token');
+    $client->shouldReceive('queryInvoiceMetadata')->andReturnUsing(
+        function ($token, $endpoint, $subject, $from, $to) use (&$ranges) {
+            $ranges[] = [Carbon::parse($from), Carbon::parse($to)];
+
+            return ['invoices' => []];
+        }
+    );
+    app()->instance(KsefClient::class, $client);
+
+    app(KsefInvoiceImporter::class)->import();
+
+    expect($ranges)->not->toBeEmpty();
+
+    foreach ($ranges as [$from, $to]) {
+        expect($to->lessThanOrEqualTo($from->copy()->addMonthsNoOverflow(3)))->toBeTrue();
+    }
 });
