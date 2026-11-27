@@ -16,6 +16,11 @@ return [
 
     'mode' => 'test',
 
+    // Where to tell staff that the matching queue needs a decision. Empty
+    // falls back to the panel's SystemEmailAddress.
+    'notification_email' => null,
+    'notify_on_review' => true,
+
     // The first import must not read an entire mailbox. Later imports continue
     // from the last UID when UIDVALIDITY has not changed.
     'initial_sync_days' => 7,

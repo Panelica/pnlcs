@@ -25,6 +25,7 @@ class BankSyncService
         private readonly RawMessageParser $rawParser,
         private readonly InvoiceMatcher $matcher,
         private readonly BankPaymentImporter $importer,
+        private readonly BankPaymentsReviewNotifier $reviewNotifier,
     ) {}
 
     /**
@@ -48,6 +49,7 @@ class BankSyncService
         $newTransactions = 0;
         $duplicates = 0;
         $errors = 0;
+        $reviewCount = 0;
 
         try {
             $probe = $this->client->test($mailbox);
@@ -206,6 +208,11 @@ class BankSyncService
                                 'error' => $e->getMessage(),
                             ]);
                         }
+
+                        if ($settings['mode'] !== 'test'
+                            && in_array($transaction->fresh()->matching_status, ['review', 'ambiguous', 'auto_ready', 'error'], true)) {
+                            $reviewCount++;
+                        }
                     }
                 }
 
@@ -233,6 +240,17 @@ class BankSyncService
                 'errors' => $errors,
                 'message' => $message,
             ]);
+
+            if ($settings['mode'] !== 'test' && $reviewCount > 0) {
+                try {
+                    $this->reviewNotifier->notify($mailbox, $reviewCount);
+                } catch (Throwable $e) {
+                    Log::warning('BankPayments: review notification failed', [
+                        'mailbox_id' => $mailbox->id,
+                        'error' => $e->getMessage(),
+                    ]);
+                }
+            }
 
             return $this->result($errors > 0 ? 'partial' : 'ok', $fetched, $parsed, $newTransactions, $duplicates, $errors, $message);
         } catch (Throwable $e) {

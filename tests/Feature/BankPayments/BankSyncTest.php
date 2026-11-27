@@ -8,6 +8,8 @@ use App\Models\Transaction;
 use App\Services\PaymentService;
 use Carbon\Carbon;
 use Carbon\CarbonInterface;
+use Illuminate\Support\Facades\Mail;
+use Modules\Addons\BankPayments\Mail\BankPaymentsReviewMail;
 use Modules\Addons\BankPayments\Models\BankImport;
 use Modules\Addons\BankPayments\Models\BankMailbox;
 use Modules\Addons\BankPayments\Models\BankMatch;
@@ -185,6 +187,31 @@ it('auto-books a full match through the sync pipeline', function () {
         ->and(BankTransaction::firstOrFail()->matching_status)->toBe('imported')
         ->and(BankImport::count())->toBe(1)
         ->and(Transaction::count())->toBe(1);
+});
+
+it('notifies the operator when a match needs approval', function () {
+    Mail::fake();
+    Setting::set('SystemEmailAddress', 'ops@example.test');
+    AddonSetting::setSetting('bank_payments', 'mode', 'semi_auto');
+
+    $client = Client::factory()->create(['company_name' => 'Przykładowy Kontrahent Sp. z o.o.']);
+    Invoice::factory()->create([
+        'client_id' => $client->id,
+        'invoice_num' => 'PRO-2026/11-000123',
+        'total' => 1234.87,
+        'status' => 'unpaid',
+    ]);
+
+    $mailbox = bankPaymentsSyncMailbox();
+    $fake = new BankPaymentsSyncTestClient;
+    $fake->messages = [['uid' => 11, 'raw' => bankPaymentsRealIncomingRaw()]];
+
+    app()->instance(BankMailboxClient::class, $fake);
+
+    app(BankSyncService::class)->sync($mailbox);
+
+    Mail::assertQueued(BankPaymentsReviewMail::class, fn (BankPaymentsReviewMail $mail): bool => $mail->hasTo('ops@example.test')
+        && $mail->matchCount === 1);
 });
 
 it('does not create a second message or transaction for the same UID', function () {

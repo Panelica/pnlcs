@@ -32,6 +32,19 @@ final class BankPaymentsSettings
                 'hint' => __('bank-payments::settings.mode_hint'),
             ],
             [
+                'name' => 'notification_email',
+                'label' => __('bank-payments::settings.notification_email'),
+                'type' => 'text',
+                'hint' => __('bank-payments::settings.notification_email_hint'),
+            ],
+            [
+                'name' => 'notify_on_review',
+                'label' => __('bank-payments::settings.notify_on_review'),
+                'type' => 'checkbox',
+                'default' => '1',
+                'hint' => __('bank-payments::settings.notify_on_review_hint'),
+            ],
+            [
                 'name' => 'initial_sync_days',
                 'label' => __('bank-payments::settings.initial_sync_days'),
                 'type' => 'text',
@@ -70,6 +83,8 @@ final class BankPaymentsSettings
 
         return [
             'mode' => (string) $mode,
+            'notification_email' => (string) self::pick($stored, 'notification_email', config('bank-payments.notification_email', '')),
+            'notify_on_review' => self::bool($stored, 'notify_on_review', (bool) config('bank-payments.notify_on_review', true)),
             'initial_sync_days' => self::boundedInt($stored, 'initial_sync_days', (int) config('bank-payments.initial_sync_days', 7), 1, 365),
             'sync_limit' => self::boundedInt($stored, 'sync_limit', (int) config('bank-payments.sync_limit', 100), 1, 500),
             'mark_seen' => self::bool($stored, 'mark_seen', (bool) config('bank-payments.mark_seen', true)),
