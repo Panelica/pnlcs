@@ -2385,7 +2385,7 @@ return [
     'domain_searches.result' => 'Result',
     'domain_searches.client' => 'Account',
     'domain_searches.none' => 'Nothing yet.',
-    'domain_searches.disabled' => 'Recording is off (General settings).',
+    'domain_searches.disabled' => 'Recording is off (Settings → Domains).',
     'domain_searches.times' => '{1} :count time|[2,*] :count times',
     'settings.domain_search_log' => 'Record domain searches',
     'settings.domain_search_log_hint' => 'The names visitors search on the storefront, the answer and the account (no IP), kept 90 days. Shown under Domains → Domain searches.',
