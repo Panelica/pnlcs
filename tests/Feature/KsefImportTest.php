@@ -125,3 +125,30 @@ it('splits the first KSeF import into ranges of at most three months', function 
         expect($to->lessThanOrEqualTo($from->copy()->addMonthsNoOverflow(3)))->toBeTrue();
     }
 });
+
+it('does not classify our own invoice as a cost invoice', function () {
+    ksefImportConfigured();
+
+    $client = Mockery::mock(KsefClient::class);
+    $client->shouldReceive('authenticate')->once()->andReturn('token');
+    $client->shouldReceive('queryInvoiceMetadata')->twice()->andReturnUsing(function () {
+        return ['invoices' => [[
+            'ksefNumber' => '5555555555-20260101-MNO-05',
+            'invoiceNumber' => 'SELF-1',
+            'issueDate' => '2026-11-20',
+            'seller' => ['nip' => '6482409327', 'name' => 'Our company'],
+            'buyer' => ['identifier' => ['value' => '6482409327'], 'name' => 'Our company'],
+            'netAmount' => 100,
+            'vatAmount' => 23,
+            'grossAmount' => 123,
+            'currency' => 'PLN',
+        ]]];
+    });
+    $client->shouldReceive('downloadInvoice')->twice()->andReturn('<Faktura><P_1>2026-11-20</P_1><P_2>SELF-1</P_2></Faktura>');
+
+    app()->instance(KsefClient::class, $client);
+    app(KsefInvoiceImporter::class)->import(Carbon::parse('2026-11-01'));
+
+    expect(KsefImportedInvoice::where('direction', 'cost')->count())->toBe(0)
+        ->and(KsefImportedInvoice::where('direction', 'sales')->count())->toBe(1);
+});

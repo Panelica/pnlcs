@@ -168,12 +168,21 @@ class KsefInvoiceImporter
         return $ranges;
     }
 
-    private function record(array $metadata, string $direction, ?string $xml, string $ksefNumber): KsefImportedInvoice
+    private function record(array $metadata, string $direction, ?string $xml, string $ksefNumber): ?KsefImportedInvoice
     {
         $parsed = $this->parseXml($xml);
 
         $seller = $this->party($metadata, 'seller', 'subject1');
         $buyer = $this->party($metadata, 'buyer', 'subject2');
+        $sellerNip = Nip::normalize($seller['nip'] ?? $parsed['seller_nip'] ?? '');
+        $ourNip = Nip::normalize((string) KsefSettings::resolve()['nip']);
+
+        // Subject2 should be an invoice issued *to* us. Test/self-billing data
+        // can return an invoice where our NIP is both sides; it is not a cost
+        // invoice and must not appear in the costs tab.
+        if ($direction === 'cost' && $sellerNip !== '' && $sellerNip === $ourNip) {
+            return null;
+        }
 
         return KsefImportedInvoice::updateOrCreate(
             ['ksef_number' => $ksefNumber],
@@ -183,7 +192,7 @@ class KsefInvoiceImporter
                 'issue_date' => $this->date($this->value($metadata, ['issueDate', 'issue_date'])) ?? $parsed['issue_date'],
                 'invoicing_date' => $this->date($this->value($metadata, ['invoicingDate', 'invoicing_date'])),
                 'permanent_storage_date' => $this->date($this->value($metadata, ['permanentStorageDate', 'permanent_storage_date'])),
-                'seller_nip' => Nip::normalize($seller['nip'] ?? $parsed['seller_nip'] ?? ''),
+                'seller_nip' => $sellerNip,
                 'seller_name' => $seller['name'] ?? $parsed['seller_name'],
                 'buyer_nip' => Nip::normalize($buyer['nip'] ?? $parsed['buyer_nip'] ?? ''),
                 'buyer_name' => $buyer['name'] ?? $parsed['buyer_name'],
@@ -207,8 +216,11 @@ class KsefInvoiceImporter
             return [];
         }
 
+        $identifier = $party['identifier'] ?? null;
+        $nestedNip = is_array($identifier) ? ($identifier['value'] ?? null) : null;
+
         return [
-            'nip' => $party['nip'] ?? $party['NIP'] ?? null,
+            'nip' => $party['nip'] ?? $party['NIP'] ?? $nestedNip,
             'name' => $party['name'] ?? $party['fullName'] ?? $party['Nazwa'] ?? null,
         ];
     }
