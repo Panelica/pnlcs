@@ -854,6 +854,7 @@ return [
     'clients.login_as_client' => 'Login as Client',
     'clients.name' => 'Name',
     'clients.never' => 'Never',
+    'clients.add_invoice' => 'Add invoice',
     'clients.new_invoice_link' => '+ New Invoice',
     'clients.new_ticket_link' => '+ New Ticket',
     'clients.next_due' => 'Next Due',

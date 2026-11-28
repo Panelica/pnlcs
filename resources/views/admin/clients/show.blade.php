@@ -519,6 +519,11 @@ $tabs = ['summary'=>__('admin.clients.tab_summary'),'services'=>__('admin.client
 </div>
 
 @elseif($tab === 'invoices')
+@if(auth('admin')->user()?->role?->hasPermission('create_invoices'))
+<div style="display:flex;justify-content:flex-end;margin-bottom:10px;">
+    <a href="{{ route('admin.invoices.create', ['client_id' => $client->id]) }}" class="btn btn-primary btn-sm">{{ __('admin.clients.add_invoice') }}</a>
+</div>
+@endif
 <div class="card">
     @if($invoices->isEmpty())
     <div class="card-body" style="text-align:center;color:#999;padding:40px;">{{ __('admin.invoices.no_invoices') }}</div>
