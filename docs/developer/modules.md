@@ -202,9 +202,10 @@ class ReviewsModule implements AddonModuleInterface, AdminMenuProvider
 ```
 
 Available locations: `clients`, `orders`, `billing`, `support`, `utilities`
-and `extensions`. `icon` is an optional Font Awesome name, without the `fa-`
-prefix (for example `university` or `file-invoice-dollar`). Links are main-menu entries; `children` is supported for
-compatibility but new entries should stay flat. A missing route, a malformed
+and `extensions`. An entry has no icon: the navigation prints the label alone,
+so an addon that wants an icon puts it on its own page heading. Links are
+main-menu entries; `children` is supported for compatibility but new entries
+should stay flat. A missing route, a malformed
 entry or an inactive addon is skipped and logged, so one addon cannot break the
 navigation. The addon's own page (`output()`) lives at
 `/admin/config/addons/modules/<name>`.
