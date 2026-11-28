@@ -7,6 +7,7 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Relations\HasOne;
+use Modules\Addons\BankPayments\Services\InvoiceMatcher;
 
 class BankTransaction extends Model
 {
@@ -30,6 +31,11 @@ class BankTransaction extends Model
             'matching_score' => 'integer',
             'matched_at' => 'datetime',
         ];
+    }
+
+    public function scorePercent(): int
+    {
+        return (int) round(((int) ($this->matching_score ?? 0)) / InvoiceMatcher::MAX_SCORE * 100);
     }
 
     public function message(): BelongsTo

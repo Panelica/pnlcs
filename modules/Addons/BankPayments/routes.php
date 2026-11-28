@@ -1,6 +1,7 @@
 <?php
 
 use Illuminate\Support\Facades\Route;
+use Modules\Addons\BankPayments\Http\Controllers\Admin\BankAssignmentController;
 use Modules\Addons\BankPayments\Http\Controllers\Admin\BankMailboxController;
 use Modules\Addons\BankPayments\Http\Controllers\Admin\BankMatchController;
 use Modules\Addons\BankPayments\Http\Controllers\Admin\BankPaymentsDashboardController;
@@ -14,6 +15,11 @@ Route::middleware(['web', 'admin.auth', 'admin.2fa', 'admin.permission:manage_in
         Route::get('/', [BankPaymentsDashboardController::class, 'index'])->name('index');
         Route::get('transactions', [BankTransactionController::class, 'index'])->name('transactions.index');
         Route::get('transactions/{transaction}', [BankTransactionController::class, 'show'])->name('transactions.show');
+        Route::get('transactions/{transaction}/assign', [BankAssignmentController::class, 'show'])->name('transactions.assign');
+        Route::post('transactions/{transaction}/assign', [BankAssignmentController::class, 'store'])->name('transactions.assign.store');
+        Route::post('transactions/{transaction}/rematch', [BankMatchController::class, 'rematch'])->name('transactions.rematch');
+        Route::get('payers', [BankAssignmentController::class, 'payers'])->name('payers.index');
+        Route::delete('payers/{profile}', [BankAssignmentController::class, 'forgetPayer'])->name('payers.destroy');
         Route::get('matches', [BankMatchController::class, 'index'])->name('matches.index');
         Route::post('matches/{match}/approve', [BankMatchController::class, 'approve'])->name('matches.approve');
         Route::post('matches/{match}/reject', [BankMatchController::class, 'reject'])->name('matches.reject');

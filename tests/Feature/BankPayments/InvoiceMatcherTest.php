@@ -83,6 +83,27 @@ it('scores a full number, amount and client match as auto_ready', function () {
         ->and(Transaction::count())->toBe(0);
 });
 
+it('shows an amount and payer match as a 56 percent review candidate', function () {
+    $client = Client::factory()->create(['company_name' => 'MOONSTONE MAGDALENA NOWARA']);
+    $invoice = matcherInvoice($client, [
+        'invoice_num' => 'PRO-NAWARA-'.uniqid(),
+        'total' => 172.20,
+    ]);
+    $transaction = matcherTransaction([
+        'amount' => 172.20,
+        'sender_name' => 'MOONSTONE MAGDALENA NOWARA',
+        'reference' => 'Proforma',
+    ]);
+
+    $result = app(InvoiceMatcher::class)->match($transaction);
+
+    expect($result['status'])->toBe('review')
+        ->and($result['score'])->toBe(50)
+        ->and(BankMatch::count())->toBe(1)
+        ->and(BankMatch::first()->invoice_id)->toBe($invoice->id)
+        ->and(BankMatch::first()->scorePercent())->toBe(56);
+});
+
 it('sends a number and client match with a different amount to review', function () {
     $client = Client::factory()->create(['company_name' => 'Acme Sp. z o.o.']);
     matcherInvoice($client, ['total' => 1000]);

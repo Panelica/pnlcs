@@ -53,7 +53,7 @@ class BankPaymentsModule implements AddonModuleInterface, AdminMenuProvider
         // An inactive addon's provider is not loaded, so `php artisan migrate`
         // cannot discover these migrations until the addon is switched on.
         // Install the addon's own tables here, once, before activation.
-        $tables = ['bank_mailboxes', 'bank_messages', 'bank_transactions', 'bank_matches', 'bank_imports', 'bank_sync_logs'];
+        $tables = ['bank_mailboxes', 'bank_messages', 'bank_transactions', 'bank_matches', 'bank_imports', 'bank_sync_logs', 'bank_payer_profiles'];
 
         if (collect($tables)->contains(fn (string $table): bool => ! Schema::hasTable($table))
             || ! Schema::hasColumn('bank_transactions', 'matching_status')) {

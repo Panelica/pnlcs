@@ -29,7 +29,7 @@
                     <td>
                         {{ __('bank-payments::matches.status_'.$transaction->matching_status) }}
                         @if($transaction->matching_score !== null)
-                            · {{ __('bank-payments::matches.score_points', ['score' => $transaction->matching_score]) }}
+                            · {{ __('bank-payments::matches.match_percent', ['score' => $transaction->scorePercent()]) }}
                         @endif
                         @if($transaction->matching_reason)
                             <div style="font-size:12px;color:var(--pn-muted);">{{ $transaction->matching_reason }}</div>
@@ -38,6 +38,15 @@
                 </tr>
             </tbody>
         </table>
+        <div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:12px;">
+            @unless(in_array($transaction->matching_status, ['imported', 'rejected'], true))
+            <a href="{{ route('admin.bank-payments.transactions.assign', $transaction) }}" class="btn btn-primary btn-sm">{{ __('bank-payments::matches.assign_action') }}</a>
+            <form method="POST" action="{{ route('admin.bank-payments.transactions.rematch', $transaction) }}" style="display:inline;">
+                @csrf
+                <button type="submit" class="btn btn-default btn-sm">{{ __('bank-payments::matches.rematch_action') }}</button>
+            </form>
+            @endunless
+        </div>
     </div>
 </div>
 

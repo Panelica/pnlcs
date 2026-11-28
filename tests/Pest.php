@@ -52,6 +52,7 @@ if (! file_exists($installedLock)) {
 function ensureBankPaymentsTables(): void
 {
     if (Illuminate\Support\Facades\Schema::hasTable('bank_imports')
+        && Illuminate\Support\Facades\Schema::hasTable('bank_payer_profiles')
         && Illuminate\Support\Facades\Schema::hasColumn('bank_transactions', 'matching_status')) {
         return;
     }
