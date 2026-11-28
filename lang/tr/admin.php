@@ -845,6 +845,7 @@ return [
     'clients.login_as_client' => 'Müşteri Olarak Giriş Yap',
     'clients.name' => 'Ad',
     'clients.never' => 'Hiçbir zaman',
+    'clients.add_invoice' => 'Fatura ekle',
     'clients.new_invoice_link' => '+ Yeni Fatura',
     'clients.new_ticket_link' => '+ Yeni Destek Talebi',
     'clients.next_due' => 'Sonraki Vade',

@@ -854,6 +854,7 @@ return [
     'clients.login_as_client' => '以客户身份登录',
     'clients.name' => '名称',
     'clients.never' => '从不',
+    'clients.add_invoice' => '添加账单',
     'clients.new_invoice_link' => '+ 新建发票',
     'clients.new_ticket_link' => '+ 新建工单',
     'clients.next_due' => '下次到期日',
