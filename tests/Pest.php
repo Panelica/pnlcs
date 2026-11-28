@@ -57,10 +57,34 @@ function ensureBankPaymentsTables(): void
         return;
     }
 
+    /*
+     * CREATE TABLE commits the transaction this test is wrapped in - the
+     * database ends one implicitly before DDL - and once it has, the rollback
+     * in tearDown has nothing left to undo: everything the test writes after
+     * this point stays for good. One row per table was exactly how it showed
+     * up when bank_payer_profiles was added: a leftover mailbox that
+     * BankMailbox::firstOrFail() then picked up in a later run, so a test about
+     * an encrypted password read someone else's row and failed.
+     *
+     * The transaction is still empty here, because this runs first in
+     * beforeEach, so it is given back cleanly: roll it back, run the DDL, open
+     * a new one at the same level for the trait to roll back as usual.
+     */
+    $connection = Illuminate\Support\Facades\DB::connection();
+    $wasInTransaction = $connection->transactionLevel() > 0;
+
+    if ($wasInTransaction) {
+        $connection->rollBack();
+    }
+
     Illuminate\Support\Facades\Artisan::call('migrate', [
         '--path' => 'modules/Addons/BankPayments/Database/Migrations',
         '--force' => true,
     ]);
+
+    if ($wasInTransaction) {
+        $connection->beginTransaction();
+    }
 }
 
 /*
