@@ -13,6 +13,7 @@ return [
     'currency_not_supported' => 'Only PLN is supported.',
     'match_changed' => 'The match changed since it was proposed — review again.',
     'amount_invalid' => 'The booking amount is invalid.',
+    'amount_exceeds_transfer' => 'The amount is higher than what is left of this transfer.',
     'not_unambiguous' => 'The match is not unambiguous — automatic booking blocked.',
     'already_settled' => 'The invoice is already settled. It was not booked again.',
     'balance_changed' => 'The invoice balance changed before booking. Review again.',

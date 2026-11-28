@@ -102,6 +102,23 @@ class BankPaymentImporter
                 return $this->recordFailure($match, $transaction, $invoice, $amount, $source, 'blocked', __('bank-payments::imports.amount_invalid'));
             }
 
+            // The operator sets the amount, and an overpayment against the
+            // INVOICE is deliberate - it leaves the customer a credit, which is
+            // what the approval form's hint offers. More than the TRANSFER
+            // brought is money that never arrived: nothing checked it, so a
+            // typed 2000.00 against a 1234.87 transfer was booked in full. A
+            // transfer may still be split across invoices, so the limit is what
+            // is left of it after the bookings already made from it.
+            $bookedFromTransfer = (float) BankImport::query()
+                ->where('bank_transaction_id', $transaction->id)
+                ->where('bank_match_id', '!=', $match->id)
+                ->where('status', 'imported')
+                ->sum('amount');
+
+            if (round($bookedFromTransfer + $amount, 2) > round((float) $transaction->amount, 2) + 0.01) {
+                return $this->recordFailure($match, $transaction, $invoice, $amount, $source, 'blocked', __('bank-payments::imports.amount_exceeds_transfer'));
+            }
+
             if ($source === 'auto') {
                 if (BankPaymentsSettings::mode() !== 'auto'
                     || ! $this->schedule->isBookingWindowOpen($transaction->bank)

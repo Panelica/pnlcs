@@ -8,6 +8,7 @@ use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\View\View;
+use Modules\Addons\BankPayments\Models\BankImport;
 use Modules\Addons\BankPayments\Models\BankMatch;
 use Modules\Addons\BankPayments\Models\BankPayerProfile;
 use Modules\Addons\BankPayments\Models\BankTransaction;
@@ -62,6 +63,17 @@ class BankAssignmentController extends BankPaymentsController
 
         if ($amount > $balance + 0.01) {
             return back()->with('error', __('bank-payments::matches.assign_amount_too_high'));
+        }
+
+        // Said here as well as at booking time, where it is enforced: the
+        // operator finds out while choosing the amount, not after approving it.
+        $bookedFromTransfer = (float) BankImport::query()
+            ->where('bank_transaction_id', $transaction->id)
+            ->where('status', 'imported')
+            ->sum('amount');
+
+        if (round($bookedFromTransfer + $amount, 2) > round((float) $transaction->amount, 2) + 0.01) {
+            return back()->with('error', __('bank-payments::imports.amount_exceeds_transfer'));
         }
 
         $candidate = $matcher->scoreInvoice($transaction, $invoice);

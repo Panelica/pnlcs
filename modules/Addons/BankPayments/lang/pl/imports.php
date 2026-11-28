@@ -13,6 +13,7 @@ return [
     'currency_not_supported' => 'Obsługiwana jest wyłącznie waluta PLN.',
     'match_changed' => 'Dopasowanie zmieniło się od chwili utworzenia — wymagana ponowna weryfikacja.',
     'amount_invalid' => 'Kwota księgowania jest nieprawidłowa.',
+    'amount_exceeds_transfer' => 'Kwota jest wyższa niż pozostała część tego przelewu.',
     'not_unambiguous' => 'Dopasowanie nie jest jednoznaczne — automatyczne księgowanie zablokowane.',
     'already_settled' => 'Faktura została już rozliczona. Nie zaksięgowano ponownie.',
     'balance_changed' => 'Saldo faktury zmieniło się przed księgowaniem. Wymagana ponowna weryfikacja.',

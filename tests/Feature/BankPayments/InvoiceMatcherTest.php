@@ -253,3 +253,68 @@ it('refuses to book while the addon is in test mode', function () {
 beforeEach(function () {
     config(['bank-payments.banks' => (require base_path('modules/Addons/BankPayments/config/bank-payments.php'))['banks']]);
 });
+
+/*
+ * The operator decides the booked amount - the hint on the approval form says
+ * so, "for a partial payment or overpayment", and an overpayment against the
+ * INVOICE is legitimate: it leaves the customer a credit. What is never
+ * legitimate is booking more than the transfer actually brought, which is what
+ * the manual path allowed: the amount was checked against the invoice balance
+ * and against zero, never against the money that arrived. One transfer can be
+ * split across several invoices, so the limit is what is left of it.
+ */
+it('refuses to book more money than the transfer brought', function () {
+    Setting::set('addon_bank_payments_active', '1', 'addons');
+    AddonSetting::setSetting('bank_payments', 'mode', 'semi_auto');
+
+    $client = Client::factory()->create(['company_name' => 'Acme Sp. z o.o.']);
+    matcherInvoice($client, ['total' => 9000, 'subtotal' => 9000]);
+    $transaction = matcherTransaction();
+    app(InvoiceMatcher::class)->match($transaction);
+
+    $match = BankMatch::firstOrFail();
+    $result = app(BankPaymentImporter::class)->import($match, Admin::factory()->create(), 2000.00, 'manual');
+
+    expect($result['success'])->toBeFalse()
+        ->and($result['status'])->toBe('blocked')
+        ->and(Transaction::count())->toBe(0)
+        ->and(BankMatch::firstOrFail()->status)->not->toBe('imported');
+});
+
+it('lets one transfer be split across invoices up to what it brought', function () {
+    Setting::set('addon_bank_payments_active', '1', 'addons');
+    AddonSetting::setSetting('bank_payments', 'mode', 'semi_auto');
+
+    $client = Client::factory()->create(['company_name' => 'Acme Sp. z o.o.']);
+    $transaction = matcherTransaction();                 // 1234.87 PLN
+    $admin = Admin::factory()->create();
+    $importer = app(BankPaymentImporter::class);
+
+    $matches = [];
+    foreach ([1000.00, 1000.00] as $i => $amount) {
+        $invoice = matcherInvoice($client, [
+            'invoice_num' => 'PRO-SPLIT-'.$i.'-'.uniqid(),
+            'total' => 1000,
+            'subtotal' => 1000,
+        ]);
+        $matches[] = BankMatch::create([
+            'bank_transaction_id' => $transaction->id,
+            'invoice_id' => $invoice->id,
+            'rank' => $i + 1,
+            'score' => 50,
+            'amount' => $amount,
+            'criteria' => ['manual' => true],
+            'status' => 'proposed',
+        ]);
+    }
+
+    $first = $importer->import($matches[0], $admin, 1000.00, 'manual');
+    $second = $importer->import($matches[1], $admin, 1000.00, 'manual');
+    $third = $importer->import($matches[1]->fresh(), $admin, 234.87, 'manual');
+
+    expect($first['success'])->toBeTrue()
+        ->and($second['success'])->toBeFalse()      // 1000 + 1000 > 1234.87
+        ->and($second['status'])->toBe('blocked')
+        ->and($third['success'])->toBeTrue()        // 1000 + 234.87 = the whole transfer
+        ->and(Transaction::count())->toBe(2);
+});
