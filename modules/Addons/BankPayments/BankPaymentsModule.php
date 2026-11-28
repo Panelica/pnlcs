@@ -93,26 +93,13 @@ class BankPaymentsModule implements AddonModuleInterface, AdminMenuProvider
         return BankPaymentsSettings::fields();
     }
 
+    /**
+     * The addon publishes its link through adminMenu(); sidebar() is the
+     * legacy Extensions slot and must stay empty so the link is not duplicated.
+     */
     public function sidebar(): array
     {
-        $url = route('admin.bank-payments.index');
-        $children = [
-            ['label' => __('bank-payments::addon.menu_dashboard'), 'url' => $url],
-            ['label' => __('bank-payments::addon.menu_transactions'), 'url' => route('admin.bank-payments.transactions.index')],
-            ['label' => __('bank-payments::addon.menu_matches'), 'url' => route('admin.bank-payments.matches.index')],
-            ['label' => __('bank-payments::addon.menu_logs'), 'url' => route('admin.bank-payments.logs.index')],
-        ];
-
-        if (auth('admin')->user()?->role?->hasPermission('manage_settings')) {
-            $children[] = ['label' => __('bank-payments::addon.menu_mailboxes'), 'url' => route('admin.bank-payments.mailboxes.index')];
-        }
-
-        return [[
-            'label' => __('bank-payments::addon.menu'),
-            'icon' => 'university',
-            'url' => $url,
-            'children' => $children,
-        ]];
+        return [];
     }
 
     public function upgrade(string $fromVersion): array
@@ -141,7 +128,7 @@ class BankPaymentsModule implements AddonModuleInterface, AdminMenuProvider
         return [[
             'location' => 'billing',
             'label' => $this->text('addon.menu'),
-            'url' => route('admin.bank-payments.index'),
+            'route' => 'admin.bank-payments.index',
             'permission' => 'manage_invoices',
             'order' => 45,
         ]];

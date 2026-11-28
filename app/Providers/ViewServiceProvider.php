@@ -44,8 +44,6 @@ class ViewServiceProvider extends ServiceProvider
             // AdminMenuProvider, grouped by navigation location.
             $view->with('adminMenuItems', rescue(fn () => app(AddonManager::class)->getAdminMenuItems(), []));
 
-            // The legacy sidebar() entries, shown in Extensions.
-            $view->with('addonMenuItems', rescue(fn () => app(AddonManager::class)->getSidebarItems(), []));
         });
 
         View::composer([

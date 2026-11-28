@@ -3,7 +3,6 @@
 namespace App\Services;
 
 use App\Contracts\AddonModuleInterface;
-use App\Contracts\AdminMenuProvider;
 use App\Models\AddonSetting;
 use App\Models\Setting;
 use Illuminate\Support\Collection;
@@ -306,86 +305,17 @@ class AddonManager
     }
 
     /**
-     * The admin menu entries of the active addons (their sidebar()), shown in
-     * the admin navigation's Extensions menu.
+     * Admin menu entries published by the active addons.
      *
-     * An entry needs a label and a url; anything else is left out. An addon
-     * whose sidebar() throws is logged and skipped, so one broken addon does
-     * not take the admin panel down with it.
-     *
-     * @return array<int, array{label: string, url: string, children: array<int, array{label: string, url: string}>}>
-     */
-    public const MENU_LOCATIONS = ['billing', 'extensions'];
-
-    /**
-     * Admin menu entries declared by active addons through AdminMenuProvider.
-     *
-     * Entries are grouped by location and filtered by the acting admin's
-     * permission. A broken addon is logged and skipped, exactly like
-     * getSidebarItems().
+     * The registry is the only place that reads adminMenu() and the legacy
+     * sidebar() fallback; this method remains for callers that already hold
+     * the manager.
      *
      * @return array<string, array<int, array{label: string, url: string, children: array<int, array{label: string, url: string}>}>>
      */
     public function getAdminMenuItems(): array
     {
-        $user = auth('admin')->user();
-        $can = fn (?string $permission): bool => $permission === null || $permission === ''
-            || ($user !== null && $user->role?->hasPermission($permission));
-
-        $valid = fn ($entry) => is_array($entry)
-            && is_string($entry['label'] ?? null) && $entry['label'] !== ''
-            && is_string($entry['url'] ?? null) && $entry['url'] !== ''
-            && is_string($entry['location'] ?? null) && in_array($entry['location'], self::MENU_LOCATIONS, true)
-            && $can($entry['permission'] ?? null);
-
-        $items = [];
-
-        foreach ($this->all() as $name => $addon) {
-            if (! $this->isActive($name) || ! $addon instanceof AdminMenuProvider) {
-                continue;
-            }
-
-            try {
-                $entries = $addon->adminMenu();
-            } catch (\Throwable $e) {
-                Log::error("Addon {$name}: adminMenu() failed, its menu entries are skipped — ".$e->getMessage());
-
-                continue;
-            }
-
-            foreach (array_filter((array) $entries, $valid) as $entry) {
-                $children = [];
-                foreach ((array) ($entry['children'] ?? []) as $child) {
-                    if (! is_array($child)
-                        || ! is_string($child['label'] ?? null) || $child['label'] === ''
-                        || ! is_string($child['url'] ?? null) || $child['url'] === ''
-                        || ! $can($child['permission'] ?? null)) {
-                        continue;
-                    }
-
-                    $children[] = ['label' => $child['label'], 'url' => $child['url']];
-                }
-
-                $items[$entry['location']][] = [
-                    'label' => $entry['label'],
-                    'url' => $entry['url'],
-                    'children' => $children,
-                    'order' => (int) ($entry['order'] ?? 100),
-                ];
-            }
-        }
-
-        foreach ($items as &$entries) {
-            usort($entries, fn ($a, $b) => [$a['order'], $a['label']] <=> [$b['order'], $b['label']]);
-
-            foreach ($entries as &$entry) {
-                unset($entry['order']);
-            }
-            unset($entry);
-        }
-        unset($entries);
-
-        return $items;
+        return (new AdminMenuRegistry($this))->all();
     }
 
     public function getSidebarItems(): array
