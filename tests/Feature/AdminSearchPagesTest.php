@@ -48,7 +48,16 @@ it('shows settings only to an admin who may change them', function () {
 
 it('knows every section of the settings page, each with an anchor', function () {
     $view = file_get_contents(resource_path('views/admin/settings/general.blade.php'));
-    $headers = substr_count($view, '<div class="card-header"><strong>{{ __(\'admin.settings.');
+
+    // Counted the way the index reads them: any card with an id whose header
+    // is a translation key. Counting only 'admin.settings.*' headers assumed
+    // every card is named under that group, and #503's domain-search card is
+    // headed by admin.domain_searches.title, which the index finds and the
+    // old count did not.
+    $headers = preg_match_all(
+        '/<div class="card"[^>]*\bid="[^"]+"[^>]*>\s*<div class="card-header"><strong>\{\{ __\(\'[a-z0-9_.]+\'\) \}\}<\/strong>/',
+        $view
+    );
 
     $cards = app(AdminSettingsIndex::class)->cards();
     expect(count($cards))->toBe($headers);
