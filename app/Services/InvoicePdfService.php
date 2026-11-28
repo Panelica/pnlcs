@@ -7,9 +7,13 @@ use App\Models\Invoice;
 use App\Models\InvoiceItem;
 use App\Models\Setting;
 use App\Models\TaxRule;
-use App\Services\AddonManager;
+use App\Support\TaxNotice;
+use BaconQrCode\Common\ErrorCorrectionLevel;
+use BaconQrCode\Renderer\GDLibRenderer;
+use BaconQrCode\Writer;
 use Barryvdh\DomPDF\Facade\Pdf;
 use Modules\Gateways\BankTransfer\BankTransferModule;
+use Modules\Ksef\KsefSettings;
 use Symfony\Component\HttpFoundation\Response;
 
 class InvoicePdfService
@@ -93,7 +97,6 @@ class InvoicePdfService
 
         return '';
     }
-
 
     public function generate(Invoice $invoice): \Barryvdh\DomPDF\PDF
     {
@@ -356,7 +359,7 @@ class InvoicePdfService
             'notes' => $invoice->notes ? nl2br(e($invoice->notes)) : '',
             'items' => $this->itemsHtml($invoice),
             'vat_summary' => $this->vatSummaryHtml($invoice),
-            'tax_notice' => \App\Support\TaxNotice::forInvoice($invoice) ?? '',
+            'tax_notice' => TaxNotice::forInvoice($invoice) ?? '',
             'company_bank_accounts' => $this->bankAccountsHtml($invoice->sellerBankAccounts()),
         ];
 
@@ -465,25 +468,39 @@ class InvoicePdfService
         return e((string) $item->description);
     }
 
-    /** The line items of an untaxed invoice: description, quantity, price, total. */
+    /** The line items of an untaxed invoice: description, quantity, optional unit, price, total. */
     protected function plainItemsHtml(Invoice $invoice): string
     {
+        // Keep the table compact when no line has a unit, but show the same
+        // conditional JM column as the VAT table when at least one does.
+        $hasUnit = $invoice->items->contains(fn (InvoiceItem $item): bool => trim((string) ($item->unit ?? '')) !== '');
+
         $rows = '';
         foreach ($invoice->items as $item) {
             $rows .= '<tr>'
                 .'<td>'.e((string) $item->description).'</td>'
-                .'<td class="num">'.max(1, (int) ($item->qty ?? 1)).'</td>'
-                .'<td class="num">'.e(invoice_money_fmt((float) $item->amount, $invoice)).'</td>'
+                .'<td class="num">'.max(1, (int) ($item->qty ?? 1)).'</td>';
+
+            if ($hasUnit) {
+                $rows .= '<td class="c">'.e((string) ($item->unit ?? '')).'</td>';
+            }
+
+            $rows .= '<td class="num">'.e(invoice_money_fmt((float) $item->amount, $invoice)).'</td>'
                 .'<td class="num">'.e(invoice_money_fmt((float) $item->amount * max(1, (int) ($item->qty ?? 1)), $invoice)).'</td>'
                 .'</tr>';
         }
 
-        return '<table class="invoice-items"><thead><tr>'
-            .'<th>'.e(__('common.table.description')).'</th>'
-            .'<th class="num">'.e(__('common.table.qty')).'</th>'
-            .'<th class="num">'.e(__('common.table.price')).'</th>'
-            .'<th class="num">'.e(__('common.table.total')).'</th>'
-            .'</tr></thead><tbody>'.$rows.'</tbody></table>';
+        $headers = '<th>'.e(__('common.table.description')).'</th>'
+            .'<th class="num">'.e(__('common.table.qty')).'</th>';
+
+        if ($hasUnit) {
+            $headers .= '<th class="num">'.e(__('pdf.items_unit')).'</th>';
+        }
+
+        $headers .= '<th class="num">'.e(__('common.table.price')).'</th>'
+            .'<th class="num">'.e(__('common.table.total')).'</th>';
+
+        return '<table class="invoice-items"><thead><tr>'.$headers.'</tr></thead><tbody>'.$rows.'</tbody></table>';
     }
 
     /** The self-contained stylesheet for the {items} table. */
@@ -738,7 +755,7 @@ class InvoicePdfService
                     $holder = company_name();
                 }
                 $payload = $this->epcPayload($holder, (string) $bank['iban'], (string) ($bank['swift'] ?? ''), $invoice);
-                $level = \BaconQrCode\Common\ErrorCorrectionLevel::M();
+                $level = ErrorCorrectionLevel::M();
             }
         }
 
@@ -840,8 +857,8 @@ class InvoicePdfService
         // The environment the operator chose in the addon's settings. The
         // config value is only the module's file default ("integration"), so
         // reading it pointed production invoices at the test site.
-        $env = class_exists(\Modules\Ksef\KsefSettings::class)
-            ? (string) \Modules\Ksef\KsefSettings::resolve()['environment']
+        $env = class_exists(KsefSettings::class)
+            ? (string) KsefSettings::resolve()['environment']
             : (string) config('ksef.environment', 'prod');
         $base = in_array($env, ['integration', 'demo'], true)
             ? 'https://ksef-test.mf.gov.pl/web/verify'
@@ -855,11 +872,11 @@ class InvoicePdfService
      * does not fetch remote URLs). Empty string when generation fails, so an
      * invoice never breaks on a missing image extension.
      */
-    private function qrDataUri(string $content, int $size = 200, ?\BaconQrCode\Common\ErrorCorrectionLevel $level = null): string
+    private function qrDataUri(string $content, int $size = 200, ?ErrorCorrectionLevel $level = null): string
     {
         try {
-            $renderer = new \BaconQrCode\Renderer\GDLibRenderer($size, 2);
-            $writer = new \BaconQrCode\Writer($renderer);
+            $renderer = new GDLibRenderer($size, 2);
+            $writer = new Writer($renderer);
             $png = $writer->writeString($content, ecLevel: $level);
 
             return 'data:image/png;base64,'.base64_encode($png);
