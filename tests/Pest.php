@@ -62,9 +62,30 @@ function ensureBankPaymentsTables(): void
     ]);
 }
 
+/*
+ * These six write a real addon or module into modules/ and delete it again,
+ * and modules/ is one directory shared by every parallel worker. The tests
+ * that scan the tree - module completeness, the translation key scan, the
+ * no-browser-dialogs scan - and the addon manager itself then see a module
+ * that is half written or already gone, in a process that never asked for it.
+ *
+ * It shows up as a failure in whichever test happened to be looking:
+ * AddonServiceProviderTest's "addons without a provider file add none" went
+ * red once in a run of 5,730 and passed on its own and on the next full run.
+ * Nothing about the product was wrong either time, which is the kind of red
+ * that teaches people to run the suite again instead of reading it.
+ *
+ * They are quick, and in the serial pass they have the tree to themselves.
+ */
 pest()->group('serial')->in(
     'Feature/InstallDatabaseStepTest.php',
     'Feature/InstallerLanguageTest.php',
     'Feature/InstallerReachableTest.php',
     'Feature/InstallRequirementsAndImapTest.php',
+    'Feature/AddonAdminMenuTest.php',
+    'Feature/AddonHookFilesTest.php',
+    'Feature/AddonServiceProviderTest.php',
+    'Feature/AddonUpgradeTest.php',
+    'Feature/AdminMenuProviderTest.php',
+    'Feature/ModuleDiscoveryTest.php',
 );
