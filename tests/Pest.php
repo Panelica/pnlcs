@@ -113,4 +113,24 @@ pest()->group('serial')->in(
     'Feature/AddonUpgradeTest.php',
     'Feature/AdminMenuProviderTest.php',
     'Feature/ModuleDiscoveryTest.php',
+    'Feature/ModuleServiceProvidersTest.php',
+    /*
+     * And these five share one file: storage/app/invoice-templates/custom.html,
+     * the operator's uploaded template, of which the product has exactly one.
+     * Two of them delete it to start from nothing while the others write it and
+     * read it back, so in parallel a test lost the template between its own
+     * write and its own read:
+     *
+     *   file_get_contents(storage/app/invoice-templates/custom.html):
+     *   Failed to open stream: No such file or directory
+     *
+     * at the line after the one that had just written it. Same shape as the
+     * modules/ race above - a real path the product owns, not a temporary one -
+     * and the same remedy.
+     */
+    'Feature/InvoiceTemplateTest.php',
+    'Feature/InvoiceTemplateLanguageTest.php',
+    'Feature/UploadedInvoiceTemplateSurvivesUpdateTest.php',
+    'Feature/CompanyBankAccountsTest.php',
+    'Feature/VatSummaryTest.php',
 );
