@@ -226,6 +226,19 @@ it('leaves the VAT columns off an invoice that is not taxed', function () {
     expect(preg_match_all('/<th[ >]/', $html))->toBe(4);
 });
 
+it('keeps the unit column on an untaxed invoice when a line uses it', function () {
+    $client = Client::factory()->create();
+    $invoice = Invoice::factory()->create(['client_id' => $client->id, 'tax_mode' => Invoice::TAX_NONE]);
+    InvoiceItem::factory()->create(['invoice_id' => $invoice->id, 'client_id' => $client->id, 'description' => 'Consulting', 'qty' => 2, 'amount' => 100, 'unit' => 'godz.']);
+
+    $html = app(InvoicePdfService::class)->placeholderVars($invoice)['items'];
+
+    expect($html)->toContain(__('pdf.items_unit'))
+        ->toContain('godz.')
+        ->not->toContain(__('pdf.items_vat_rate'));
+    expect(preg_match_all('/<th[ >]/', $html))->toBe(5);
+});
+
 it('builds the VAT table when the invoice is taxed', function () {
     $client = Client::factory()->create();
     $invoice = Invoice::factory()->create(['client_id' => $client->id, 'tax_mode' => null]);
