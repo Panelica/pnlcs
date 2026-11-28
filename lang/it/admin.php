@@ -551,6 +551,7 @@ return [
         'pnlcs_registrar_balance' => 'Controllo saldo registrar',
         'pnlcs_db_backup' => 'Backup del database',
         'pnlcs_prune_logs' => 'Pulizia dei log',
+        'pnlcs_ksef_import_invoices' => 'Importazione fatture KSeF',
     ],
     'automation.every_minute' => 'Ogni minuto',
     'automation.every_minutes' => '{1} Ogni minuto|[2,*] Ogni :count minuti',

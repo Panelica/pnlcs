@@ -101,6 +101,10 @@ class KsefInvoiceImporter
 
                             $record = $this->record($metadata, $direction, $xml, $ksefNumber);
 
+                            if ($record === null) {
+                                continue;
+                            }
+
                             if ($record->wasRecentlyCreated) {
                                 $created++;
                             } else {

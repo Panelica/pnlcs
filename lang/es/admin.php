@@ -547,6 +547,7 @@ return [
 		'pnlcs_registrar_balance' => 'Verificación de saldo del registrador',
 		'pnlcs_db_backup' => 'Copia de seguridad de la base de datos',
 		'pnlcs_prune_logs' => 'Poda de troncos',
+		'pnlcs_ksef_import_invoices' => 'Importación de facturas KSeF',
 	],
 	'automation.every_minute' => 'cada minuto',
 	'automation.every_minutes' => '{1} Cada minuto|[2,*] Cada :count minutos',

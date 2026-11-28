@@ -577,6 +577,7 @@ return [
         'pnlcs_registrar_balance' => '注册商余额检查',
         'pnlcs_db_backup' => '数据库备份',
         'pnlcs_prune_logs' => '日志清理',
+        'pnlcs_ksef_import_invoices' => 'KSeF 发票导入',
     ],
     'automation.every_minute' => '每分钟',
     'automation.every_minutes' => '{1} 每分钟|[2,*] 每 :count 分钟',

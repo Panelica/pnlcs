@@ -577,6 +577,7 @@ return [
         'pnlcs_registrar_balance' => 'Überprüfung des Kontostands durch den Registrar',
         'pnlcs_db_backup' => 'Datenbanksicherung',
         'pnlcs_prune_logs' => 'Beschneiden von Baumstämmen',
+        'pnlcs_ksef_import_invoices' => 'KSeF-Rechnungsimport',
     ],
     'automation.every_minute' => 'Jede Minute',
     'automation.every_minutes' => '{1} Jede Minute|[2,*] Alle :count Minuten',

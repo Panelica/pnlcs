@@ -40,6 +40,13 @@ class KsefServiceProvider extends ServiceProvider
         }
 
         $this->callAfterResolving(Schedule::class, function (Schedule $schedule): void {
+            // The task only exists while the addon is switched on. The command
+            // also checks this itself; keeping it out of the schedule entirely
+            // avoids a permanently failing row on the automation screen.
+            if (! $this->app->make(AddonManager::class)->isActive('ksef')) {
+                return;
+            }
+
             $schedule->command('pnlcs:ksef-import-invoices')
                 ->everyFourHours()
                 ->withoutOverlapping(20);

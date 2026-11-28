@@ -568,6 +568,7 @@ return [
         'pnlcs_registrar_balance' => 'Kayıt kuruluşu bakiye kontrolü',
         'pnlcs_db_backup' => 'Veritabanı yedeği',
         'pnlcs_prune_logs' => 'Günlük budama',
+        'pnlcs_ksef_import_invoices' => 'KSeF fatura içe aktarma',
     ],
     'automation.every_minute' => 'Her dakika',
     'automation.every_minutes' => '{1} Her dakika|[2,*] Her :count dakikada bir',

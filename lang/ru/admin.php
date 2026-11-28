@@ -546,6 +546,7 @@ return [
         'pnlcs_registrar_balance' => 'Проверка баланса регистратора',
         'pnlcs_db_backup' => 'Резервное копирование БД',
         'pnlcs_prune_logs' => 'Очистка журналов',
+        'pnlcs_ksef_import_invoices' => 'Импорт счетов KSeF',
     ],
     'automation.every_minute' => 'Каждую минуту',
     'automation.every_minutes' => '{1} Каждую минуту|[2,*] Каждые :count мин.',
