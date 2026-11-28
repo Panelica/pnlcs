@@ -86,6 +86,7 @@
                     <li><a href="{{ route('admin.services.index') }}">{{ __('admin.nav.products_services') }}</a></li>
                     <li><a href="{{ route('admin.domains.index') }}">{{ __('admin.nav.domains') }}</a></li>
                     <li><a href="{{ route('admin.ssl.index') }}"><i class="fas fa-lock"></i> {{ __('admin.nav.ssl_certificates') }}</a></li>
+                    @include('admin.partials.addon-menu', ['location' => 'clients'])
                 </ul>
             </li>
 
@@ -98,6 +99,7 @@
                     <li><a href="{{ route('admin.orders.index', ['status' => 'active']) }}">{{ __('admin.nav.active') }}</a></li>
                     <li><a href="{{ route('admin.orders.index', ['status' => 'fraud']) }}">{{ __('admin.nav.fraud') }}</a></li>
                     <li><a href="{{ route('admin.orders.index', ['status' => 'cancelled']) }}">{{ __('admin.status.cancelled') }}</a></li>
+                    @include('admin.partials.addon-menu', ['location' => 'orders'])
                 </ul>
             </li>
 
@@ -114,13 +116,7 @@
                     <li><a href="{{ route('admin.payment-notifications.index') }}">{{ __('admin.nav.payment_notifications') }} @if(($sidebarCounts->pending_payment_notifications ?? 0) > 0)<span class="sb-badge sb-badge-warning">{{ $sidebarCounts->pending_payment_notifications }}</span>@endif</a></li>
                     <li><a href="{{ route('admin.config.transactions') }}">{{ __('admin.nav.transactions') }}</a></li>
                     <li><a href="{{ route('admin.config.billable-items') }}">{{ __('admin.nav.billable_items') }}</a></li>
-                    @foreach(($adminMenuItems['billing'] ?? []) as $item)
-                    <li><a href="{{ $item['url'] }}">{{ $item['label'] }}</a></li>
-                    @foreach($item['children'] as $child)
-                    @continue($child['url'] === $item['url'])
-                    <li><a href="{{ $child['url'] }}" style="padding-left:28px;">{{ $child['label'] }}</a></li>
-                    @endforeach
-                    @endforeach
+                    @include('admin.partials.addon-menu', ['location' => 'billing'])
                     <li><a href="{{ route('admin.affiliates.index') }}">{{ __('admin.sidebar.affiliates') }}</a></li>
                     <li class="divider"></li>
                     <li><a href="{{ route('admin.quotes.index') }}">{{ __('admin.nav.quotes') }}</a></li>
@@ -138,6 +134,7 @@
                     <li><a href="{{ route('admin.config.downloads') }}">{{ __('admin.nav.downloads') }}</a></li>
                     <li><a href="{{ route('admin.config.knowledge-base') }}">{{ __('admin.nav.knowledge_base') }}</a></li>
                     <li><a href="{{ route('admin.config.network-issues') }}">{{ __('admin.nav.network_issues') }}</a></li>
+                    @include('admin.partials.addon-menu', ['location' => 'support'])
                 </ul>
             </li>
 
@@ -168,29 +165,16 @@
                     <li><a href="{{ route('admin.config.system-phpinfo') }}">{{ __('admin.nav.php_info') }}</a></li>
                     <li><a href="{{ route('admin.whois.index') }}">{{ __('admin.nav.whois_lookup') }}</a></li>
                     <li><a href="{{ route('admin.whmcs-import.index') }}">{{ __('whmcs_import.menu_title') }}</a></li>
+                    @include('admin.partials.addon-menu', ['location' => 'utilities'])
                 </ul>
             </li>
 
-            {{-- Extensions: the menu entries of active addons (their sidebar()) --}}
-            @if(!empty($addonMenuItems) || !empty($adminMenuItems['extensions']))
+            {{-- Extensions: addon-published links and the legacy sidebar() fallback --}}
+            @if(!empty($adminMenuItems['extensions']))
             <li class="has-dropdown" style="float:left; width:auto; position:relative;">
                 <a href="#" onclick="event.preventDefault();"><i class="fas fa-puzzle-piece"></i> {{ __('admin.nav.addon_modules') }}</a>
                 <ul class="dropdown-menu">
-                    @foreach(($adminMenuItems['extensions'] ?? []) as $item)
-                    <li><a href="{{ $item['url'] }}">{{ $item['label'] }}</a></li>
-                    @foreach($item['children'] as $child)
-                    @continue($child['url'] === $item['url'])
-                    <li><a href="{{ $child['url'] }}" style="padding-left:28px;">{{ $child['label'] }}</a></li>
-                    @endforeach
-                    @endforeach
-                    @foreach($addonMenuItems as $item)
-                    @if(!$loop->first && $item['children'])<li class="divider"></li>@endif
-                    <li><a href="{{ $item['url'] }}">{{ $item['label'] }}</a></li>
-                    @foreach($item['children'] as $child)
-                    @continue($child['url'] === $item['url'])
-                    <li><a href="{{ $child['url'] }}" style="padding-left:28px;">{{ $child['label'] }}</a></li>
-                    @endforeach
-                    @endforeach
+                    @include('admin.partials.addon-menu', ['location' => 'extensions'])
                     <li class="divider"></li>
                     <li><a href="{{ route('admin.config.addons.modules') }}">{{ __('admin.addon_modules.manage') }}</a></li>
                 </ul>
@@ -404,13 +388,7 @@
         <ul class="menu">
             <li><a href="{{ route('admin.config.transactions') }}" @if($routeName === 'admin.config.transactions') class="active" @endif>{{ __('admin.nav.transactions') }}</a></li>
             <li><a href="{{ route('admin.config.billable-items') }}" @if($routeName === 'admin.config.billable-items') class="active" @endif>{{ __('admin.nav.billable_items') }}</a></li>
-            @foreach(($adminMenuItems['billing'] ?? []) as $item)
-            <li><a href="{{ $item['url'] }}" @if(request()->url() === $item['url']) class="active" @endif>{{ $item['label'] }}</a></li>
-            @foreach($item['children'] as $child)
-            @continue($child['url'] === $item['url'])
-            <li><a href="{{ $child['url'] }}" style="padding-left:20px;" @if(request()->url() === $child['url']) class="active" @endif>{{ $child['label'] }}</a></li>
-            @endforeach
-            @endforeach
+            @include('admin.partials.addon-menu', ['location' => 'billing', 'sidebar' => true, 'childIndent' => 20])
             <li><a href="{{ route('admin.affiliates.index') }}" @if($routeName === 'admin.affiliates.index') class="active" @endif>{{ __('admin.sidebar.affiliates') }}</a></li>
         </ul>
         <div class="sidebar-header"><i class="fas fa-file-signature"></i> {{ __('admin.nav.quotes') }}</div>

@@ -3,7 +3,7 @@
 @section('content')
 <div class="page-header" style="display:flex;justify-content:space-between;align-items:flex-start;gap:12px;flex-wrap:wrap;">
     <div>
-        <h1 style="margin:0;">{{ __('messages.ksef.settings_title') }}</h1>
+        <h1 style="margin:0;"><i class="fas fa-file-invoice-dollar"></i> {{ __('messages.ksef.settings_title') }}</h1>
         <p style="font-size:13px;color:var(--pn-muted);margin:4px 0 0;">{{ __('messages.ksef.addon_output_hint') }}</p>
     </div>
     <div style="display:flex;gap:8px;flex-wrap:wrap;">

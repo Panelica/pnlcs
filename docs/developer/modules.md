@@ -177,12 +177,42 @@ listed on the **Extensions** page (`/admin/config/addons/modules`, in the
 settings sidebar) and on the Modules screen, where it is activated. The Staff Board and Project Management addons are working
 examples.
 
-**Admin menu entries.** While an addon is active, the entries its `sidebar()`
-returns are listed in the **Extensions** menu of the admin top navigation. An
-entry is `['label' => …, 'url' => …]`, optionally with `'children'` of the same
-shape; entries without a label or a url are left out, and an addon whose
-`sidebar()` throws is logged and skipped. The addon's own page
-(`output()`) lives at `/admin/config/addons/modules/<name>`.
+**Admin menu entries.** Implement `App\Contracts\AdminMenuProvider` on the
+addon to publish links into the existing admin menus. The entry names its
+`location` and a `route`; PNLCS builds the URL, checks the route and permission,
+and renders it in that menu slot. No core layout change is needed for a new
+addon.
+
+```php
+use App\Contracts\AdminMenuProvider;
+
+class ReviewsModule implements AddonModuleInterface, AdminMenuProvider
+{
+    public function adminMenu(): array
+    {
+        return [[
+            'location' => 'support',
+            'label' => 'Reviews',
+            'route' => 'reviews.admin.index',
+            'permission' => 'manage_tickets',
+            'order' => 50,
+        ]];
+    }
+}
+```
+
+Available locations: `clients`, `orders`, `billing`, `support`, `utilities`
+and `extensions`. `icon` is an optional Font Awesome name, without the `fa-`
+prefix (for example `university` or `file-invoice-dollar`). Links are main-menu entries; `children` is supported for
+compatibility but new entries should stay flat. A missing route, a malformed
+entry or an inactive addon is skipped and logged, so one addon cannot break the
+navigation. The addon's own page (`output()`) lives at
+`/admin/config/addons/modules/<name>`.
+
+`sidebar()` remains for addons that do not implement `AdminMenuProvider`; its
+entries are shown in **Extensions** as a compatibility fallback. An addon that
+implements `AdminMenuProvider` is represented only by `adminMenu()`, so a link
+cannot appear in both places.
 
 **Pages, views and tables from an addon.** An addon may ship its own Laravel
 service provider, `modules/Addons/<Name>/<Name>ServiceProvider.php` (class

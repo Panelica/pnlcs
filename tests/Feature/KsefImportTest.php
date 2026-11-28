@@ -86,6 +86,7 @@ it('shows sent invoices by default and imported invoices in their tabs', functio
     $this->actingAs($admin, 'admin')
         ->get(route('admin.ksef.index'))
         ->assertOk()
+        ->assertSee('<i class="fas fa-file-invoice-dollar"></i>', false)
         ->assertSee(__('messages.ksef.tab_sent'))
         ->assertDontSee('SALE-1')
         ->assertDontSee('COST-1');

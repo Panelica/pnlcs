@@ -93,7 +93,7 @@ class KsefModule implements AddonModuleInterface, AdminMenuProvider
         return [[
             'location' => 'billing',
             'label' => __('admin.nav.ksef_status'),
-            'url' => route('admin.ksef.index'),
+            'route' => 'admin.ksef.index',
             'permission' => 'manage_products',
             'order' => 40,
         ]];

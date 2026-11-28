@@ -33,7 +33,7 @@ it('can be activated once its tables exist', function () {
         ->and(app(AddonManager::class)->isActive('bank_payments'))->toBeTrue();
 });
 
-it('provides its admin page and sidebar while active', function () {
+it('provides its admin page and billing link while active', function () {
     bootBankPaymentsAddon();
     app()->setLocale('pl');
 
@@ -47,8 +47,10 @@ it('provides its admin page and sidebar while active', function () {
         ->assertSee('href="'.route('admin.bank-payments.index').'"', false);
 
     $module = app(AddonManager::class)->find('bank_payments');
-    $items = $module->sidebar();
+    $items = app(AddonManager::class)->getAdminMenuItems();
 
-    expect($items)->toHaveCount(1)
-        ->and($items[0]['children'])->not->toBeEmpty();
+    expect($module->sidebar())->toBe([])
+        ->and($items)->toHaveKey('billing')
+        ->and($items)->not->toHaveKey('extensions')
+        ->and($items['billing'][0]['url'])->toBe(route('admin.bank-payments.index'));
 });
