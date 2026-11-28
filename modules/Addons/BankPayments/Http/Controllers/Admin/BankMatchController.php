@@ -10,6 +10,7 @@ use Modules\Addons\BankPayments\Models\BankMatch;
 use Modules\Addons\BankPayments\Models\BankTransaction;
 use Modules\Addons\BankPayments\Services\BankPaymentImporter;
 use Modules\Addons\BankPayments\Services\BankPaymentsSettings;
+use Modules\Addons\BankPayments\Services\InvoiceMatcher;
 
 class BankMatchController extends BankPaymentsController
 {
@@ -57,6 +58,21 @@ class BankMatchController extends BankPaymentsController
         return back()->with(
             $result['success'] ? 'success' : 'error',
             $result['message']
+        );
+    }
+
+    public function rematch(BankTransaction $transaction, InvoiceMatcher $matcher): RedirectResponse
+    {
+        $this->ensureActive();
+
+        abort_if(in_array((string) $transaction->matching_status, ['imported', 'rejected'], true), 404);
+        abort_if($transaction->import()->where('status', 'imported')->exists(), 404);
+
+        $result = $matcher->match($transaction);
+
+        return back()->with(
+            $result['status'] === 'unmatched' ? 'info' : 'success',
+            __('bank-payments::matches.rematched', ['status' => __('bank-payments::matches.status_'.$result['status'])])
         );
     }
 

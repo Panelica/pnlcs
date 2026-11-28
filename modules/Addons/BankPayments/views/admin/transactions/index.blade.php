@@ -80,7 +80,7 @@
                         <td>
                             {{ __('bank-payments::matches.status_'.$transaction->matching_status) }}
                             @if($transaction->matching_score !== null)
-                                <div style="font-size:11px;color:var(--pn-muted);">{{ $transaction->matching_score }} pkt</div>
+                                <div style="font-size:11px;color:var(--pn-muted);">{{ $transaction->scorePercent() }}%</div>
                             @endif
                         </td>
                     </tr>

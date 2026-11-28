@@ -10,6 +10,7 @@ use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Log;
 use Modules\Addons\BankPayments\Models\BankImport;
 use Modules\Addons\BankPayments\Models\BankMatch;
+use Modules\Addons\BankPayments\Models\BankPayerProfile;
 use Modules\Addons\BankPayments\Models\BankTransaction;
 use Throwable;
 
@@ -88,7 +89,8 @@ class BankPaymentImporter
 
             $candidate = $this->matcher->scoreInvoice($transaction, $invoice);
 
-            if ($candidate['score'] < 60 || $candidate['invoice_balance'] <= 0.009) {
+            if (($source !== 'manual' && $candidate['score'] < InvoiceMatcher::MIN_SCORE)
+                || $candidate['invoice_balance'] <= 0.009) {
                 return $this->recordFailure($match, $transaction, $invoice, $amount, $source, 'blocked', __('bank-payments::imports.match_changed'));
             }
 
@@ -174,6 +176,17 @@ class BankPaymentImporter
                     : __('bank-payments::imports.imported'),
                 'matched_at' => now(),
             ]);
+
+            if ($source === 'manual') {
+                try {
+                    BankPayerProfile::remember($transaction, $invoice);
+                } catch (Throwable $e) {
+                    Log::warning('BankPayments: payer learning failed', [
+                        'transaction_id' => $transaction->id,
+                        'error' => $e->getMessage(),
+                    ]);
+                }
+            }
 
             return $this->result(true, 'imported', __('bank-payments::imports.imported'), $import->id, (bool) ($response['duplicate'] ?? false));
         } catch (Throwable $e) {

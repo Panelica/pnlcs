@@ -7,6 +7,8 @@
         <h1 style="margin:0;"><i class="fas fa-link"></i> {{ __('bank-payments::matches.title') }}</h1>
         <p style="margin:4px 0 0;font-size:13px;color:var(--pn-muted);">{{ __('bank-payments::matches.subtitle') }}</p>
     </div>
+    <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;">
+        <a href="{{ route('admin.bank-payments.payers.index') }}" class="btn btn-default btn-sm">{{ __('bank-payments::matches.payers_title') }}</a>
     <form method="GET" action="{{ route('admin.bank-payments.matches.index') }}" style="display:flex;gap:8px;align-items:flex-end;">
         <div>
             <label class="form-label" style="font-size:12px;">{{ __('bank-payments::matches.filter_status') }}</label>
@@ -19,6 +21,7 @@
         </div>
         <button type="submit" class="btn btn-primary btn-sm">{{ __('bank-payments::matches.filter_status') }}</button>
     </form>
+    </div>
 </div>
 
 @if($mode === 'test')
@@ -48,8 +51,17 @@
                     {{ __('bank-payments::matches.status_'.$transaction->matching_status) }}
                 </span>
                 @if($transaction->matching_score !== null)
-                    <div style="font-size:12px;color:var(--pn-muted);margin-top:4px;">{{ __('bank-payments::matches.score_points', ['score' => $transaction->matching_score]) }}</div>
+                    <div style="font-size:12px;color:var(--pn-muted);margin-top:4px;">{{ __('bank-payments::matches.match_percent', ['score' => $transaction->scorePercent()]) }}</div>
                 @endif
+                <div style="margin-top:6px;display:flex;gap:6px;justify-content:flex-end;flex-wrap:wrap;">
+                    <a href="{{ route('admin.bank-payments.transactions.assign', $transaction) }}" class="btn btn-default btn-xs">{{ __('bank-payments::matches.assign_action') }}</a>
+                    @unless(in_array($transaction->matching_status, ['imported', 'rejected'], true))
+                    <form method="POST" action="{{ route('admin.bank-payments.transactions.rematch', $transaction) }}" style="display:inline;">
+                        @csrf
+                        <button type="submit" class="btn btn-default btn-xs">{{ __('bank-payments::matches.rematch_action') }}</button>
+                    </form>
+                    @endunless
+                </div>
             </div>
         </div>
         <div class="card-body" style="padding:0;">
@@ -67,6 +79,7 @@
                             <th>{{ __('bank-payments::matches.number_match') }}</th>
                             <th>{{ __('bank-payments::matches.amount_match') }}</th>
                             <th>{{ __('bank-payments::matches.client_match') }}</th>
+                            <th>{{ __('bank-payments::matches.learned_match') }}</th>
                             @if($mode !== 'test')
                             <th style="text-align:right;">{{ __('bank-payments::matches.actions') }}</th>
                             @endif
@@ -85,11 +98,17 @@
                                     -
                                 @endif
                             </td>
-                            <td>{{ $match->score }}</td>
+                            <td>
+                                {{ $match->scorePercent() }}%
+                                @if(!empty($criteria['manual']))
+                                    <div style="font-size:10px;color:var(--pn-muted);">{{ __('bank-payments::matches.manual') }}</div>
+                                @endif
+                            </td>
                             <td>{{ number_format((float) $match->amount, 2, ',', ' ') }} {{ data_get($criteria, 'currency', 'PLN') }}</td>
                             <td>{{ !empty($criteria['number_match']) ? 'tak' : '-' }}</td>
                             <td>{{ !empty($criteria['amount_match']) ? 'tak' : '-' }}</td>
                             <td>{{ !empty($criteria['client_match']) ? 'tak' : '-' }}</td>
+                            <td>{{ !empty($criteria['learned_match']) ? 'tak' : '-' }}</td>
                             @if($mode !== 'test')
                             <td style="text-align:right;white-space:nowrap;">
                                 @if($match->status === 'proposed')

@@ -21,7 +21,7 @@ class BankPaymentsDashboardController extends BankPaymentsController
             'activeMailboxCount' => BankMailbox::where('active', true)->count(),
             'messageCount' => BankMessage::count(),
             'transactionCount' => BankTransaction::count(),
-            'pendingMatchCount' => BankTransaction::whereIn('matching_status', ['pending', 'review', 'ambiguous', 'auto_ready', 'manual_currency', 'error'])->count(),
+            'pendingMatchCount' => BankTransaction::whereIn('matching_status', ['pending', 'unmatched', 'review', 'ambiguous', 'auto_ready', 'manual_currency', 'error'])->count(),
             'lastSync' => BankSyncLog::with('mailbox')->latest('started_at')->first(),
             'recentMessages' => BankMessage::with('mailbox')->latest('id')->limit(8)->get(),
         ]);

@@ -6,7 +6,9 @@ use App\Models\Currency;
 use App\Models\Invoice;
 use Illuminate\Support\Str;
 use Modules\Addons\BankPayments\Models\BankMatch;
+use Modules\Addons\BankPayments\Models\BankPayerProfile;
 use Modules\Addons\BankPayments\Models\BankTransaction;
+use Modules\Addons\BankPayments\Support\PayerName;
 
 /**
  * Proposes open invoices for an incoming PLN transfer.
@@ -17,7 +19,7 @@ use Modules\Addons\BankPayments\Models\BankTransaction;
  */
 class InvoiceMatcher
 {
-    private const CANDIDATE_STATUSES = [
+    public const CANDIDATE_STATUSES = [
         'unpaid',
         'overdue',
         'partially_paid',
@@ -25,7 +27,9 @@ class InvoiceMatcher
         'collections',
     ];
 
-    private const MIN_SCORE = 60;
+    public const MIN_SCORE = 50;
+
+    public const MAX_SCORE = 90;
 
     private const AUTO_SCORE = 90;
 
@@ -35,6 +39,7 @@ class InvoiceMatcher
     {
         $transaction->loadMissing('message.mailbox');
         $transaction->matches()->delete();
+        $profile = BankPayerProfile::forTransaction($transaction);
 
         $amount = round((float) $transaction->amount, 2);
         $currency = strtoupper(trim((string) $transaction->currency));
@@ -65,8 +70,8 @@ class InvoiceMatcher
             })
             ->whereNotNull('client_id')
             ->orderBy('id')
-            ->each(function (Invoice $invoice) use ($transaction, &$candidates): void {
-                $candidate = $this->scoreInvoice($transaction, $invoice);
+            ->each(function (Invoice $invoice) use ($transaction, $profile, &$candidates): void {
+                $candidate = $this->scoreInvoice($transaction, $invoice, $profile);
 
                 if ($candidate['score'] < self::MIN_SCORE) {
                     return;
@@ -76,8 +81,8 @@ class InvoiceMatcher
             });
 
         usort($candidates, function (array $a, array $b): int {
-            return [$b['score'], $b['amount_match'], $b['number_match'], $a['invoice']->id]
-                <=> [$a['score'], $a['amount_match'], $a['number_match'], $b['invoice']->id];
+            return [$b['score'], $b['amount_match'], $b['number_match'], $b['learned_match'], $a['invoice']->id]
+                <=> [$a['score'], $a['amount_match'], $a['number_match'], $a['learned_match'], $b['invoice']->id];
         });
 
         $candidates = array_slice($candidates, 0, self::MAX_CANDIDATES);
@@ -103,6 +108,7 @@ class InvoiceMatcher
                         'number_match' => $candidate['number_match'],
                         'amount_match' => $candidate['amount_match'],
                         'client_match' => $candidate['client_match'],
+                        'learned_match' => $candidate['learned_match'],
                         'transaction_amount' => $amount,
                         'invoice_balance' => $candidate['invoice_balance'],
                         'invoice_number' => $invoice->invoice_num,
@@ -140,17 +146,19 @@ class InvoiceMatcher
      *
      * @return array<string, mixed>
      */
-    public function scoreInvoice(BankTransaction $transaction, Invoice $invoice): array
+    public function scoreInvoice(BankTransaction $transaction, Invoice $invoice, ?BankPayerProfile $profile = null): array
     {
+        $profile ??= BankPayerProfile::forTransaction($transaction);
         $amount = round((float) $transaction->amount, 2);
-        $sender = $this->normalizeName((string) $transaction->sender_name);
+        $sender = PayerName::normalize($transaction->sender_name);
         $referenceTokens = $this->referenceTokens($transaction->reference);
         $balance = round((float) $invoice->amountDue(), 2);
 
         $invoiceNumber = $this->normalizeNumber((string) $invoice->invoice_num);
         $numberMatch = $invoiceNumber !== '' && in_array($invoiceNumber, $referenceTokens, true);
         $amountMatch = $balance > 0.009 && abs($balance - $amount) <= 0.01;
-        $clientMatch = $this->clientMatches($sender, $invoice->client);
+        $learnedMatch = $profile !== null && (int) $profile->client_id === (int) $invoice->client_id;
+        $clientMatch = $learnedMatch || $this->clientMatches($sender, $invoice->client);
         $score = ($numberMatch ? 40 : 0) + ($amountMatch ? 30 : 0) + ($clientMatch ? 20 : 0);
 
         return [
@@ -159,6 +167,7 @@ class InvoiceMatcher
             'number_match' => $numberMatch,
             'amount_match' => $amountMatch,
             'client_match' => $clientMatch,
+            'learned_match' => $learnedMatch,
             'invoice_balance' => $balance,
             'client_name' => $this->clientName($invoice),
         ];
@@ -210,36 +219,6 @@ class InvoiceMatcher
         return (string) preg_replace('/[^A-Z0-9]/', '', Str::upper(Str::ascii(trim($value))));
     }
 
-    private function normalizeName(string $value): string
-    {
-        $value = Str::ascii(mb_strtolower(trim($value)));
-        $value = (string) preg_replace('/[^a-z0-9]+/', ' ', $value);
-
-        // Legal forms are not part of the trading name. Order matters: the
-        // longest phrase goes first so "sp. z o.o. sp.k." leaves no fragments.
-        foreach ([
-            'spolka z ograniczona odpowiedzialnoscia spolka komandytowa',
-            'spolka z ograniczona odpowiedzialnoscia',
-            'spolka akcyjna',
-            'sp z o o',
-            'sp z oo',
-            'spolka komandytowa',
-            'spolka jawna',
-            'spolka cywilna',
-            'limited liability company',
-            'limited',
-            'ltd',
-            'llc',
-            'inc',
-            'gmbh',
-            'company',
-        ] as $legalForm) {
-            $value = str_replace($legalForm, ' ', $value);
-        }
-
-        return trim((string) preg_replace('/\s+/', ' ', $value));
-    }
-
     private function clientMatches(string $sender, mixed $client): bool
     {
         if ($sender === '' || ! $client) {
@@ -247,7 +226,7 @@ class InvoiceMatcher
         }
 
         foreach ([$this->clientName($client), trim((string) $client->first_name.' '.(string) $client->last_name)] as $name) {
-            $clientName = $this->normalizeName((string) $name);
+            $clientName = PayerName::normalize($name);
 
             if ($clientName === '') {
                 continue;
