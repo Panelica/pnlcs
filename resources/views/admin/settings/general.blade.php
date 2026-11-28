@@ -69,14 +69,26 @@
                             <option value="{{ $code }}" {{ ($settings['Country'] ?? '') === $code ? 'selected' : '' }}>{{ $name }}</option>
                         @endforeach
                     </select></div>
-                <div class="form-group"><label style="font-size:13px;display:flex;gap:6px;align-items:flex-start;">
-                    <input type="hidden" name="TurkishLegalForms" value="0"><input type="checkbox" name="TurkishLegalForms" value="1" {{ !empty($settings['TurkishLegalForms']) ? 'checked' : '' }} style="margin-top:3px;">
-                    <span>{{ __('admin.settings.turkish_legal_forms') }}<br><small style="color:#777;">{{ __('admin.settings.turkish_legal_forms_hint') }}</small></span></label></div>
-                <div class="form-group"><label style="font-size:13px;display:flex;gap:6px;align-items:flex-start;">
-                    <input type="hidden" name="DomainSearchLog" value="0"><input type="checkbox" name="DomainSearchLog" value="1" {{ ($settings['DomainSearchLog'] ?? '1') !== '0' ? 'checked' : '' }} style="margin-top:3px;">
-                    <span>{{ __('admin.settings.domain_search_log') }}<br><small style="color:#777;">{{ __('admin.settings.domain_search_log_hint') }}</small></span></label></div>
                 <div class="form-group"><label class="form-label">{{ __('admin.settings.date_format') }}</label><input type="text" name="DateFormat" value="{{ $settings['DateFormat'] ?? 'd/m/Y' }}" class="form-control" placeholder="d/m/Y"></div>
-                <div class="form-group"><label class="form-label">{{ __('admin.settings.timezone') }}</label><input type="text" name="Timezone" value="{{ $settings['Timezone'] ?? 'UTC' }}" class="form-control"></div>
+                <div class="form-group">
+                    <label class="form-label">{{ __('admin.settings.timezone') }}</label>
+                    @php
+                        $selectedTimezone = (string) ($settings['Timezone'] ?? '') ?: 'UTC';
+                        $allTimezones = array_merge(...array_values($timezoneGroups));
+                    @endphp
+                    <select name="Timezone" class="form-control">
+                        @if($selectedTimezone !== '' && ! in_array($selectedTimezone, $allTimezones, true))
+                            <option value="{{ $selectedTimezone }}" selected>{{ $selectedTimezone }} (current)</option>
+                        @endif
+                        @foreach($timezoneGroups as $region => $zones)
+                            <optgroup label="{{ $region }}">
+                                @foreach($zones as $zone)
+                                    <option value="{{ $zone }}" @selected($selectedTimezone === $zone)>{{ $zone }}</option>
+                                @endforeach
+                            </optgroup>
+                        @endforeach
+                    </select>
+                </div>
             </div>
         </div>
     </div>
@@ -97,6 +109,9 @@
                     <input type="url" name="PrivacyUrl" value="{{ $settings['PrivacyUrl'] ?? '' }}" class="form-control" placeholder="https://example.com/privacy">
                 </div>
             </div>
+            <div class="form-group" style="margin-top:14px;margin-bottom:0;"><label style="font-size:13px;display:flex;gap:6px;align-items:flex-start;">
+                <input type="hidden" name="TurkishLegalForms" value="0"><input type="checkbox" name="TurkishLegalForms" value="1" {{ !empty($settings['TurkishLegalForms']) ? 'checked' : '' }} style="margin-top:3px;">
+                <span>{{ __('admin.settings.turkish_legal_forms') }}<br><small style="color:#777;">{{ __('admin.settings.turkish_legal_forms_hint') }}</small></span></label></div>
             <div style="font-size:12px;color:#777;">{{ __('admin.settings.legal_hint') }}</div>
         </div>
     </div>
@@ -491,6 +506,18 @@
                 <div class="form-group"><label class="form-label">{{ __('admin.settings.domain_suggestion_count') }}</label><input type="number" min="1" max="12" name="DomainSuggestionCount" value="{{ $settings['DomainSuggestionCount'] ?? '' }}" class="form-control" placeholder="6"></div>
             </div>
             <div style="font-size:12px;color:#777;">{{ __('admin.settings.domain_suggestions_hint') }}</div>
+        </div>
+    </div>
+
+    {{-- Whether storefront domain searches are recorded. This belongs with
+         the domain features, not with language/country settings. --}}
+    <div class="card" data-tab="domains" id="settings-domain_search_log" style="margin-bottom:15px;">
+        <div class="card-header"><strong>{{ __('admin.domain_searches.title') }}</strong></div>
+        <div class="card-body">
+            <label style="font-size:13px;display:flex;gap:6px;align-items:flex-start;">
+                <input type="hidden" name="DomainSearchLog" value="0"><input type="checkbox" name="DomainSearchLog" value="1" {{ ($settings['DomainSearchLog'] ?? '1') !== '0' ? 'checked' : '' }} style="margin-top:3px;">
+                <span>{{ __('admin.settings.domain_search_log') }}<br><small style="color:#777;">{{ __('admin.settings.domain_search_log_hint') }}</small></span>
+            </label>
         </div>
     </div>
 

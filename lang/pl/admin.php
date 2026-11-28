@@ -2386,7 +2386,7 @@ return [
     'domain_searches.result' => 'Wynik',
     'domain_searches.client' => 'Konto',
     'domain_searches.none' => 'Jeszcze nic.',
-    'domain_searches.disabled' => 'Zapisywanie wyłączone (Ustawienia ogólne).',
+    'domain_searches.disabled' => 'Zapisywanie wyłączone (Ustawienia → Domeny).',
     'domain_searches.times' => '{1} :count raz|[2,*] :count razy',
     'settings.domain_search_log' => 'Zapisuj wyszukiwania domen',
     'settings.domain_search_log_hint' => 'Nazwy wyszukiwane w sklepie, odpowiedź i konto (bez IP), przechowywane 90 dni. Widoczne w Domeny → Wyszukiwania domen.',
