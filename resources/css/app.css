@@ -118,7 +118,7 @@ h1, h2, h3, h4, h5, h6 { font-family: "Open Sans", "Helvetica Neue", Helvetica, 
 .sidebar .staff-dot { width: 8px; height: 8px; background: #27ae60; border-radius: 50%; flex-shrink: 0; }
 
 /* ── CONTENT AREA ── */
-.contentarea { margin: 0 0 0 195px; padding: 15px; min-height: calc(100vh - 95px); background-color: #fff; border: 0; border-left: 1px solid #ccc; }
+.contentarea { margin: 0 0 0 195px; padding: 15px 15px 48px; min-height: calc(100vh - 95px); background-color: #fff; border: 0; border-left: 1px solid #ccc; }
 .contentarea h1 { font-size: 22px; font-weight: 300; color: #333; margin: 0 0 15px; padding-bottom: 10px; border-bottom: 1px solid #eee; }
 
 /* ── FOOTER ── */
@@ -474,3 +474,50 @@ select.form-control { height: 34px !important; }
 .pn-btn-danger { background: var(--danger, #ef4444); border-color: var(--danger, #ef4444); color: #fff; }
 .pn-btn-danger:hover { background: #dc2626; color: #fff; }
 .pn-btn-sm { padding: 6px 12px; font-size: 12.5px; }
+
+
+/* ── MY ACCOUNT / SECURITY ── */
+.account-layout { display: grid; grid-template-columns: minmax(0, 640px) minmax(300px, 1fr); gap: 16px; align-items: start; max-width: 1100px; }
+.account-layout > * { min-width: 0; }
+.account-primary form > .card { margin-bottom: 16px; }
+.account-primary .card { max-width: none; }
+.account-actions { display: flex; gap: 8px; flex-wrap: wrap; margin-top: 16px; }
+.account-side .card { margin-bottom: 16px; }
+.account-muted { color: #777; font-size: 13px; margin: 0 0 10px; line-height: 1.5; }
+.account-status { display: flex; align-items: center; gap: 12px; flex-wrap: wrap; margin-bottom: 12px; }
+.account-status-on { color: #3c763d; font-size: 13px; font-weight: 500; }
+.account-disable-form { display: flex; gap: 8px; align-items: flex-start; flex-wrap: wrap; margin: 0; }
+.account-disable-form .form-control { flex: 1 1 190px; min-width: 0; }
+.account-error { color: #c43c35; font-size: 12px; width: 100%; }
+.account-empty { color: #888; font-size: 13px; margin: 0 0 10px; }
+.account-hint { color: #999; font-size: 12px; line-height: 1.45; margin: 10px 0 0; }
+.trusted-devices { display: flex; flex-direction: column; gap: 8px; }
+.trusted-device { display: flex; align-items: flex-start; justify-content: space-between; gap: 10px; padding: 10px; border: 1px solid #e5e7eb; border-radius: 5px; background: #fafafa; }
+.trusted-device-main { min-width: 0; }
+.trusted-device-title { font-size: 13px; font-weight: 600; color: #333; word-break: break-word; }
+.trusted-device-badge { display: inline-block; margin-left: 6px; padding: 1px 6px; border-radius: 8px; background: #e8f0fb; color: #1a4d80; font-size: 10px; font-weight: 600; vertical-align: 1px; }
+.trusted-device-meta { color: #888; font-size: 11px; line-height: 1.5; margin-top: 2px; word-break: break-word; }
+.trusted-device form { flex: 0 0 auto; margin: 0; }
+@media (max-width: 1100px) {
+    .account-layout { grid-template-columns: 1fr; max-width: 640px; }
+}
+@media (max-width: 640px) {
+    .trusted-device { flex-direction: column; }
+    .trusted-device form { width: 100%; }
+    .trusted-device form .btn { width: 100%; }
+}
+
+/* ── 2FA SETUP ── */
+.twofa-setup-card { max-width: 760px; }
+.twofa-intro { margin-top: 0; }
+.twofa-setup { display: grid; grid-template-columns: 220px minmax(0, 1fr); gap: 24px; align-items: start; }
+.twofa-qr { text-align: center; }
+.twofa-qr img { width: 200px; height: 200px; max-width: 100%; border: 4px solid #f0f0f0; border-radius: 8px; }
+.twofa-manual-label { color: #888; font-size: 13px; margin: 0 0 8px; }
+.twofa-secret { display: block; background: #f5f5f5; padding: 10px 12px; border-radius: 6px; font-size: 16px; letter-spacing: 2px; word-break: break-all; text-align: center; margin-bottom: 16px; }
+.twofa-code { max-width: 200px; text-align: center; font-size: 18px; letter-spacing: 4px; }
+.twofa-actions { display: flex; gap: 8px; flex-wrap: wrap; }
+@media (max-width: 640px) {
+    .twofa-setup { grid-template-columns: 1fr; gap: 16px; }
+    .twofa-qr img { margin: 0 auto; }
+}

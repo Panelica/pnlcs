@@ -2,6 +2,7 @@
 namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
+use App\Models\AdminTrustedDevice;
 use App\Models\HomepageContent;
 use App\Models\HomepageSection;
 use App\Models\Language;
@@ -10,6 +11,7 @@ use App\Services\ThemeManager;
 use App\Services\ThemeService;
 use App\Support\Timezones;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Cookie;
 use Illuminate\Support\Facades\Mail;
 use Symfony\Component\Mailer\Transport\Smtp\EsmtpTransport;
 
@@ -360,12 +362,20 @@ class SettingController extends Controller
         }
     }
 
-    public function myAccount()
+    public function myAccount(Request $request)
     {
         $admin = auth("admin")->user();
         $languages = Language::active()->orderBy('sort_order')->get();
+        $trustedDevices = $admin->trustedDevices()
+            ->where("expires_at", ">", now())
+            ->orderByDesc("last_used_at")
+            ->get();
+        $currentDevice = AdminTrustedDevice::findValid(
+            $admin,
+            $request->cookie(AdminTrustedDevice::COOKIE_NAME)
+        );
 
-        return view("admin.settings.my-account", compact("admin", "languages"));
+        return view("admin.settings.my-account", compact("admin", "languages", "trustedDevices", "currentDevice"));
     }
 
     public function updateMyAccount(Request $request)
@@ -387,15 +397,39 @@ class SettingController extends Controller
 
         $data = $request->only(["first_name", "last_name", "email", "signature", "language"]);
 
-        if ($request->filled("new_password")) {
+        $passwordChanged = $request->filled("new_password");
+        if ($passwordChanged) {
             $data["password"] = bcrypt($request->new_password);
         }
 
         $admin->update($data);
+
+        // Admin::updated() removes the remembered browsers. The browser
+        // making this change must lose its own cookie too.
+        if ($passwordChanged) {
+            Cookie::expire(AdminTrustedDevice::COOKIE_NAME, '/');
+        }
+
         $request->session()->put('locale', $data['language']);
         cookie()->queue('pnlcs_locale', $data['language'], 43200);
 
         return back()->with("success", __("admin.messages.account_updated"));
+    }
+
+    public function destroyTrustedDevice(Request $request, AdminTrustedDevice $device)
+    {
+        abort_unless((int) $device->admin_id === (int) auth('admin')->id(), 404);
+
+        $cookie = $request->cookie(AdminTrustedDevice::COOKIE_NAME);
+        $isCurrent = $cookie && hash_equals($device->token_hash, hash('sha256', $cookie));
+
+        $device->delete();
+
+        if ($isCurrent) {
+            Cookie::expire(AdminTrustedDevice::COOKIE_NAME, '/');
+        }
+
+        return back()->with("success", __("admin.settings.trusted_device_removed"));
     }
 
     // ═══════════════════════════════════════════════════════

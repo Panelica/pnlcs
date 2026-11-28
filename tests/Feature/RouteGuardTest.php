@@ -34,7 +34,7 @@ const GUARD_PUBLIC_ADMIN = [
 const GUARD_NO_PERMISSION_ADMIN = [
     'admin.login', 'admin.login.submit', 'admin.logout',
     'admin.2fa.verify', 'admin.2fa.verify.submit', 'admin.2fa.enable', 'admin.2fa.disable',
-    'admin.my-account', 'admin.my-account.update',
+    'admin.my-account', 'admin.my-account.update', 'admin.my-account.trusted-devices.destroy',
     'admin.dashboard', 'admin.api-docs',
     // The bar's search: open to every admin, each kind of result filtered by
     // the permission its page asks for (AdminSearch).

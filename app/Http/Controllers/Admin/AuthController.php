@@ -3,10 +3,13 @@
 namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
+use App\Models\Admin;
+use App\Models\AdminTrustedDevice;
 use App\Services\TwoFactorService;
 use App\Support\QrCode;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Cookie;
 use Illuminate\Support\Facades\RateLimiter;
 use Illuminate\Support\Str;
 use Illuminate\Validation\ValidationException;
@@ -63,7 +66,20 @@ class AuthController extends Controller
                 // from a re-login over a live session would wave this admin
                 // through without their own second factor. Ordinary logout
                 // invalidates the session; a re-login does not.
-                session()->forget('admin_2fa_verified');
+                session()->forget(['admin_2fa_verified', 'admin_2fa_pending']);
+
+                $trusted = AdminTrustedDevice::findValid(
+                    $admin,
+                    $request->cookie(AdminTrustedDevice::COOKIE_NAME)
+                );
+
+                if ($trusted) {
+                    $trusted->markUsed();
+                    session(['admin_2fa_verified' => true]);
+
+                    return redirect()->intended(route('admin.dashboard'));
+                }
+
                 session(['admin_2fa_pending' => true]);
                 return redirect()->route('admin.2fa.verify');
             }
@@ -86,7 +102,11 @@ class AuthController extends Controller
 
     public function verify2fa(Request $request, TwoFactorService $twoFactor)
     {
-        $request->validate(['code' => 'required|string']);
+        $validated = $request->validate([
+            'code' => 'required|string',
+            'trust_device' => 'nullable|boolean',
+            'trust_days' => 'exclude_unless:trust_device,1|nullable|integer|min:1|max:'.AdminTrustedDevice::MAX_DAYS,
+        ]);
 
         $admin = Auth::guard('admin')->user();
         if (!$admin) {
@@ -105,9 +125,8 @@ class AuthController extends Controller
 
         // Try TOTP code first
         if ($twoFactor->verify($admin->second_factor_secret, $code)) {
-            session(['admin_2fa_verified' => true]);
+            $this->completeTwoFactor($request, $admin, $validated);
             RateLimiter::clear($attempts);
-            session()->forget('admin_2fa_pending');
             return redirect()->intended(route('admin.dashboard'));
         }
 
@@ -117,9 +136,8 @@ class AuthController extends Controller
             $result = $twoFactor->verifyBackupCode($backupCodes, $code);
             if ($result['valid']) {
                 $admin->update(['backup_codes' => $result['remaining']]);
-                session(['admin_2fa_verified' => true]);
+                $this->completeTwoFactor($request, $admin, $validated);
                 RateLimiter::clear($attempts);
-                session()->forget('admin_2fa_pending');
                 return redirect()->intended(route('admin.dashboard'));
             }
         }
@@ -187,8 +205,41 @@ class AuthController extends Controller
         ]);
 
         session()->forget('admin_2fa_verified');
+        Cookie::expire(AdminTrustedDevice::COOKIE_NAME, '/');
 
         return back()->with('success', __('messages.success.2fa_has_been_disabled'));
+    }
+
+    private function completeTwoFactor(Request $request, Admin $admin, array $validated): void
+    {
+        session(['admin_2fa_verified' => true]);
+        session()->forget('admin_2fa_pending');
+
+        if (! $request->boolean('trust_device')) {
+            return;
+        }
+
+        $days = (int) ($validated['trust_days'] ?? AdminTrustedDevice::DEFAULT_DAYS);
+        $days = max(1, min(AdminTrustedDevice::MAX_DAYS, $days));
+
+        $token = AdminTrustedDevice::issue(
+            $admin,
+            $days,
+            $request->ip(),
+            $request->userAgent()
+        );
+
+        Cookie::queue(
+            AdminTrustedDevice::COOKIE_NAME,
+            $token,
+            $days * 24 * 60,
+            '/',
+            null,
+            $request->isSecure() || (bool) config('session.secure'),
+            true,
+            false,
+            'lax'
+        );
     }
 
     public function logout(Request $request)
