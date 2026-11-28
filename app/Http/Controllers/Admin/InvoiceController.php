@@ -209,6 +209,7 @@ class InvoiceController extends Controller
             'description' => ['required', 'string', 'max:255'],
             'qty' => ['required', 'integer', 'min:1', 'max:999999'],
             'amount' => ['required', 'numeric', 'min:0'],
+            'unit' => ['nullable', 'string', 'max:50'],
             'tax_rule_id' => ['nullable', 'string', 'max:20'],
         ]);
 
@@ -230,6 +231,11 @@ class InvoiceController extends Controller
             'qty' => (int) $validated['qty'],
             'amount' => (float) $validated['amount'],
         ];
+
+        if (array_key_exists('unit', $validated)) {
+            $unit = trim((string) ($validated['unit'] ?? ''));
+            $fields['unit'] = $unit !== '' ? $unit : null;
+        }
 
         if ($ruleId !== '__legacy__') {
             $taxRate = $rule !== null ? (float) $rule->tax_rate : 0.0;
