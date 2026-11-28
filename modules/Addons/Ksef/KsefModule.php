@@ -3,6 +3,7 @@
 namespace Modules\Addons\Ksef;
 
 use App\Contracts\AddonModuleInterface;
+use App\Contracts\AdminMenuProvider;
 use Illuminate\Http\Request;
 use Modules\Ksef\KsefSettings;
 
@@ -13,17 +14,32 @@ use Modules\Ksef\KsefSettings;
  * submission status list lives in its own screen under Billing → KSeF status
  * (`admin.ksef.index`), shown only while this addon is active.
  */
-class KsefModule implements AddonModuleInterface
+class KsefModule implements AddonModuleInterface, AdminMenuProvider
 {
-    public function getName(): string { return 'ksef'; }
+    public function getName(): string
+    {
+        return 'ksef';
+    }
 
-    public function getDisplayName(): string { return __('messages.ksef.settings_title'); }
+    public function getDisplayName(): string
+    {
+        return __('messages.ksef.settings_title');
+    }
 
-    public function getDescription(): string { return __('messages.ksef.addon_description'); }
+    public function getDescription(): string
+    {
+        return __('messages.ksef.addon_description');
+    }
 
-    public function getVersion(): string { return '1.1.0'; }
+    public function getVersion(): string
+    {
+        return '1.1.0';
+    }
 
-    public function getAuthor(): string { return 'PNLCS'; }
+    public function getAuthor(): string
+    {
+        return 'PNLCS';
+    }
 
     /**
      * Version history shown on the module page, newest first.
@@ -70,6 +86,17 @@ class KsefModule implements AddonModuleInterface
     public function sidebar(): array
     {
         return [];
+    }
+
+    public function adminMenu(): array
+    {
+        return [[
+            'location' => 'billing',
+            'label' => __('admin.nav.ksef_status'),
+            'url' => route('admin.ksef.index'),
+            'permission' => 'manage_products',
+            'order' => 40,
+        ]];
     }
 
     public function upgrade(string $fromVersion): array
