@@ -7,6 +7,7 @@ use App\Models\KsefInvoice;
 use Illuminate\Support\Facades\Http;
 use Modules\Ksef\Support\Crypto;
 use Modules\Ksef\Support\InvoiceXmlBuilder;
+use Modules\Ksef\Support\Nip;
 use Modules\Ksef\Support\XadesSigner;
 
 /**
@@ -30,7 +31,7 @@ class KsefClient
     public function authenticate(array $settings): string
     {
         $endpoint = rtrim((string) $settings['endpoint'], '/');
-        $nip = (string) $settings['nip'];
+        $nip = Nip::normalize((string) $settings['nip']);
 
         // 1. Challenge.
         $challenge = Http::accept('application/json')
@@ -257,6 +258,55 @@ class KsefClient
         }
 
         throw new \RuntimeException(__('messages.ksef.auth_timeout'));
+    }
+
+    /**
+     * Query invoice metadata for one subject type and date range.
+     */
+    public function queryInvoiceMetadata(
+        string $accessToken,
+        string $endpoint,
+        string $subjectType,
+        string $from,
+        string $to,
+        string $dateType = 'PermanentStorage',
+        int $pageOffset = 0,
+        int $pageSize = 100,
+    ): array {
+        $response = Http::withToken($accessToken)
+            ->accept('application/json')
+            ->timeout((int) config('ksef.http.request_timeout', 60))
+            ->connectTimeout((int) config('ksef.http.connect_timeout', 10))
+            ->post($endpoint.'/invoices/query/metadata?'.http_build_query([
+                'pageOffset' => $pageOffset,
+                'pageSize' => max(10, min(200, $pageSize)),
+                'sortOrder' => 'Asc',
+            ]), [
+                'subjectType' => $subjectType,
+                'dateRange' => [
+                    'dateType' => $dateType,
+                    'from' => $from,
+                    'to' => $to,
+                ],
+            ]);
+
+        $response->throw();
+
+        return $response->json() ?? [];
+    }
+
+    /**
+     * Download one invoice XML by its KSeF number.
+     */
+    public function downloadInvoice(string $accessToken, string $endpoint, string $ksefNumber): string
+    {
+        return Http::withToken($accessToken)
+            ->accept('application/xml')
+            ->timeout((int) config('ksef.http.request_timeout', 60))
+            ->connectTimeout((int) config('ksef.http.connect_timeout', 10))
+            ->get($endpoint.'/invoices/ksef/'.rawurlencode($ksefNumber))
+            ->throw()
+            ->body();
     }
 
     /**

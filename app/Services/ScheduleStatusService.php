@@ -4,6 +4,7 @@ namespace App\Services;
 
 use App\Models\ScheduledTaskRun;
 use App\Support\ScheduledWindows;
+use Cron\CronExpression;
 use Illuminate\Console\Scheduling\Schedule;
 use Illuminate\Contracts\Console\Kernel as ConsoleKernel;
 use Illuminate\Support\Carbon;
@@ -24,9 +25,7 @@ class ScheduleStatusService
      * @param  string  $supervisorConfig  Where the PNLCS Docker image keeps its
      *                                    supervisor config; tests point it elsewhere.
      */
-    public function __construct(private string $supervisorConfig = '/etc/supervisord.conf')
-    {
-    }
+    public function __construct(private string $supervisorConfig = '/etc/supervisord.conf') {}
 
     /**
      * Whether the scheduler already runs inside this container.
@@ -70,16 +69,16 @@ class ScheduleStatusService
             $run = $runs->get($key);
 
             $rows[] = [
-                'command'     => $key,
-                'label'       => $this->label($key),
-                'expression'  => $event->expression,
-                'frequency'   => $this->frequency($key, $event->expression),
-                'next_due'    => $this->nextDue($key, $event->expression),
+                'command' => $key,
+                'label' => $this->label($key),
+                'expression' => $event->expression,
+                'frequency' => $this->frequency($key, $event->expression),
+                'next_due' => $this->nextDue($key, $event->expression),
                 'last_run_at' => $run?->last_run_at,
-                'runtime_ms'  => $run?->runtime_ms,
-                'exit_code'   => $run?->exit_code,
-                'failures'    => (int) ($run->failures ?? 0),
-                'state'       => $this->state($key, $event->expression, $run),
+                'runtime_ms' => $run?->runtime_ms,
+                'exit_code' => $run?->exit_code,
+                'failures' => (int) ($run->failures ?? 0),
+                'state' => $this->state($key, $event->expression, $run),
             ];
         }
 
@@ -158,7 +157,7 @@ class ScheduleStatusService
      *
      * @param  array{start:string,end:string,every:int}  $window
      */
-    private function windowState(array $window, \Illuminate\Support\Carbon $last, \Illuminate\Support\Carbon $now): string
+    private function windowState(array $window, Carbon $last, Carbon $now): string
     {
         $start = $now->copy()->setTimeFromTimeString($window['start']);
         $end = $now->copy()->setTimeFromTimeString($window['end']);
@@ -187,11 +186,14 @@ class ScheduleStatusService
     {
         $parts = preg_split('/\s+/', trim($expression));
         $minute = $parts[0] ?? '*';
-        $hour   = $parts[1] ?? '*';
-        $dom    = $parts[2] ?? '*';
+        $hour = $parts[1] ?? '*';
+        $dom = $parts[2] ?? '*';
 
         if ($dom !== '*') {
             return 60 * 24 * 31;
+        }
+        if (str_starts_with($hour, '*/')) {
+            return 60 * max(1, (int) substr($hour, 2));
         }
         if ($hour !== '*') {
             return 60 * 24;
@@ -214,7 +216,7 @@ class ScheduleStatusService
 
         try {
             return Carbon::instance(
-                (new \Cron\CronExpression($expression))->getNextRunDate(now())
+                (new CronExpression($expression))->getNextRunDate(now())
             );
         } catch (\Throwable) {
             return null;
@@ -222,7 +224,7 @@ class ScheduleStatusService
     }
 
     /** @param array{start:string,end:string,every:int} $window */
-    private function windowNextDue(array $window, \Illuminate\Support\Carbon $now): Carbon
+    private function windowNextDue(array $window, Carbon $now): Carbon
     {
         $start = $now->copy()->setTimeFromTimeString($window['start']);
         $end = $now->copy()->setTimeFromTimeString($window['end']);
@@ -258,8 +260,13 @@ class ScheduleStatusService
         if ($dom !== '*') {
             return __('admin.automation.monthly');
         }
+        if (str_starts_with($hour, '*/')) {
+            $hours = max(1, (int) substr($hour, 2));
+
+            return trans_choice('admin.automation.every_hours', $hours, ['count' => $hours]);
+        }
         if ($hour !== '*' && ! str_contains($hour, '*')) {
-            return __('admin.automation.daily') . ' ' . sprintf('%02d:%02d', (int) $hour, (int) $minute);
+            return __('admin.automation.daily').' '.sprintf('%02d:%02d', (int) $hour, (int) $minute);
         }
         if (str_starts_with($minute, '*/')) {
             return trans_choice('admin.automation.every_minutes', (int) substr($minute, 2), ['count' => (int) substr($minute, 2)]);

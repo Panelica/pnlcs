@@ -31,6 +31,12 @@ class InvoiceXmlBuilder
 
         $buyerNip = $invoice->buyer('tax_id');
 
+        if (Nip::isValid($buyerNip)) {
+            $buyerNip = Nip::normalize($buyerNip);
+        } else {
+            $buyerNip = null;
+        }
+
         // The seller's NIP is not taken from the invoice: it is the number the
         // KSeF session authenticates with (KsefClient::authenticate signs the
         // AuthTokenRequest with it). A general-settings tax id written in any
@@ -69,6 +75,8 @@ class InvoiceXmlBuilder
 
     private function podmiot1(string $nip, string $name, Invoice $invoice): string
     {
+        $nip = Nip::normalize($nip);
+
         return '<Podmiot1>'
             .'<DaneIdentyfikacyjne>'
             .'<NIP>'.e($nip).'</NIP>'
