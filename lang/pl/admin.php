@@ -2863,6 +2863,7 @@ return [
         'ticket_signature' => 'Podpis w zgłoszeniach',
         'ticket_signature_hint' => 'Opcjonalnie',
         'timezone' => 'Strefa czasowa',
+        'timezone_stored' => 'zapisana wartość',
         'title' => 'Ustawienia',
         'white_label' => 'White-Label',
     ],

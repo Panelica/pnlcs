@@ -78,7 +78,7 @@
                     @endphp
                     <select name="Timezone" class="form-control">
                         @if($selectedTimezone !== '' && ! in_array($selectedTimezone, $allTimezones, true))
-                            <option value="{{ $selectedTimezone }}" selected>{{ $selectedTimezone }} (current)</option>
+                            <option value="{{ $selectedTimezone }}" selected>{{ $selectedTimezone }} ({{ __('admin.settings.timezone_stored') }})</option>
                         @endif
                         @foreach($timezoneGroups as $region => $zones)
                             <optgroup label="{{ $region }}">

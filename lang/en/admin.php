@@ -2863,6 +2863,7 @@ return [
         'ticket_signature' => 'Ticket signature',
         'ticket_signature_hint' => 'Optional',
         'timezone' => 'Timezone',
+        'timezone_stored' => 'stored value',
         'title' => 'Settings',
         'white_label' => 'White-Label',
     ],
