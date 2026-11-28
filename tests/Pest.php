@@ -41,6 +41,27 @@ if (! file_exists($installedLock)) {
  * pass: php artisan test --parallel --exclude-group=serial, then
  * php artisan test --group=serial. A plain php artisan test runs them all.
  */
+/*
+ * An addon keeps its migrations inside its own module, and `php artisan
+ * migrate` only finds them while the addon is active - so a database built for
+ * the suite (or rebuilt with --recreate-databases) has none of its tables. The
+ * addon's own tests then fail on a missing table rather than on anything they
+ * are about. This installs them once per process, the same guarded path
+ * BankPaymentsModule::activate() takes, before any test touches them.
+ */
+function ensureBankPaymentsTables(): void
+{
+    if (Illuminate\Support\Facades\Schema::hasTable('bank_imports')
+        && Illuminate\Support\Facades\Schema::hasColumn('bank_transactions', 'matching_status')) {
+        return;
+    }
+
+    Illuminate\Support\Facades\Artisan::call('migrate', [
+        '--path' => 'modules/Addons/BankPayments/Database/Migrations',
+        '--force' => true,
+    ]);
+}
+
 pest()->group('serial')->in(
     'Feature/InstallDatabaseStepTest.php',
     'Feature/InstallerLanguageTest.php',

@@ -18,6 +18,8 @@ use Modules\Addons\BankPayments\Models\BankTransaction;
 use Modules\Addons\BankPayments\Services\BankMailboxClient;
 use Modules\Addons\BankPayments\Services\BankSyncService;
 
+beforeEach(fn () => ensureBankPaymentsTables());
+
 class BankPaymentsSyncTestClient implements BankMailboxClient
 {
     /** @var array<int, array{uid: int, raw: string}> */

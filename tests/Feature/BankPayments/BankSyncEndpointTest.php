@@ -15,6 +15,8 @@ use Modules\Addons\BankPayments\Models\BankMatch;
 use Modules\Addons\BankPayments\Models\BankMessage;
 use Modules\Addons\BankPayments\Services\BankMailboxClient;
 
+beforeEach(fn () => ensureBankPaymentsTables());
+
 class BankPaymentsSyncEndpointClient implements BankMailboxClient
 {
     public function test(BankMailbox $mailbox): array

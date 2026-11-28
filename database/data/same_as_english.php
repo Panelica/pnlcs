@@ -518,7 +518,6 @@ return [
         'whmcs_import.port',
         'whmcs_import.title',
             'admin.nav.ksef_status',
-        'messages.ksef.vat',
 ],
     'tr' => [
         'admin.appearance.logo',

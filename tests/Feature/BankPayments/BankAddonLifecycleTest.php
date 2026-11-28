@@ -6,6 +6,8 @@ use App\Providers\AddonServiceProvider;
 use App\Services\AddonManager;
 use Modules\Addons\BankPayments\BankPaymentsModule;
 
+beforeEach(fn () => ensureBankPaymentsTables());
+
 function bootBankPaymentsAddon(): void
 {
     Setting::set('addon_bank_payments_active', '1', 'addons');

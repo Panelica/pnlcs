@@ -9,6 +9,8 @@ use Illuminate\Support\Facades\DB;
 use Modules\Addons\BankPayments\Models\BankMailbox;
 use Modules\Addons\BankPayments\Services\BankMailboxClient;
 
+beforeEach(fn () => ensureBankPaymentsTables());
+
 class BankPaymentsMailboxTestClient implements BankMailboxClient
 {
     public bool $ok = true;

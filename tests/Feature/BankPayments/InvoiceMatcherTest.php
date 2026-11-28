@@ -15,6 +15,8 @@ use Modules\Addons\BankPayments\Models\BankTransaction;
 use Modules\Addons\BankPayments\Services\BankPaymentImporter;
 use Modules\Addons\BankPayments\Services\InvoiceMatcher;
 
+beforeEach(fn () => ensureBankPaymentsTables());
+
 function matcherTransaction(array $overrides = []): BankTransaction
 {
     $mailbox = BankMailbox::create([
