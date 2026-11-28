@@ -3,6 +3,7 @@
 namespace Modules\Ksef;
 
 use App\Models\AddonSetting;
+use Modules\Ksef\Support\Nip;
 
 /**
  * Resolves the KSeF addon's effective configuration: built-in defaults from
@@ -41,7 +42,7 @@ final class KsefSettings
         $stored = AddonSetting::getForAddon('ksef');
 
         return [
-            'nip' => self::pick($stored, 'nip', $defaults['nip']),
+            'nip' => Nip::normalize(self::pick($stored, 'nip', $defaults['nip'])),
             'environment' => self::pick($stored, 'environment', $defaults['environment']),
             'private_key' => self::pick($stored, 'private_key', $defaults['private_key']),
             'private_key_passphrase' => self::pick($stored, 'private_key_passphrase', $defaults['private_key_passphrase']),
@@ -61,7 +62,7 @@ final class KsefSettings
     {
         $s = self::resolve();
 
-        return filled($s['nip']) && filled($s['private_key']) && filled($s['certificate']);
+        return Nip::isValid($s['nip']) && filled($s['private_key']) && filled($s['certificate']);
     }
 
     private static function endpoint(string $environment): string

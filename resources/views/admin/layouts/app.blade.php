@@ -114,7 +114,13 @@
                     <li><a href="{{ route('admin.payment-notifications.index') }}">{{ __('admin.nav.payment_notifications') }} @if(($sidebarCounts->pending_payment_notifications ?? 0) > 0)<span class="sb-badge sb-badge-warning">{{ $sidebarCounts->pending_payment_notifications }}</span>@endif</a></li>
                     <li><a href="{{ route('admin.config.transactions') }}">{{ __('admin.nav.transactions') }}</a></li>
                     <li><a href="{{ route('admin.config.billable-items') }}">{{ __('admin.nav.billable_items') }}</a></li>
-                    @if($ksefActive ?? false)<li><a href="{{ route('admin.ksef.index') }}">{{ __('admin.nav.ksef_status') }}</a></li>@endif
+                    @foreach(($adminMenuItems['billing'] ?? []) as $item)
+                    <li><a href="{{ $item['url'] }}">{{ $item['label'] }}</a></li>
+                    @foreach($item['children'] as $child)
+                    @continue($child['url'] === $item['url'])
+                    <li><a href="{{ $child['url'] }}" style="padding-left:28px;">{{ $child['label'] }}</a></li>
+                    @endforeach
+                    @endforeach
                     <li><a href="{{ route('admin.affiliates.index') }}">{{ __('admin.sidebar.affiliates') }}</a></li>
                     <li class="divider"></li>
                     <li><a href="{{ route('admin.quotes.index') }}">{{ __('admin.nav.quotes') }}</a></li>
@@ -166,10 +172,17 @@
             </li>
 
             {{-- Extensions: the menu entries of active addons (their sidebar()) --}}
-            @if(!empty($addonMenuItems))
+            @if(!empty($addonMenuItems) || !empty($adminMenuItems['extensions']))
             <li class="has-dropdown" style="float:left; width:auto; position:relative;">
                 <a href="#" onclick="event.preventDefault();"><i class="fas fa-puzzle-piece"></i> {{ __('admin.nav.addon_modules') }}</a>
                 <ul class="dropdown-menu">
+                    @foreach(($adminMenuItems['extensions'] ?? []) as $item)
+                    <li><a href="{{ $item['url'] }}">{{ $item['label'] }}</a></li>
+                    @foreach($item['children'] as $child)
+                    @continue($child['url'] === $item['url'])
+                    <li><a href="{{ $child['url'] }}" style="padding-left:28px;">{{ $child['label'] }}</a></li>
+                    @endforeach
+                    @endforeach
                     @foreach($addonMenuItems as $item)
                     @if(!$loop->first && $item['children'])<li class="divider"></li>@endif
                     <li><a href="{{ $item['url'] }}">{{ $item['label'] }}</a></li>
@@ -391,7 +404,13 @@
         <ul class="menu">
             <li><a href="{{ route('admin.config.transactions') }}" @if($routeName === 'admin.config.transactions') class="active" @endif>{{ __('admin.nav.transactions') }}</a></li>
             <li><a href="{{ route('admin.config.billable-items') }}" @if($routeName === 'admin.config.billable-items') class="active" @endif>{{ __('admin.nav.billable_items') }}</a></li>
-            @if($ksefActive ?? false)<li><a href="{{ route('admin.ksef.index') }}" @if($routeName === 'admin.ksef.index') class="active" @endif>{{ __('admin.nav.ksef_status') }}</a></li>@endif
+            @foreach(($adminMenuItems['billing'] ?? []) as $item)
+            <li><a href="{{ $item['url'] }}" @if(request()->url() === $item['url']) class="active" @endif>{{ $item['label'] }}</a></li>
+            @foreach($item['children'] as $child)
+            @continue($child['url'] === $item['url'])
+            <li><a href="{{ $child['url'] }}" style="padding-left:20px;" @if(request()->url() === $child['url']) class="active" @endif>{{ $child['label'] }}</a></li>
+            @endforeach
+            @endforeach
             <li><a href="{{ route('admin.affiliates.index') }}" @if($routeName === 'admin.affiliates.index') class="active" @endif>{{ __('admin.sidebar.affiliates') }}</a></li>
         </ul>
         <div class="sidebar-header"><i class="fas fa-file-signature"></i> {{ __('admin.nav.quotes') }}</div>

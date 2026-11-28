@@ -41,7 +41,8 @@ class PaymentService
      * @param  string  $gateway  Gateway key (e.g. 'stripe', 'banktransfer', 'manual', 'credit')
      * @param  string|null  $transactionId  Gateway transaction reference (used for idempotency)
      * @param  float|null  $amount  Paid amount; null = remaining balance of the invoice
-     * @param  array  $options  ['fees' => float, 'description' => string]
+     * @param  array  $options  ['fees' => float, 'description' => string,
+     *                          'require_payable' => bool, 'expected_balance' => float]
      * @return array{success: bool, status: string, balance: float, duplicate?: bool}
      */
     public function applyPayment(Invoice $invoice, string $gateway, ?string $transactionId, ?float $amount = null, array $options = []): array
@@ -65,10 +66,44 @@ class PaymentService
             }
 
             $status = strtolower((string) $invoice->status);
+            $payable = in_array($status, self::PAYABLE_STATUSES, true);
+            $requirePayable = (bool) ($options['require_payable'] ?? false);
+
+            // A source that has already checked the invoice wants a hard stop,
+            // not the generic "money on a closed invoice becomes credit" path.
+            // This is the shared guard used by the bank addon and by manual
+            // payment-notification approval: both can race each other.
+            if ($requirePayable && ! $payable) {
+                return [
+                    'success' => false,
+                    'status' => $invoice->status,
+                    'balance' => $this->balance($invoice),
+                    'not_payable' => true,
+                    'paid_event' => false,
+                ];
+            }
+
+            // An automated caller may pass the balance it matched. Check it
+            // under the same row lock, so a concurrent payment or credit change
+            // cannot make an "exact" match into an overpayment.
+            if (array_key_exists('expected_balance', $options) && $options['expected_balance'] !== null) {
+                $currentBalance = $this->balance($invoice);
+
+                if (abs($currentBalance - (float) $options['expected_balance']) > 0.009) {
+                    return [
+                        'success' => false,
+                        'status' => $invoice->status,
+                        'balance' => $currentBalance,
+                        'balance_changed' => true,
+                        'paid_event' => false,
+                    ];
+                }
+            }
 
             // Money arriving on a non-payable invoice (already paid, cancelled,
-            // refunded) is never discarded — it becomes client credit.
-            if (! in_array($status, self::PAYABLE_STATUSES, true)) {
+            // refunded) is never discarded — it becomes client credit. Callers
+            // that cannot accept that use require_payable above.
+            if (! $payable) {
                 $amount = (float) ($amount ?? 0);
                 if ($amount > 0) {
                     $this->recordTransaction($invoice, $gateway, $transactionId, $amount, $options);

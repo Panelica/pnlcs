@@ -4,10 +4,12 @@ namespace App\Http\Controllers\Admin;
 
 use App\Enums\InvoiceStatus;
 use App\Http\Controllers\Controller;
+use App\Mail\PaymentNotificationRejectedMail;
 use App\Models\PaymentNotification;
 use App\Services\PaymentService;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\View\View;
@@ -47,7 +49,7 @@ class PaymentNotificationController extends Controller
         }
 
         $validated = $request->validate([
-            'amount'     => ['nullable', 'numeric', 'min:0.01'],
+            'amount' => ['nullable', 'numeric', 'min:0.01'],
             'admin_note' => ['nullable', 'string', 'max:2000'],
         ]);
 
@@ -75,18 +77,40 @@ class PaymentNotificationController extends Controller
             ]));
         }
 
+        $expectedBalance = $this->payments->balance($paymentNotification->invoice);
+
         $result = $this->payments->applyPayment(
             $paymentNotification->invoice,
             $paymentNotification->gateway,
-            'PN-' . $paymentNotification->id,
-            $amount
+            'PN-'.$paymentNotification->id,
+            $amount,
+            [
+                'require_payable' => true,
+                'expected_balance' => $expectedBalance,
+            ]
         );
 
+        // A parallel bank-addon import or another reviewer settled the invoice
+        // after the pre-check. Record the review but never book a second time.
+        if ($result['not_payable'] ?? false) {
+            $paymentNotification->update([
+                'status' => 'approved',
+                'amount' => $amount,
+                'admin_id' => auth('admin')->id(),
+                'admin_note' => $validated['admin_note'] ?? null,
+                'reviewed_at' => now(),
+            ]);
+
+            return back()->with('info', __('admin.payment_notifications.already_settled', [
+                'status' => __('client.status.'.strtolower((string) $paymentNotification->invoice->status)),
+            ]));
+        }
+
         $paymentNotification->update([
-            'status'      => 'approved',
-            'amount'      => $amount,
-            'admin_id'    => auth('admin')->id(),
-            'admin_note'  => $validated['admin_note'] ?? null,
+            'status' => 'approved',
+            'amount' => $amount,
+            'admin_id' => auth('admin')->id(),
+            'admin_note' => $validated['admin_note'] ?? null,
             'reviewed_at' => now(),
         ]);
 
@@ -111,9 +135,9 @@ class PaymentNotificationController extends Controller
         ]);
 
         $paymentNotification->update([
-            'status'      => 'rejected',
-            'admin_id'    => auth('admin')->id(),
-            'admin_note'  => $validated['admin_note'],
+            'status' => 'rejected',
+            'admin_id' => auth('admin')->id(),
+            'admin_note' => $validated['admin_note'],
             'reviewed_at' => now(),
         ]);
 
@@ -128,10 +152,10 @@ class PaymentNotificationController extends Controller
         try {
             $email = $paymentNotification->client?->email;
             if ($email) {
-                Mail::to($email)->queue(new \App\Mail\PaymentNotificationRejectedMail($paymentNotification));
+                Mail::to($email)->queue(new PaymentNotificationRejectedMail($paymentNotification));
             }
         } catch (\Throwable $e) {
-            \Illuminate\Support\Facades\Log::error('Payment notification reject mail failed: ' . $e->getMessage());
+            Log::error('Payment notification reject mail failed: '.$e->getMessage());
         }
 
         return back()->with('success', __('admin.payment_notifications.rejected'));

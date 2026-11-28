@@ -6,7 +6,10 @@ use App\Models\AdminRole;
 use App\Models\Client;
 use App\Models\MarketingConsent;
 use App\Models\User;
+use Illuminate\Contracts\Http\Kernel;
+use Illuminate\Foundation\Http\Middleware\PreventRequestForgery;
 use Illuminate\Support\Facades\Mail;
+use Illuminate\Support\Facades\Route;
 
 /*
  * Marketing email only to customers who agreed, with a way to stop.
@@ -111,6 +114,19 @@ it('unsubscribes through the signed link, after a click and not on opening it', 
     test()->post($url)->assertOk();
     $consent = MarketingConsent::where('client_id', $client->id)->sole();
     expect($consent->email_opt_in)->toBeFalse()->and($consent->source)->toBe('unsubscribe');
+});
+
+it('takes the one-click unsubscribe a mail app posts without a CSRF token', function () {
+    // The suite switches the CSRF check off, so posting here proves nothing:
+    // what counts is that the route no longer carries the middleware. A mail
+    // provider acting on List-Unsubscribe-Post has no session and no token,
+    // and was answered 419 while the exclusion named the old class.
+    app(Kernel::class);
+
+    $middleware = fn (string $name) => app('router')->gatherRouteMiddleware(Route::getRoutes()->getByName($name));
+
+    expect($middleware('client.unsubscribe.store'))->not->toContain(PreventRequestForgery::class)
+        ->and($middleware('client.register.submit'))->toContain(PreventRequestForgery::class);
 });
 
 it('refuses an unsigned or altered link', function () {

@@ -40,11 +40,11 @@ class ViewServiceProvider extends ServiceProvider
             // to render an empty select posting a parameter nothing read.
             $view->with('sidebarDepartments', TicketDepartment::orderBy('name')->get(['id', 'name']));
 
-            // Whether the KSeF addon is enabled — gates the billing-menu entry.
-            $view->with('ksefActive', app(AddonManager::class)->isActive('ksef'));
+            // Admin menu links declared by active addons through
+            // AdminMenuProvider, grouped by navigation location.
+            $view->with('adminMenuItems', rescue(fn () => app(AddonManager::class)->getAdminMenuItems(), []));
 
-            // The admin menu entries active addons declare in sidebar(); shown
-            // in the Extensions menu of the top navigation.
+            // The legacy sidebar() entries, shown in Extensions.
             $view->with('addonMenuItems', rescue(fn () => app(AddonManager::class)->getSidebarItems(), []));
         });
 

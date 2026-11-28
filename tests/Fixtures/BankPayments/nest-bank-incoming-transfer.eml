@@ -1,0 +1,26 @@
+From: "Nest Bank S.A." <nestinfo@powiadomienia.nestbank.pl>
+To: ksiegowosc@example.test
+Subject: =?UTF-8?B?V3DFgnl3IG5hIGtvbnRvIEJJWm5lc3QgS29udG8gMTIuLi4zNDU2?=
+Message-ID: <nest-bank-incoming-transfer@example.test>
+Date: Fri, 27 Nov 2026 10:37:34 +0100
+MIME-Version: 1.0
+Content-Type: multipart/signed; protocol="application/pkcs7-signature"; micalg=sha-256; boundary="nest-bank-boundary"
+
+--nest-bank-boundary
+Content-Type: text/html; charset=UTF-8
+Content-Transfer-Encoding: 8bit
+
+<html><body>
+<p>Dzień dobry,</p>
+<br>
+<p>dnia 27.11.2026 nastąpił wpływ 1 234,87 PLN na konto BIZnest Konto 12 3456 7890 1234 5678 9012 3456, od Przykładowy Kontrahent Sp. z o.o., tytułem PRO-2026/11-000123.</p>
+<br>
+<p>Pozdrawiamy<br>
+Zespół Nest Banku</p><br/><br/>Nest Bank Spółka Akcyjna z siedzibą w Warszawie, ul. Wołoska 24, 02-675 Warszawa. Niniejsza wiadomość może zawierać informacje poufne.
+</body></html>
+--nest-bank-boundary
+Content-Type: application/pkcs7-signature; name="smime.p7s"
+Content-Transfer-Encoding: base64
+
+ZmFrZS1zaWduYXR1cmU=
+--nest-bank-boundary--
