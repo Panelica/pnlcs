@@ -581,6 +581,7 @@ return [
     ],
     'automation.every_minute' => '每分钟',
     'automation.every_minutes' => '{1} 每分钟|[2,*] 每 :count 分钟',
+    'automation.every_hours' => '{1} 每小时|[2,*] 每 :count 小时',
     'automation.hourly' => '每小时',
     'automation.state_ok' => '正常',
     'automation.state_overdue' => '已逾期',

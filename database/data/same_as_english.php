@@ -185,7 +185,8 @@ return [
         'whmcs_import.host',
         'whmcs_import.port',
         'whmcs_import.target_domains',
-    ],
+            'admin.nav.ksef_status',
+],
     // Spanish (community): judged one by one on 2026-10-13 - names, units and
     // words Spanish writes the same (Total, General, Error, Manual, Popular).
     'es' => [
@@ -516,7 +517,9 @@ return [
         'whmcs_import.menu_title',
         'whmcs_import.port',
         'whmcs_import.title',
-    ],
+            'admin.nav.ksef_status',
+        'messages.ksef.vat',
+],
     'tr' => [
         'admin.appearance.logo',
         'admin.dashboard.laravel',
@@ -559,7 +562,9 @@ return [
         'sections.nav.hosting',
         'sections.nav.wordpress_hosting',
         'sections.topbar.blog',
-    ],
+            'admin.nav.ksef_status',
+        'messages.ksef.net',
+],
     'zh' => [
         'admin.dashboard.laravel',
         'admin.invoices.stripe',
@@ -580,5 +585,6 @@ return [
         'panelica_license.page.menu',
         'panelica_license.page.product_name',
         'sections.hero.stat_2',
-    ],
+            'admin.nav.ksef_status',
+],
 ];

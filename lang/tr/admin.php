@@ -572,6 +572,7 @@ return [
     ],
     'automation.every_minute' => 'Her dakika',
     'automation.every_minutes' => '{1} Her dakika|[2,*] Her :count dakikada bir',
+    'automation.every_hours' => '{1} Her saat|[2,*] Her :count saatte bir',
     'automation.hourly' => 'Saatlik',
     'automation.state_ok' => 'Sağlıklı',
     'automation.state_overdue' => 'Gecikmiş',

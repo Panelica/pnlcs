@@ -581,6 +581,7 @@ return [
     ],
     'automation.every_minute' => 'Jede Minute',
     'automation.every_minutes' => '{1} Jede Minute|[2,*] Alle :count Minuten',
+    'automation.every_hours' => '{1} Jede Stunde|[2,*] Alle :count Stunden',
     'automation.hourly' => 'Stündlich',
     'automation.state_ok' => 'Gesund',
     'automation.state_overdue' => 'Überfällig',
