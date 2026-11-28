@@ -854,6 +854,7 @@ return [
     'clients.login_as_client' => 'Zaloguj jako klient',
     'clients.name' => 'Imię/Nazwisko',
     'clients.never' => 'Nigdy',
+    'clients.add_invoice' => 'Dodaj fakturę',
     'clients.new_invoice_link' => '+ Nowa faktura',
     'clients.new_ticket_link' => '+ Nowe zgłoszenie',
     'clients.next_due' => 'Następny termin',
