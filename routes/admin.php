@@ -351,6 +351,7 @@ Route::middleware(['admin.auth', 'admin.2fa'])->prefix('admin')->name('admin.')-
     // My Account — no permission required (all admins)
     Route::get('my-account', [SettingController::class, 'myAccount'])->name('my-account');
     Route::post('my-account', [SettingController::class, 'updateMyAccount'])->name('my-account.update');
+    Route::delete('my-account/trusted-devices/{device}', [SettingController::class, 'destroyTrustedDevice'])->name('my-account.trusted-devices.destroy');
     Route::match(['get', 'post'], '2fa/enable', [AuthController::class, 'enable2fa'])->name('2fa.enable');
     Route::post('2fa/disable', [AuthController::class, 'disable2fa'])->name('2fa.disable');
 

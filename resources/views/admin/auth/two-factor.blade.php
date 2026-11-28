@@ -28,6 +28,21 @@
                 <input type="text" name="code" autofocus autocomplete="one-time-code" inputmode="numeric" maxlength="9"
                        style="width:100%;padding:12px;border:1px solid #ddd;border-radius:6px;font-size:22px;text-align:center;letter-spacing:6px;box-sizing:border-box;" placeholder="000000">
             </div>
+
+            <div style="margin-bottom:16px;padding:12px;background:#f8fafc;border:1px solid #e2e8f0;border-radius:6px;">
+                <label style="display:flex;align-items:flex-start;gap:8px;font-size:13px;font-weight:500;cursor:pointer;">
+                    <input type="checkbox" name="trust_device" value="1" @checked(old('trust_device')) style="margin-top:2px;">
+                    <span>{{ __('admin.auth.trust_device') }}</span>
+                </label>
+                <div style="display:flex;align-items:center;gap:8px;margin-top:10px;font-size:13px;color:#555;">
+                    <label for="trust_days">{{ __('admin.auth.trust_days') }}</label>
+                    <input id="trust_days" type="number" name="trust_days" min="1" max="365" value="{{ old('trust_days', 30) }}"
+                           style="width:76px;padding:6px 8px;border:1px solid #ddd;border-radius:5px;font-size:13px;">
+                    <span>{{ __('admin.auth.trust_days_unit') }}</span>
+                </div>
+                <p style="margin:8px 0 0;font-size:12px;color:#888;line-height:1.45;">{{ __('admin.auth.trust_device_hint') }}</p>
+            </div>
+
             <button type="submit" style="width:100%;padding:12px;background:var(--theme-primary,#1a4d80);color:#fff;border:none;border-radius:6px;font-size:15px;font-weight:600;cursor:pointer;">{{ __('admin.auth.verify') }}</button>
         </form>
 
